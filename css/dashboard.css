@@ -1,6 +1,6 @@
-/* ========================================================
-   CRUD 2026 — DASHBOARD & OTP VERIFICATION STYLES
-   ======================================================== */
+/* ==========================================================
+   CRUD 2026 — DASHBOARD, OTP & MOBILE PROTECTED VIEWER STYLES
+   ========================================================== */
 
 .dashboard-grid {
   display: grid;
@@ -133,7 +133,7 @@
   font-weight: 700;
 }
 
-/* OTP Input Boxes (High Precision 6-Digit Layout) */
+/* OTP Input Boxes */
 .otp-container {
   display: flex;
   justify-content: center;
@@ -180,20 +180,30 @@
   text-align: center;
 }
 
-/* Ticket Viewer Frame */
+/* Protected Ticket Viewer Container (Mobile Optimized) */
 .pdf-container {
+  position: relative;
   width: 100%;
-  height: 540px;
+  height: 580px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   background: #090c15;
   overflow: hidden;
   margin-top: 1.25rem;
   box-shadow: var(--shadow-md);
+  -webkit-overflow-scrolling: touch;
 }
 
 @media (max-width: 600px) {
   .pdf-container {
-    height: 420px;
+    height: 520px;
+    min-height: 70vh;
+  }
+}
+
+@media (max-width: 400px) {
+  .pdf-container {
+    height: 480px;
+    min-height: 65vh;
   }
 }
