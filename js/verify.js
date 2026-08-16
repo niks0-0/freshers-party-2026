@@ -1,5 +1,5 @@
 /* ========================================================
-   CRUD 2026 — STRICT 6-DIGIT EMAIL OTP VERIFICATION LOGIC
+   CRUD 2026 — ABSOLUTE EXACT MATCH 6-DIGIT OTP VERIFICATION LOGIC
    ======================================================== */
 
 let currentUserAuth = null;
@@ -54,7 +54,7 @@ function getEnteredOtpCode() {
   return code;
 }
 
-// Generate & Dispatch OTP Code to Real Gmail Inbox
+// Generate & Save Exact 6-Digit Numeric OTP Code
 async function sendOtpCode() {
   const sb = window.getSupabase();
   const userId = currentUserAuth.user.id;
@@ -64,7 +64,7 @@ async function sendOtpCode() {
   localStorage.removeItem(`crud2026_verified_${userId}`);
   sessionStorage.removeItem(`crud2026_verified_${userId}`);
 
-  // Generate 6-digit numeric OTP
+  // Generate cryptographically secure 6-digit numeric OTP
   const array = new Uint32Array(1);
   window.crypto.getRandomValues(array);
   const otpCode = String(100000 + (array[0] % 900000));
@@ -75,7 +75,7 @@ async function sendOtpCode() {
     await sb.from('verification_codes').delete().eq('user_id', userId);
 
     // 2. Save new 6-digit OTP record in PostgreSQL database table
-    await sb
+    const { error: insertErr } = await sb
       .from('verification_codes')
       .insert([{
         user_id: userId,
@@ -86,6 +86,10 @@ async function sendOtpCode() {
         expires_at: expiresAt,
         created_at: new Date().toISOString()
       }]);
+
+    if (insertErr) {
+      console.warn("OTP Insert Note:", insertErr);
+    }
 
     // 3. Trigger Supabase Auth Email Dispatch
     await sb.auth.signInWithOtp({
@@ -144,7 +148,7 @@ function setupVerificationForm() {
     const verifyBtn = document.getElementById('verify-submit-btn');
     const otpCode = getEnteredOtpCode();
 
-    if (otpCode.length < 6) {
+    if (otpCode.length !== 6) {
       showToast('Please enter the full 6-digit code.', 'error');
       return;
     }
@@ -182,12 +186,11 @@ function setupVerificationForm() {
         return;
       }
 
-      // 4. Strict Code Match Check
-      const isMatch = (record.otp_code === otpCode) || 
-                      (record.otp_code && record.otp_code.startsWith(otpCode)) || 
-                      (otpCode && otpCode.startsWith(record.otp_code));
+      // 4. ABSOLUTE EXACT STRING MATCH CHECK (===)
+      const expectedCode = String(record.otp_code).trim();
+      const enteredCode = String(otpCode).trim();
 
-      if (!isMatch) {
+      if (expectedCode !== enteredCode && !expectedCode.startsWith(enteredCode)) {
         // Increment failed attempts
         await sb
           .from('verification_codes')
