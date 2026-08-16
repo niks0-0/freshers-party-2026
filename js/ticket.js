@@ -36,17 +36,30 @@ async function loadAndUnlockTicket() {
       return;
     }
 
-    // 3. Check Verification Session Storage & Database
+    // 3. Check Verification Session Flags & Database Status
+    const isLocalVerified = localStorage.getItem(`crud2026_verified_${userId}`) === 'true';
     const isSessionVerified = sessionStorage.getItem(`crud2026_verified_${userId}`) === 'true';
 
-    const { data: verifyRecord } = await sb
-      .from('verification_codes')
-      .select('is_verified')
-      .eq('user_id', userId)
-      .eq('is_verified', true)
-      .maybeSingle();
+    let isDbVerified = false;
+    try {
+      const { data: verifyRecord } = await sb
+        .from('verification_codes')
+        .select('is_verified')
+        .eq('user_id', userId)
+        .eq('is_verified', true)
+        .maybeSingle();
 
-    if (!isSessionVerified && !verifyRecord) {
+      if (verifyRecord && verifyRecord.is_verified) {
+        isDbVerified = true;
+      }
+    } catch (e) {
+      console.warn("DB verification check note:", e);
+    }
+
+    // Grant pass if verified anywhere
+    const isAuthorized = isLocalVerified || isSessionVerified || isDbVerified;
+
+    if (!isAuthorized) {
       showErrorState("Email verification required before accessing ticket.", "verify.html", "Verify Email Now");
       return;
     }

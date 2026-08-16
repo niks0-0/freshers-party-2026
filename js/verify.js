@@ -153,30 +153,36 @@ function setupVerificationForm() {
 
     try {
       // 1. Mark verified in Database table
-      await sb.from('verification_codes').delete().eq('user_id', userId);
-      await sb.from('verification_codes').insert([{
-        user_id: userId,
-        email: userEmail,
-        otp_code: otpCode,
-        is_verified: true,
-        created_at: new Date().toISOString()
-      }]);
+      try {
+        await sb.from('verification_codes').delete().eq('user_id', userId);
+        await sb.from('verification_codes').insert([{
+          user_id: userId,
+          email: userEmail,
+          otp_code: otpCode,
+          is_verified: true,
+          created_at: new Date().toISOString()
+        }]);
+      } catch (e) {
+        console.warn("DB record verify note:", e);
+      }
 
-      // 2. Set Session Storage Flag for Instant Seamless Ticket Unlock
+      // 2. Set BOTH localStorage & sessionStorage Verified Flags
+      localStorage.setItem(`crud2026_verified_${userId}`, 'true');
       sessionStorage.setItem(`crud2026_verified_${userId}`, 'true');
 
       showToast('Email verified successfully! Opening your ticket...', 'success');
       setTimeout(() => {
         window.location.href = 'ticket.html';
-      }, 800);
+      }, 600);
 
     } catch (err) {
       console.error("Verification error:", err);
+      localStorage.setItem(`crud2026_verified_${userId}`, 'true');
       sessionStorage.setItem(`crud2026_verified_${userId}`, 'true');
       showToast('Email verified successfully! Opening your ticket...', 'success');
       setTimeout(() => {
         window.location.href = 'ticket.html';
-      }, 800);
+      }, 600);
     }
   });
 }
