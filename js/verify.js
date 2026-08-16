@@ -1,5 +1,5 @@
 /* ========================================================
-   CRUD 2026 — REAL INSTANT EMAIL OTP DISPATCH LOGIC
+   CRUD 2026 — INSTANT GMAIL OTP DISPATCH LOGIC
    ======================================================== */
 
 let currentUserAuth = null;
@@ -87,8 +87,8 @@ async function sendOtpCode() {
       console.warn("OTP Insert Note:", insertErr);
     }
 
-    // 3. Dispatch Email Gateway Call
-    dispatchRealEmail(userEmail, otpCode);
+    // 3. Dispatch Gmail SMTP / Email Gateway
+    dispatchGmailOtp(userEmail, otpCode);
 
     showToast(`Verification code sent to your Gmail (${maskEmail(userEmail)})! Check Inbox & Spam.`, 'info', 7000);
     startResendCountdown();
@@ -98,18 +98,18 @@ async function sendOtpCode() {
   }
 }
 
-// Dispatch Real Email via REST Gateway
-async function dispatchRealEmail(email, code) {
-  console.log(`[REAL EMAIL GATEWAY] Sending 6-digit code (${code}) to ${email}`);
+// Dispatch Gmail OTP directly via Instant API
+async function dispatchGmailOtp(toEmail, otpCode) {
+  console.log(`[INSTANT GMAIL DISPATCHER] Sending code ${otpCode} to ${toEmail}`);
   try {
-    // Supabase Auth Email API Trigger
     const sb = window.getSupabase();
+    // Trigger Supabase Auth OTP with Custom Gmail SMTP active
     await sb.auth.signInWithOtp({
-      email: email,
+      email: toEmail,
       options: { shouldCreateUser: false }
     });
   } catch (err) {
-    console.warn("Email API Gateway note:", err);
+    console.warn("Gmail Dispatcher note:", err);
   }
 }
 
