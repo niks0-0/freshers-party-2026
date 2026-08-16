@@ -125,14 +125,13 @@ async function loadAndUnlockTicket() {
       qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}`;
     }
 
-    // Watermark Overlay
+    // Subtle Safe Watermark Overlay (CRUD 2026 Top-Right to Bottom-Left)
     const watermarkEl = document.getElementById('watermark-text-display');
     if (watermarkEl) {
-      watermarkEl.textContent = `CRUD FRESHERS 2K26 • ISSUED TO: ${studentName.toUpperCase()} • ${ticketCode} • DO NOT SHARE`;
+      watermarkEl.textContent = `CRUD 2026 • CRUD 2026 • CRUD 2026 • CRUD 2026`;
     }
 
     if (!ticket || !ticket.storage_path) {
-      // Native Ticket Pass is displayed gracefully
       return;
     }
 
