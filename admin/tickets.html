@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ticket Repository — Admin Portal</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="container nav-container">
+      <a href="dashboard.html" class="nav-logo">
+        <span>FRESHERS 2026</span>
+        <span class="logo-badge" style="background: var(--accent);">ADMIN</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+        <li><a href="students.html" class="nav-link">Students</a></li>
+        <li><a href="tickets.html" class="nav-link active">Tickets</a></li>
+        <li><a href="settings.html" class="nav-link">Settings</a></li>
+        <li><button onclick="logoutUser('../login.html')" class="btn btn-sm btn-secondary">Logout</button></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container" style="padding: 2.5rem 1.5rem 5rem;">
+
+    <div class="admin-header-bar">
+      <div>
+        <h1 style="font-size: 2rem;">Ticket <span class="gradient-text">Repository</span></h1>
+        <p>Overview of all uploaded PDF tickets in private storage bucket</p>
+      </div>
+      <div>
+        <a href="students.html" class="btn btn-primary btn-sm">+ Upload Ticket for Student</a>
+      </div>
+    </div>
+
+    <!-- Tickets Table -->
+    <div class="table-responsive">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Ticket Pass ID</th>
+            <th>Student Name & Email</th>
+            <th>Uploaded Date</th>
+            <th>Storage Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="tickets-overview-table-body">
+          <tr>
+            <td colspan="5" style="text-align: center; padding: 2rem;">Loading tickets repository...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>© 2026 Freshers Party Admin Console.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/supabase.js"></script>
+  <script src="../js/ui-helpers.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/admin.js"></script>
+
+</body>
+</html>

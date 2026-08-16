@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Ticket — Freshers Party 2026</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="container nav-container">
+      <a href="dashboard.html" class="nav-logo">
+        <span>FRESHERS 2026</span>
+        <span class="logo-badge">UNLOCKED TICKET</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="dashboard.html" class="btn btn-sm btn-secondary">← Back to Dashboard</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container" style="padding: 3rem 1.5rem 5rem;">
+
+    <!-- Loading State -->
+    <div id="ticket-loading-state" class="glass-card" style="text-align: center; padding: 4rem 2rem;">
+      <div class="spinner" style="width: 40px; height: 40px; margin: 0 auto 1.5rem; border-width: 4px;"></div>
+      <h2>Authorizing <span class="gradient-text">Private Ticket Access</span></h2>
+      <p style="margin-top: 0.5rem;">Validating identity verification and generating secure temporary PDF URL...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="ticket-error-state" class="glass-card" style="display: none; text-align: center; padding: 4rem 2rem; border-left: 4px solid var(--danger);">
+      <div style="font-size: 3.5rem; margin-bottom: 0.5rem;">🔒</div>
+      <h2 style="color: var(--danger); margin-bottom: 1rem;">Ticket Access Locked</h2>
+      <p id="ticket-error-message" style="margin-bottom: 2rem; font-size: 1.05rem;">
+        Your ticket access could not be authorized.
+      </p>
+      <a id="ticket-error-redirect-btn" href="dashboard.html" class="btn btn-primary">Back to Dashboard</a>
+    </div>
+
+    <!-- Ticket Viewer Content -->
+    <div id="ticket-viewer-content" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+        <div>
+          <span class="badge badge-live">✓ VERIFIED & UNLOCKED</span>
+          <h1 style="font-size: 2rem; margin-top: 0.5rem;">
+            Ticket Pass ID: <span id="display-ticket-id" class="gradient-text-gold">FP26-XXXX</span>
+          </h1>
+        </div>
+        <div>
+          <a id="download-pdf-btn" href="#" class="btn btn-primary" style="padding: 0.9rem 1.8rem; font-size: 1rem;">
+            📥 DOWNLOAD PDF TICKET
+          </a>
+        </div>
+      </div>
+
+      <div class="pdf-container">
+        <iframe id="pdf-frame" title="Event Ticket PDF"></iframe>
+      </div>
+
+      <div style="margin-top: 1.5rem; text-align: center; font-size: 0.85rem; color: var(--text-dim);">
+        🛡️ Secure Ticket Link. Generated dynamically for authorized student account.
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>© 2026 Freshers Party Digital Ticket Portal.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/ui-helpers.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/ticket.js"></script>
+
+</body>
+</html>

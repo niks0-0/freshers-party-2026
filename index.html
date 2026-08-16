@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Freshers Party 2026 — Official Digital Portal</title>
+  <meta name="description" content="Official registration and secure digital ticket portal for Freshers Party 2026.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/auth.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="container nav-container">
+      <a href="index.html" class="nav-logo">
+        <span>FRESHERS 2026</span>
+        <span class="logo-badge">PORTAL</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#event-info" class="nav-link">Event Details</a></li>
+        <li><a href="#register" class="nav-link">Registration</a></li>
+        <li><a href="login.html" class="btn btn-sm btn-primary">Student Login</a></li>
+        <li><a href="admin/login.html" class="nav-link" style="font-size: 0.8rem; opacity: 0.7;">Admin</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero-section" style="padding: 5rem 0 3rem; text-align: center;">
+    <div class="container container-narrow">
+      <span class="badge badge-live" style="margin-bottom: 1.5rem;">🎉 REGISTRATION OPEN FOR BATCH 2026</span>
+      <h1 style="margin-bottom: 1rem;">
+        WELCOME TO <br>
+        <span class="gradient-text event-name-display">FRESHERS PARTY 2026</span>
+      </h1>
+      <p style="font-size: 1.15rem; margin-bottom: 2rem;">
+        Get ready for the most awaited night of the year! Music, dance, food, awards, and unforgettable memories.
+      </p>
+      <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="#register" class="btn btn-primary" style="padding: 1rem 2.2rem; font-size: 1.05rem;">REGISTER NOW 🎟️</a>
+        <a href="login.html" class="btn btn-secondary" style="padding: 1rem 2rem; font-size: 1.05rem;">ACCESS TICKET 🔐</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Event Information Section -->
+  <section id="event-info" style="padding: 3rem 0;">
+    <div class="container">
+      <div style="text-align: center; margin-bottom: 2.5rem;">
+        <h2>Event <span class="gradient-text">Information</span></h2>
+        <p>Key event guidelines, venue details, and schedules</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+        <div class="glass-card">
+          <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">📅</div>
+          <h3>Date & Time</h3>
+          <p id="display-event-date" style="font-weight: 600; color: var(--text-main); margin-top: 0.5rem;">August 21, 2026</p>
+          <p id="display-event-time">05:00 PM IST</p>
+        </div>
+
+        <div class="glass-card">
+          <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">📍</div>
+          <h3>Venue & Campus</h3>
+          <p id="display-event-venue" style="font-weight: 600; color: var(--text-main); margin-top: 0.5rem;">Grand College Auditorium</p>
+          <p id="display-college-name">College of Engineering & Technology</p>
+        </div>
+
+        <div class="glass-card">
+          <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">👗</div>
+          <h3>Dress Code</h3>
+          <p style="font-weight: 600; color: var(--text-main); margin-top: 0.5rem;">Ethnic / Western Formal</p>
+          <p>Dazzle in your best evening attire!</p>
+        </div>
+      </div>
+
+      <!-- Instructions Box -->
+      <div class="glass-card" style="margin-top: 2rem; background: rgba(13, 18, 30, 0.7);">
+        <h3 style="margin-bottom: 0.75rem;">📋 Important Instructions</h3>
+        <p id="display-instructions" style="white-space: pre-line; line-height: 1.7;">
+          1. Carry your physical College ID card along with your digital ticket PDF.
+          2. Gate opens at 04:30 PM. Entry will strictly close at 06:00 PM.
+          3. Digital ticket QR code will be scanned at the venue entrance.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Registration Form Section -->
+  <section id="register" style="padding: 3rem 0 5rem;">
+    <div class="container container-narrow">
+      <div class="glass-card">
+        <div style="text-align: center; margin-bottom: 2rem;">
+          <h2>Student <span class="gradient-text">Registration</span></h2>
+          <p>Fill out the form below to register your entry for Freshers Party 2026.</p>
+        </div>
+
+        <!-- Registration Success Notification Box -->
+        <div id="registration-success-box" style="display: none; padding: 1.5rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: var(--radius-md); text-align: center; margin-bottom: 1.5rem;">
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎉</div>
+          <h3 style="color: var(--success);">Registration & Account Created!</h3>
+          <p style="margin-top: 0.5rem; color: var(--text-main);">
+            Your student account has been created successfully. <br>
+            Default Login Password: <strong style="color: var(--primary);">Freshers@2026</strong>
+          </p>
+          <a href="login.html" class="btn btn-primary btn-sm" style="margin-top: 1rem;">Go to Student Login</a>
+        </div>
+
+        <form id="registration-form">
+          <div class="form-group">
+            <label for="reg-name">Full Name *</label>
+            <input type="text" id="reg-name" placeholder="e.g. Rahul Patel" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="reg-email">Email Address *</label>
+              <input type="email" id="reg-email" placeholder="rahul@example.com" required>
+            </div>
+            <div class="form-group">
+              <label for="reg-mobile">Mobile Number *</label>
+              <input type="tel" id="reg-mobile" placeholder="10-digit mobile number" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="reg-course">Select Course / Stream *</label>
+            <select id="reg-course" required>
+              <option value="">Choose Course...</option>
+              <option value="BCA">BCA</option>
+              <option value="MCA GIA (Sem-1)">MCA GIA (Sem-1)</option>
+              <option value="MCA SFI (Sem-1)">MCA SFI (Sem-1)</option>
+              <option value="MCA GIA (Sem-3)">MCA GIA (Sem-3)</option>
+              <option value="MCA SFI (Sem-3)">MCA SFI (Sem-3)</option>
+              <option value="MSc IT">MSc IT</option>
+              <option value="PGDCA">PGDCA</option>
+            </select>
+          </div>
+
+          <div style="padding: 0.85rem 1rem; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: var(--radius-md); font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1rem;">
+            🔑 Default Login Password for all students: <strong style="color: var(--text-main);">Freshers@2026</strong>
+          </div>
+
+          <button type="submit" id="register-submit-btn" class="btn btn-primary btn-full" style="margin-top: 0.5rem;">
+            SUBMIT REGISTRATION
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>© 2026 Freshers Party Digital Portal. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Supabase CDN & JS Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/ui-helpers.js"></script>
+  <script src="js/registration.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Student — Admin Portal</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="container nav-container">
+      <a href="dashboard.html" class="nav-logo">
+        <span>FRESHERS 2026</span>
+        <span class="logo-badge" style="background: var(--accent);">ADMIN</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="students.html" class="btn btn-sm btn-secondary">← Back to Students</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container" style="padding: 2.5rem 1.5rem 5rem;">
+
+    <div class="admin-header-bar">
+      <div>
+        <h1 style="font-size: 2rem;">Manage <span class="gradient-text">Student Profile</span></h1>
+        <p>Upload individual PDF ticket and manage account status</p>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1rem;">
+      <!-- Student Info Card -->
+      <div class="glass-card">
+        <h3 style="margin-bottom: 1.25rem;">📄 Student Information</h3>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <div>
+            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Full Name</div>
+            <div id="detail-name" style="font-size: 1.1rem; font-weight: 700; color: var(--text-main);">Loading...</div>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Email Address</div>
+            <div id="detail-email" style="font-size: 0.95rem; color: var(--text-muted);">Loading...</div>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Course & Stream</div>
+            <div id="detail-course" style="font-size: 0.95rem; color: var(--text-muted);">Loading...</div>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Mobile Number</div>
+            <div id="detail-mobile" style="font-size: 0.95rem; color: var(--text-muted);">Loading...</div>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 0.2rem;">Ticket Upload Status</div>
+            <div id="detail-ticket-status" class="badge badge-pending">NOT UPLOADED</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ticket Upload Card -->
+      <div class="glass-card">
+        <h3 style="margin-bottom: 0.5rem;">🎟️ Upload Individual Ticket PDF</h3>
+        <p style="font-size: 0.875rem; margin-bottom: 1.5rem;">Select the student's personalized PDF ticket to upload to private storage.</p>
+
+        <form id="ticket-upload-form">
+          <div class="form-group">
+            <label for="ticket-pdf-file">Select PDF File (.pdf, Max 10MB) *</label>
+            <input type="file" id="ticket-pdf-file" accept="application/pdf" required style="padding: 0.6rem;">
+          </div>
+
+          <div style="padding: 1rem; background: rgba(13, 18, 30, 0.6); border-radius: var(--radius-md); border: 1px solid var(--border-color); margin: 1rem 0; font-size: 0.85rem; color: var(--text-muted);">
+            🛡️ PDF files are stored strictly in private Supabase Storage. Students can download their ticket ONLY after completing email verification when tickets are set LIVE.
+          </div>
+
+          <button type="submit" id="upload-ticket-submit-btn" class="btn btn-primary btn-full">
+            UPLOAD / REPLACE TICKET PDF
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>© 2026 Freshers Party Admin Console.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/supabase.js"></script>
+  <script src="../js/ui-helpers.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/admin.js"></script>
+
+</body>
+</html>

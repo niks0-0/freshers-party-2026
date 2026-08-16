@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Settings — Admin Portal</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="container nav-container">
+      <a href="dashboard.html" class="nav-logo">
+        <span>FRESHERS 2026</span>
+        <span class="logo-badge" style="background: var(--accent);">ADMIN</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+        <li><a href="students.html" class="nav-link">Students</a></li>
+        <li><a href="tickets.html" class="nav-link">Tickets</a></li>
+        <li><a href="settings.html" class="nav-link active">Settings</a></li>
+        <li><button onclick="logoutUser('../login.html')" class="btn btn-sm btn-secondary">Logout</button></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container container-narrow" style="padding: 2.5rem 1.5rem 5rem;">
+
+    <div class="admin-header-bar">
+      <div>
+        <h1 style="font-size: 2rem;">Event <span class="gradient-text">Settings</span></h1>
+        <p>Global ticket LIVE toggle switch & event metadata</p>
+      </div>
+    </div>
+
+    <!-- CORE REQUIREMENT: GLOBAL TICKET LIVE / OFF SWITCH -->
+    <div class="glass-card" style="margin-bottom: 2rem; border-left: 4px solid var(--primary);">
+      <h3 style="margin-bottom: 0.5rem;">🔴 GLOBAL TICKET LIVE CONTROL</h3>
+      <p style="font-size: 0.9rem; margin-bottom: 1.25rem;">
+        When <strong>OFF</strong>, tickets are locked for all students regardless of account status. When <strong>LIVE</strong>, verified students can generate and download their tickets.
+      </p>
+
+      <div class="switch-container">
+        <label class="switch">
+          <input type="checkbox" id="global-ticket-live-toggle">
+          <span class="slider"></span>
+        </label>
+        <div>
+          <div style="font-weight: 700; font-size: 1rem; color: var(--text-main);">TICKET RELEASE SWITCH</div>
+          <div id="switch-status-label" class="badge badge-off" style="margin-top: 0.25rem;">
+            <span class="badge-dot"></span> TICKETS OFF
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Event Information Form -->
+    <div class="glass-card">
+      <h3 style="margin-bottom: 1.5rem;">📝 Event Details Configurator</h3>
+
+      <form id="event-settings-form">
+        <div class="form-group">
+          <label for="event-name-input">Event Name *</label>
+          <input type="text" id="event-name-input" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="event-date-input">Event Date *</label>
+            <input type="date" id="event-date-input" required>
+          </div>
+          <div class="form-group">
+            <label for="event-time-input">Event Time *</label>
+            <input type="text" id="event-time-input" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="event-venue-input">Venue *</label>
+          <input type="text" id="event-venue-input" required>
+        </div>
+
+        <div class="form-group">
+          <label for="event-college-input">College Name *</label>
+          <input type="text" id="event-college-input" required>
+        </div>
+
+        <div class="form-group">
+          <label for="event-instructions-input">Important Event Instructions</label>
+          <textarea id="event-instructions-input" rows="4"></textarea>
+        </div>
+
+        <button type="submit" id="save-settings-submit-btn" class="btn btn-primary btn-full" style="margin-top: 1rem;">
+          SAVE EVENT SETTINGS
+        </button>
+      </form>
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>© 2026 Freshers Party Admin Console.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/supabase.js"></script>
+  <script src="../js/ui-helpers.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/admin.js"></script>
+
+</body>
+</html>

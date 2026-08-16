@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Portal — Freshers Party 2026</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="container nav-container">
+      <a href="dashboard.html" class="nav-logo">
+        <span>FRESHERS 2026</span>
+        <span class="logo-badge">STUDENT PORTAL</span>
+      </a>
+      <ul class="nav-links">
+        <li><span id="student-name-header" style="font-weight: 600; color: var(--text-main);">Welcome 👋</span></li>
+        <li><button onclick="logoutUser()" class="btn btn-sm btn-secondary">Logout</button></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container" style="padding: 2.5rem 1.5rem 5rem;">
+    <!-- Welcome Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+      <div>
+        <h1 style="font-size: 2rem;">Student <span class="gradient-text">Dashboard</span></h1>
+        <p>Manage your profile registration details and digital ticket status</p>
+      </div>
+      <div id="ticket-live-badge" class="badge badge-off">
+        <span class="badge-dot"></span> TICKETS OFF
+      </div>
+    </div>
+
+    <!-- Status Message Banner -->
+    <div id="ticket-status-message" class="glass-card" style="padding: 1rem 1.5rem; margin-bottom: 2rem; border-left: 4px solid var(--warning);">
+      Checking ticket availability...
+    </div>
+
+    <div class="dashboard-grid">
+      <!-- Profile Card -->
+      <div class="glass-card profile-card">
+        <div class="profile-header">
+          <div id="student-avatar-initial" class="avatar-circle">S</div>
+          <div>
+            <h3 id="student-name-display">Student Name</h3>
+            <p id="student-email-display" style="font-size: 0.875rem;">email@example.com</p>
+          </div>
+        </div>
+
+        <div>
+          <h4 style="font-size: 0.9rem; text-transform: uppercase; color: var(--text-dim); margin-bottom: 1rem;">Registration Details</h4>
+          <div class="profile-info-grid">
+            <div class="info-item">
+              <div class="info-label">Student ID</div>
+              <div id="student-id-display" class="info-value">Loading...</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Mobile Number</div>
+              <div id="student-mobile-display" class="info-value">Loading...</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Course</div>
+              <div id="student-course-display" class="info-value">Loading...</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Semester</div>
+              <div id="student-semester-display" class="info-value">Loading...</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size: 0.8rem; color: var(--text-dim); border-top: 1px solid var(--border-color); padding-top: 1rem;">
+          🔒 Sensitive profile details can only be modified by event administrators.
+        </div>
+      </div>
+
+      <!-- Ticket Card Preview -->
+      <div class="ticket-preview-card">
+        <h3 style="margin-bottom: 0.5rem;">🎟️ YOUR EVENT TICKET</h3>
+        <p style="margin-bottom: 1.5rem; font-size: 0.875rem;">Freshers Party 2026 Pass</p>
+
+        <div class="ticket-locked-overlay">
+          <div class="lock-icon">🔐</div>
+          <div class="blurred-stub">FP26-XXXX-TICKET</div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">
+            Verification & Ticket Authorization Required
+          </p>
+        </div>
+
+        <button id="generate-ticket-btn" class="btn btn-primary btn-full" style="padding: 1rem; font-size: 1rem;">
+          GENERATE TICKET
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>© 2026 Freshers Party Digital Ticket System.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/ui-helpers.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/dashboard.js"></script>
+
+</body>
+</html>

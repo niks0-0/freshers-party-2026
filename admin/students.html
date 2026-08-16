@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Management — Admin Portal</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="container nav-container">
+      <a href="dashboard.html" class="nav-logo">
+        <span>FRESHERS 2026</span>
+        <span class="logo-badge" style="background: var(--accent);">ADMIN</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+        <li><a href="students.html" class="nav-link active">Students</a></li>
+        <li><a href="tickets.html" class="nav-link">Tickets</a></li>
+        <li><a href="settings.html" class="nav-link">Settings</a></li>
+        <li><button onclick="logoutUser('../login.html')" class="btn btn-sm btn-secondary">Logout</button></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container" style="padding: 2.5rem 1.5rem 5rem;">
+
+    <div class="admin-header-bar">
+      <div>
+        <h1 style="font-size: 2rem;">Student <span class="gradient-text">Management</span></h1>
+        <p>View registrations, activate login accounts, and manage ticket assignments</p>
+      </div>
+      <div>
+        <button onclick="openModal('create-student-modal')" class="btn btn-primary btn-sm">+ Create Student Account</button>
+      </div>
+    </div>
+
+    <!-- Search & Filter Toolbar -->
+    <div class="toolbar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="student-search-input" placeholder="Search by student name or email...">
+      </div>
+    </div>
+
+    <!-- Students Table -->
+    <div class="table-responsive">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Full Name & Email</th>
+            <th>Course / Stream</th>
+            <th>Mobile</th>
+            <th>Account Status</th>
+            <th>Ticket Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="students-table-body">
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 2rem;">Loading student database...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- Create Student Account Modal -->
+  <div id="create-student-modal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Create Student Login Account</h3>
+        <button onclick="closeModal('create-student-modal')" class="close-btn">×</button>
+      </div>
+
+      <form id="create-student-account-form">
+        <div class="form-group">
+          <label for="create-fullname">Full Name *</label>
+          <input type="text" id="create-fullname" placeholder="e.g. Ananya Sharma" required>
+        </div>
+
+        <div class="form-group">
+          <label for="create-email">Student Email Address *</label>
+          <input type="email" id="create-email" placeholder="ananya@example.com" required>
+        </div>
+
+        <div class="form-group">
+          <label for="create-course">Select Course / Stream *</label>
+          <select id="create-course" required>
+            <option value="BCA">BCA</option>
+            <option value="MCA GIA (Sem-1)">MCA GIA (Sem-1)</option>
+            <option value="MCA SFI (Sem-1)">MCA SFI (Sem-1)</option>
+            <option value="MCA GIA (Sem-3)">MCA GIA (Sem-3)</option>
+            <option value="MCA SFI (Sem-3)">MCA SFI (Sem-3)</option>
+            <option value="MSc IT">MSc IT</option>
+            <option value="PGDCA">PGDCA</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="create-password">Initial Password *</label>
+          <input type="text" id="create-password" value="Freshers@2026" required>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+          <button type="button" onclick="closeModal('create-student-modal')" class="btn btn-secondary btn-sm">Cancel</button>
+          <button type="submit" id="create-account-submit-btn" class="btn btn-primary btn-sm">Create Account</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <p>© 2026 Freshers Party Admin Console.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/supabase.js"></script>
+  <script src="../js/ui-helpers.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/admin.js"></script>
+
+</body>
+</html>
