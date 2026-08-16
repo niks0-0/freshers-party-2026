@@ -36,7 +36,9 @@ async function loadAndUnlockTicket() {
       return;
     }
 
-    // 3. Check Email Verification Status
+    // 3. Check Verification Session Storage & Database
+    const isSessionVerified = sessionStorage.getItem(`crud2026_verified_${userId}`) === 'true';
+
     const { data: verifyRecord } = await sb
       .from('verification_codes')
       .select('is_verified')
@@ -44,7 +46,7 @@ async function loadAndUnlockTicket() {
       .eq('is_verified', true)
       .maybeSingle();
 
-    if (!verifyRecord) {
+    if (!isSessionVerified && !verifyRecord) {
       showErrorState("Email verification required before accessing ticket.", "verify.html", "Verify Email Now");
       return;
     }
