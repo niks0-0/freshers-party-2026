@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Email Verification — CRUD 2026</title>
-  <link rel="stylesheet" href="css/style.css?v=2.0">
-  <link rel="stylesheet" href="css/auth.css?v=2.0">
-  <link rel="stylesheet" href="css/dashboard.css?v=2.0">
+  <link rel="stylesheet" href="css/style.css?v=2.2">
+  <link rel="stylesheet" href="css/auth.css?v=2.2">
+  <link rel="stylesheet" href="css/dashboard.css?v=2.2">
 </head>
 <body>
 
@@ -33,10 +33,10 @@
       <!-- Email Notification Card -->
       <div style="padding: 0.85rem 1rem; background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.35); border-radius: var(--radius-md); font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem; text-align: left;">
         <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-main); font-weight: 600; margin-bottom: 0.2rem;">
-          <span>📩</span> <span>Check Your Registered Email Inbox</span>
+          <span>📩</span> <span>Check Your Registered Gmail Inbox</span>
         </div>
         <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">
-          A 6-digit verification security code has been generated for your account. Please enter the code below to unlock your ticket.
+          A 6-digit verification code has been dispatched to your email inbox. Please check your inbox (or Spam folder) and enter the code below.
         </p>
       </div>
 
@@ -55,16 +55,6 @@
         </button>
       </form>
 
-      <!-- Developer Test Code Reveal Link -->
-      <div style="margin-bottom: 1rem;">
-        <button type="button" onclick="toggleTestCodeDisplay()" class="btn btn-sm btn-secondary" style="font-size: 0.75rem; opacity: 0.8;">
-          🔍 Revealer (Developer Test Mode)
-        </button>
-        <div id="test-code-box" style="display: none; margin-top: 0.75rem; padding: 0.6rem; background: rgba(0,0,0,0.5); border-radius: var(--radius-sm); font-size: 0.85rem; color: #a5b4fc; font-weight: 700;">
-          Test Code: <span id="test-code-value">######</span>
-        </div>
-      </div>
-
       <div class="resend-timer">
         <span id="resend-timer-text">Resend available in 60s</span> <br>
         <button id="resend-code-btn" class="btn btn-sm btn-secondary" style="margin-top: 0.5rem;" disabled>Resend Verification Code</button>
@@ -74,25 +64,16 @@
 
   <footer class="footer">
     <div class="container">
-      <p>© 2026 CRUD 2026 Digital Ticket System.</p>
+      <p>© 2026 CRUD 2026 Digital Ticket System • Crafted by <span class="credit-tag">NIKSLAB</span></p>
     </div>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=2.0"></script>
-  <script src="js/supabase.js?v=2.0"></script>
-  <script src="js/ui-helpers.js?v=2.0"></script>
-  <script src="js/auth.js?v=2.0"></script>
-  <script src="js/verify.js?v=2.0"></script>
-
-  <script>
-    function toggleTestCodeDisplay() {
-      const box = document.getElementById('test-code-box');
-      if (box) {
-        box.style.display = box.style.display === 'none' ? 'block' : 'none';
-      }
-    }
-  </script>
+  <script src="js/config.js?v=2.2"></script>
+  <script src="js/supabase.js?v=2.2"></script>
+  <script src="js/ui-helpers.js?v=2.2"></script>
+  <script src="js/auth.js?v=2.2"></script>
+  <script src="js/verify.js?v=2.2"></script>
 
 </body>
 </html>
