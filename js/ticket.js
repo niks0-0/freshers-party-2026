@@ -1,35 +1,96 @@
 /* ========================================================
-   FRESHERS PARTY 2026 — PURE PDF VIEWER WITH SS PROTECTION
+   FRESHERS PARTY 2026 — TOUCH-REVEAL & LIVE CLOCK TICKET PASS
    ======================================================== */
 
 let currentUserAuth = null;
 let signedPdfUrl = null;
+let liveClockInterval = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   currentUserAuth = await requireStudentAuth();
   if (!currentUserAuth) return;
 
-  setupScreenshotProtection();
+  setupLiveSecondsClock();
+  setupTouchRevealEngine();
+  setupSecurityShortcutBlocker();
   await loadAndUnlockTicket();
 });
 
-// Pure anti-screenshot & anti-capture protection engine
-function setupScreenshotProtection() {
+// 1. Live Seconds Verification Clock Engine
+function setupLiveSecondsClock() {
+  const clockEl = document.getElementById('clock-timestamp-str');
+
+  function updateClock() {
+    if (!clockEl) return;
+    const now = new Date();
+    const formatted = now.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    }) + ', ' + now.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+
+    clockEl.textContent = formatted;
+  }
+
+  updateClock();
+  if (liveClockInterval) clearInterval(liveClockInterval);
+  liveClockInterval = setInterval(updateClock, 1000);
+}
+
+// 2. Press & Hold Touch-Reveal Engine for Mobile & Desktop
+function setupTouchRevealEngine() {
+  const interactiveCard = document.getElementById('ticket-interactive-card');
+  const shieldOverlay = document.getElementById('touch-reveal-shield');
+
+  if (!interactiveCard || !shieldOverlay) return;
+
+  function revealPass(e) {
+    if (e) e.preventDefault();
+    shieldOverlay.classList.add('revealed');
+  }
+
+  function hidePass(e) {
+    if (e) e.preventDefault();
+    shieldOverlay.classList.remove('revealed');
+  }
+
+  // Touch events for Mobile
+  interactiveCard.addEventListener('touchstart', revealPass, { passive: false });
+  interactiveCard.addEventListener('touchend', hidePass, { passive: false });
+  interactiveCard.addEventListener('touchcancel', hidePass, { passive: false });
+
+  // Mouse events for Laptop / Desktop
+  interactiveCard.addEventListener('mousedown', revealPass);
+  interactiveCard.addEventListener('mouseup', hidePass);
+  interactiveCard.addEventListener('mouseleave', hidePass);
+
+  // Auto hide on window blur or app switch
+  window.addEventListener('blur', hidePass);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) hidePass();
+  });
+}
+
+// 3. Security Shortcut & Print Blocker
+function setupSecurityShortcutBlocker() {
   document.addEventListener('contextmenu', e => e.preventDefault());
   document.addEventListener('selectstart', e => e.preventDefault());
   document.addEventListener('dragstart', e => e.preventDefault());
 
   document.addEventListener('keyup', e => {
     if (e.key === 'PrintScreen') {
-      triggerBlurShield();
       navigator.clipboard.writeText('');
-      showToast('Screenshot attempt blocked.', 'warning');
+      showToast('Screenshot blocked! Ticket pass protected.', 'warning');
     }
   });
 
   document.addEventListener('keydown', e => {
     if (e.key === 'PrintScreen') {
-      triggerBlurShield();
       navigator.clipboard.writeText('');
       e.preventDefault();
     }
@@ -38,36 +99,12 @@ function setupScreenshotProtection() {
       (e.key === 'p' || e.key === 'P' || e.key === 's' || e.key === 'S' || e.key === 'u' || e.key === 'U')
     ) {
       e.preventDefault();
-      triggerBlurShield();
-      showToast('Screenshots & printing are restricted.', 'warning');
+      showToast('Screenshots and printing are restricted.', 'warning');
     }
     if (e.key === 'F12') {
       e.preventDefault();
     }
   });
-
-  window.addEventListener('blur', () => {
-    document.body.classList.add('screen-protected');
-  });
-
-  window.addEventListener('focus', () => {
-    document.body.classList.remove('screen-protected');
-  });
-
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      document.body.classList.add('screen-protected');
-    } else {
-      document.body.classList.remove('screen-protected');
-    }
-  });
-}
-
-function triggerBlurShield() {
-  document.body.classList.add('screen-protected');
-  setTimeout(() => {
-    document.body.classList.remove('screen-protected');
-  }, 2000);
 }
 
 async function loadAndUnlockTicket() {
@@ -76,10 +113,12 @@ async function loadAndUnlockTicket() {
   const userEmail = currentUserAuth.user.email;
 
   try {
-    const nameEl = document.getElementById('ticket-student-name');
-    if (nameEl) {
-      nameEl.textContent = currentUserAuth.profile?.full_name || currentUserAuth.user.user_metadata?.full_name || 'Student Ticket Pass';
-    }
+    const studentName = currentUserAuth.profile?.full_name || currentUserAuth.user.user_metadata?.full_name || 'Student';
+    const passNameEl = document.getElementById('pass-attendee-name');
+    if (passNameEl) passNameEl.textContent = studentName;
+
+    const emailTagEl = document.getElementById('ticket-email-tag');
+    if (emailTagEl) emailTagEl.textContent = userEmail;
 
     const { data: settings } = await sb
       .from('event_settings')
@@ -127,11 +166,13 @@ async function loadAndUnlockTicket() {
     if (!ticket || !ticket.storage_path) {
       const { data: detail } = await sb
         .from('student_details')
-        .select('id')
+        .select('id, full_name')
         .eq('email', userEmail)
         .maybeSingle();
 
       if (detail) {
+        if (detail.full_name && passNameEl) passNameEl.textContent = detail.full_name;
+
         const { data: tFallback } = await sb
           .from('tickets')
           .select('*')
@@ -142,8 +183,18 @@ async function loadAndUnlockTicket() {
       }
     }
 
+    // Display Ticket ID & QR Code
+    const ticketCode = ticket ? (ticket.ticket_id || 'FR002') : 'FR002';
+    const passTicketIdEl = document.getElementById('pass-ticket-id');
+    if (passTicketIdEl) passTicketIdEl.textContent = ticketCode;
+
+    const qrImg = document.getElementById('pass-qr-image');
+    if (qrImg) {
+      const qrData = encodeURIComponent(`CRUD2026-ENTRY-${ticketCode}-${userEmail}`);
+      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}`;
+    }
+
     if (!ticket || !ticket.storage_path) {
-      showErrorState("Your individual ticket PDF has not been uploaded yet by administrators.");
       return;
     }
 
@@ -152,21 +203,13 @@ async function loadAndUnlockTicket() {
       .from('tickets')
       .createSignedUrl(ticket.storage_path, 300, { download: false });
 
-    if (storageErr || !signedData || !signedData.signedUrl) {
-      showErrorState("Failed to authorize private ticket access.");
-      return;
-    }
-
-    signedPdfUrl = signedData.signedUrl;
-
-    const ticketIdEl = document.getElementById('display-ticket-id');
-    if (ticketIdEl) {
-      ticketIdEl.textContent = `Ticket ID: ${ticket.ticket_id || 'FP26-PASS'}`;
-    }
-
-    const iframe = document.getElementById('pdf-frame');
-    if (iframe) {
-      iframe.src = `${signedPdfUrl}#toolbar=0&navpanes=0&scrollbar=0`;
+    if (!storageErr && signedData && signedData.signedUrl) {
+      signedPdfUrl = signedData.signedUrl;
+      const iframe = document.getElementById('pdf-frame');
+      if (iframe) {
+        iframe.src = `${signedPdfUrl}#toolbar=0&navpanes=0&scrollbar=0`;
+        iframe.style.display = 'block';
+      }
     }
 
   } catch (err) {

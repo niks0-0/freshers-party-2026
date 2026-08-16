@@ -1,5 +1,5 @@
 /* ==========================================================
-   CRUD 2026 — DASHBOARD, OTP & LANDSCAPE TICKET PASS STYLES
+   CRUD 2026 — DASHBOARD, OTP & TOUCH-REVEAL TICKET STYLES
    ========================================================== */
 
 .dashboard-grid {
@@ -180,7 +180,7 @@
   text-align: center;
 }
 
-/* LANDSCAPE 16:9 TICKET PASS CONTAINER (EXACT MATCH FOR OFFICIAL PASS) */
+/* LANDSCAPE 16:9 TICKET PASS CONTAINER WITH TOUCH-REVEAL OVERLAY */
 .pdf-container {
   position: relative;
   width: 100%;
@@ -194,149 +194,55 @@
   box-shadow: var(--shadow-md), var(--shadow-glow);
 }
 
-/* Official Ticket Pass Native Layout */
-.official-ticket-card {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at 80% 20%, rgba(30, 41, 69, 0.9), #0b1120);
-  border-radius: 16px;
-  display: grid;
-  grid-template-columns: 1.6fr 1fr;
-  padding: 2.2rem 2.5rem;
-  border: 1.5px solid rgba(255, 255, 255, 0.12);
-  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6);
-  user-select: none;
-  overflow: hidden;
-}
-
-/* Perforated Dashed Line Divider & Circles */
-.ticket-tear-line {
+/* Press & Hold Touch-Reveal Overlay */
+.touch-reveal-overlay {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 61.5%;
-  width: 1px;
-  border-left: 2px dashed rgba(255, 255, 255, 0.22);
-  z-index: 5;
-}
-
-.ticket-tear-circle-top {
-  position: absolute;
-  top: -14px;
-  left: 61.5%;
-  transform: translateX(-50%);
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #070a12;
-  border: 1.5px solid rgba(255, 255, 255, 0.15);
-  z-index: 6;
-}
-
-.ticket-tear-circle-bottom {
-  position: absolute;
-  bottom: -14px;
-  left: 61.5%;
-  transform: translateX(-50%);
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #070a12;
-  border: 1.5px solid rgba(255, 255, 255, 0.15);
-  z-index: 6;
-}
-
-.ticket-left-section {
+  inset: 0;
+  z-index: 20;
+  background: rgba(10, 14, 26, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  z-index: 2;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  text-align: center;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease, filter 0.15s ease;
+  border-radius: var(--radius-md);
 }
 
-.admit-tag {
-  font-size: clamp(0.65rem, 1.8vw, 0.85rem);
-  font-weight: 800;
-  color: #06b6d4;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+.touch-reveal-overlay.revealed {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
 }
 
-.ticket-main-title {
-  font-family: var(--font-heading);
-  font-size: clamp(1.3rem, 3.8vw, 2.3rem);
-  font-weight: 900;
-  color: white;
-  line-height: 1.1;
-  letter-spacing: 0.02em;
+.touch-icon-pulse {
+  font-size: 3rem;
+  animation: pulseTouch 1.8s infinite ease-in-out;
 }
 
-.ticket-subtitle {
-  font-size: clamp(0.65rem, 1.6vw, 0.8rem);
-  font-weight: 700;
-  color: #64748b;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  margin-bottom: 0.6rem;
+@keyframes pulseTouch {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.15); opacity: 1; }
 }
 
-.ticket-detail-row {
-  display: flex;
-  align-items: baseline;
+/* Live Dynamic Timestamp Badge */
+.live-clock-badge {
+  display: inline-flex;
+  align-items: center;
   gap: 0.5rem;
-  font-size: clamp(0.75rem, 2vw, 1.05rem);
-}
-
-.detail-label {
-  font-size: clamp(0.6rem, 1.5vw, 0.75rem);
+  padding: 0.35rem 0.85rem;
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
   font-weight: 700;
-  color: #64748b;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.detail-value {
+  color: #c084fc;
   font-family: monospace;
-  font-size: clamp(0.9rem, 2.4vw, 1.35rem);
-  font-weight: 800;
-  color: #34d399;
-  letter-spacing: 0.05em;
-}
-
-.ticket-right-section {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding-left: 1.5rem;
-  z-index: 2;
-}
-
-.qr-white-card {
-  background: white;
-  padding: clamp(0.5rem, 1.8vw, 1rem);
-  border-radius: 14px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.qr-white-card img, .qr-white-card svg, .qr-white-card canvas {
-  width: clamp(90px, 22vw, 170px);
-  height: clamp(90px, 22vw, 170px);
-  display: block;
-}
-
-@media (max-width: 600px) {
-  .official-ticket-card {
-    padding: 1.25rem 1.25rem;
-    grid-template-columns: 1.4fr 1fr;
-  }
-}
-
-@media (max-width: 420px) {
-  .official-ticket-card {
-    padding: 0.85rem 0.85rem;
-  }
 }
