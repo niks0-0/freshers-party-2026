@@ -6,6 +6,20 @@
   <title>Manage Student — Admin Portal</title>
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/admin.css">
+  <style>
+    .admin-detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 1rem;
+      width: 100%;
+    }
+    @media (max-width: 850px) {
+      .admin-detail-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
 
@@ -22,16 +36,16 @@
     </div>
   </nav>
 
-  <main class="container" style="padding: 2.5rem 1.5rem 5rem;">
+  <main class="container" style="padding: 2rem 1rem 4rem;">
 
     <div class="admin-header-bar">
       <div>
-        <h1 style="font-size: 2rem;">Manage <span class="gradient-text">Student Profile</span></h1>
+        <h1 style="font-size: 1.8rem;">Manage <span class="gradient-text">Student Profile</span></h1>
         <p>Upload individual PDF ticket and manage account status</p>
       </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1rem;">
+    <div class="admin-detail-grid">
       <!-- Student Info Card -->
       <div class="glass-card">
         <h3 style="margin-bottom: 1.25rem;">📄 Student Information</h3>
@@ -62,7 +76,7 @@
       <!-- Ticket Upload Card -->
       <div class="glass-card">
         <h3 style="margin-bottom: 0.5rem;">🎟️ Upload Individual Ticket PDF</h3>
-        <p style="font-size: 0.875rem; margin-bottom: 1.5rem;">Select the student's personalized PDF ticket to upload to private storage.</p>
+        <p style="font-size: 0.875rem; margin-bottom: 1.25rem;">Select the student's personalized PDF ticket to upload to private storage.</p>
 
         <form id="ticket-upload-form">
           <div class="form-group">
@@ -70,7 +84,7 @@
             <input type="file" id="ticket-pdf-file" accept="application/pdf" required style="padding: 0.6rem;">
           </div>
 
-          <div style="padding: 1rem; background: rgba(13, 18, 30, 0.6); border-radius: var(--radius-md); border: 1px solid var(--border-color); margin: 1rem 0; font-size: 0.85rem; color: var(--text-muted);">
+          <div style="padding: 0.85rem 1rem; background: rgba(13, 18, 30, 0.6); border-radius: var(--radius-md); border: 1px solid var(--border-color); margin: 1rem 0; font-size: 0.825rem; color: var(--text-muted);">
             🛡️ PDF files are stored strictly in private Supabase Storage. Students can download their ticket ONLY after completing email verification when tickets are set LIVE.
           </div>
 
