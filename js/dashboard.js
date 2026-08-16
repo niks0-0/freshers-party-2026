@@ -21,24 +21,41 @@ async function loadStudentDashboardData() {
   const userEmail = currentUserAuth.user.email;
 
   // Render User Name & Email
-  const profile = currentUserAuth.profile;
-  document.getElementById('student-name-display').textContent = profile.full_name || 'Student';
-  document.getElementById('student-email-display').textContent = profile.email;
-  document.getElementById('student-avatar-initial').textContent = (profile.full_name || 'S')[0].toUpperCase();
+  const profile = currentUserAuth.profile || {};
+  const nameDisplay = profile.full_name || currentUserAuth.user.user_metadata?.full_name || 'Student';
+
+  const nameHeader = document.getElementById('student-name-header');
+  if (nameHeader) nameHeader.textContent = `Welcome, ${nameDisplay} 👋`;
+
+  const nameEl = document.getElementById('student-name-display');
+  if (nameEl) nameEl.textContent = nameDisplay;
+
+  const emailEl = document.getElementById('student-email-display');
+  if (emailEl) emailEl.textContent = userEmail;
+
+  const avatarEl = document.getElementById('student-avatar-initial');
+  if (avatarEl) avatarEl.textContent = (nameDisplay || 'S')[0].toUpperCase();
 
   try {
-    // 1. Fetch Student Details (Course, Semester, Student ID, Mobile)
+    // 1. Fetch Student Details (Course, Mobile)
     const { data: details } = await sb
       .from('student_details')
       .select('*')
-      .eq('email', userEmail)
+      .or(`profile_id.eq.${userId},email.eq.${userEmail}`)
+      .limit(1)
       .maybeSingle();
 
     if (details) {
-      document.getElementById('student-id-display').textContent = details.student_id || 'N/A';
-      document.getElementById('student-course-display').textContent = details.course || 'N/A';
-      document.getElementById('student-semester-display').textContent = details.semester || 'N/A';
-      document.getElementById('student-mobile-display').textContent = details.mobile || 'N/A';
+      const mobileEl = document.getElementById('student-mobile-display');
+      if (mobileEl) mobileEl.textContent = details.mobile || 'N/A';
+
+      const courseEl = document.getElementById('student-course-display');
+      if (courseEl) courseEl.textContent = details.course || 'N/A';
+
+      if (details.full_name) {
+        if (nameEl) nameEl.textContent = details.full_name;
+        if (avatarEl) avatarEl.textContent = details.full_name[0].toUpperCase();
+      }
     }
 
     // 2. Fetch Global Event Settings (Is Ticket LIVE?)
@@ -46,7 +63,7 @@ async function loadStudentDashboardData() {
       .from('event_settings')
       .select('ticket_live, event_name, event_date, venue')
       .limit(1)
-      .single();
+      .maybeSingle();
 
     isTicketLive = settings ? settings.ticket_live : false;
 
@@ -83,23 +100,24 @@ async function loadStudentDashboardData() {
 
     // Render Ticket Status Box Text & Banner
     const statusBanner = document.getElementById('ticket-status-message');
-    if (!isTicketLive) {
-      statusBanner.className = 'info-banner warning-banner';
-      statusBanner.innerHTML = `🔒 <strong>Tickets are not live yet.</strong> Please wait for the administrator to release them.`;
-    } else if (!ticketData) {
-      statusBanner.className = 'info-banner danger-banner';
-      statusBanner.innerHTML = `⚠️ <strong>Ticket pending upload.</strong> Your individual PDF ticket has not been uploaded by organizers yet.`;
-    } else if (!isEmailVerified) {
-      statusBanner.className = 'info-banner warning-banner';
-      statusBanner.innerHTML = `📧 <strong>Email Verification Required.</strong> Click 'Generate Ticket' below to verify your email.`;
-    } else {
-      statusBanner.className = 'info-banner success-banner';
-      statusBanner.innerHTML = `✓ <strong>Ticket Unlocked & Ready!</strong> Click below to view and download your ticket PDF.`;
+    if (statusBanner) {
+      if (!isTicketLive) {
+        statusBanner.className = 'info-banner warning-banner';
+        statusBanner.innerHTML = `🔒 <strong>Tickets are not live yet.</strong> Please wait for the administrator to release them.`;
+      } else if (!ticketData) {
+        statusBanner.className = 'info-banner danger-banner';
+        statusBanner.innerHTML = `⚠️ <strong>Ticket pending upload.</strong> Your individual PDF ticket has not been uploaded by organizers yet.`;
+      } else if (!isEmailVerified) {
+        statusBanner.className = 'info-banner warning-banner';
+        statusBanner.innerHTML = `📧 <strong>Email Verification Required.</strong> Click 'Generate Ticket' below to verify your email.`;
+      } else {
+        statusBanner.className = 'info-banner success-banner';
+        statusBanner.innerHTML = `✓ <strong>Ticket Unlocked & Ready!</strong> Click below to view and download your ticket PDF.`;
+      }
     }
 
   } catch (err) {
     console.error("Error loading dashboard data:", err);
-    showToast('Failed to load dashboard profile details.', 'error');
   }
 }
 
@@ -108,7 +126,6 @@ function setupGenerateTicketButton() {
   if (!generateBtn) return;
 
   generateBtn.addEventListener('click', () => {
-    // Perform Master Checklist Checks
     if (!isTicketLive) {
       showToast('Tickets are not live yet. Please wait for administrator release.', 'error');
       return;
