@@ -63,6 +63,19 @@ function maskEmail(email) {
   return `${maskedName}@${domain}`;
 }
 
+// Toggle Password Visibility (Eye Button)
+function togglePasswordVisibility(inputId, btnEl) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    if (btnEl) btnEl.innerHTML = '🙈';
+  } else {
+    input.type = 'password';
+    if (btnEl) btnEl.innerHTML = '👁️';
+  }
+}
+
 // Modal Helpers
 function openModal(modalId) {
   const modal = document.getElementById(modalId);
@@ -88,6 +101,7 @@ function formatDate(dateString) {
 window.showToast = showToast;
 window.setButtonLoading = setButtonLoading;
 window.maskEmail = maskEmail;
+window.togglePasswordVisibility = togglePasswordVisibility;
 window.openModal = openModal;
 window.closeModal = closeModal;
 window.formatDate = formatDate;

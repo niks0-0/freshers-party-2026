@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Management — Admin Portal</title>
+  <title>Student Manager — CRUD 2026</title>
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/auth.css">
 </head>
 <body>
 
@@ -13,15 +14,15 @@
   <nav class="navbar">
     <div class="container nav-container">
       <a href="dashboard.html" class="nav-logo">
-        <span>FRESHERS 2026</span>
+        <span>CRUD 2026</span>
         <span class="logo-badge" style="background: var(--accent);">ADMIN</span>
       </a>
       <ul class="nav-links">
         <li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
         <li><a href="students.html" class="nav-link active">Students</a></li>
-        <li><a href="tickets.html" class="nav-link">Tickets</a></li>
-        <li><a href="settings.html" class="nav-link">Settings</a></li>
-        <li><button onclick="logoutUser('../login.html')" class="btn btn-sm btn-secondary">Logout</button></li>
+        <li><a href="tickets.html" class="nav-link">Tickets Storage</a></li>
+        <li><a href="settings.html" class="nav-link">Event Settings</a></li>
+        <li><button onclick="logoutUser()" class="btn btn-sm btn-secondary">Logout</button></li>
       </ul>
     </div>
   </nav>
@@ -30,19 +31,17 @@
 
     <div class="admin-header-bar">
       <div>
-        <h1 style="font-size: 2rem;">Student <span class="gradient-text">Management</span></h1>
-        <p>View registrations, activate login accounts, and manage ticket assignments</p>
+        <h1 style="font-size: 2rem;">Registered <span class="gradient-text">Students Directory</span></h1>
+        <p>Manage student profiles, accounts, and individual PDF ticket uploads</p>
       </div>
-      <div>
-        <button onclick="openModal('create-student-modal')" class="btn btn-primary btn-sm">+ Create Student Account</button>
-      </div>
+      <button onclick="openModal('create-student-modal')" class="btn btn-primary btn-sm">+ Create Student Account</button>
     </div>
 
-    <!-- Search & Filter Toolbar -->
+    <!-- Toolbar & Search -->
     <div class="toolbar">
       <div class="search-box">
         <span class="search-icon">🔍</span>
-        <input type="text" id="student-search-input" placeholder="Search by student name or email...">
+        <input type="text" id="student-search-input" placeholder="Search by student name, email, or course...">
       </div>
     </div>
 
@@ -51,17 +50,17 @@
       <table class="admin-table">
         <thead>
           <tr>
-            <th>Full Name & Email</th>
-            <th>Course / Stream</th>
+            <th>Student Name & Email</th>
+            <th>Course & Stream</th>
             <th>Mobile</th>
             <th>Account Status</th>
-            <th>Ticket Status</th>
+            <th>Ticket PDF</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody id="students-table-body">
           <tr>
-            <td colspan="6" style="text-align: center; padding: 2rem;">Loading student database...</td>
+            <td colspan="6" style="text-align: center; padding: 2rem;">Loading registered students...</td>
           </tr>
         </tbody>
       </table>
@@ -73,19 +72,26 @@
   <div id="create-student-modal" class="modal-overlay">
     <div class="modal-container">
       <div class="modal-header">
-        <h3>Create Student Login Account</h3>
+        <h3>Create Student Account</h3>
         <button onclick="closeModal('create-student-modal')" class="close-btn">×</button>
       </div>
-
       <form id="create-student-account-form">
         <div class="form-group">
           <label for="create-fullname">Full Name *</label>
-          <input type="text" id="create-fullname" placeholder="e.g. Ananya Sharma" required>
+          <input type="text" id="create-fullname" placeholder="e.g. Priya Sharma" required>
         </div>
 
         <div class="form-group">
-          <label for="create-email">Student Email Address *</label>
-          <input type="email" id="create-email" placeholder="ananya@example.com" required>
+          <label for="create-email">Email Address *</label>
+          <input type="email" id="create-email" placeholder="priya@example.com" required>
+        </div>
+
+        <div class="form-group">
+          <label for="create-password">Account Password *</label>
+          <div class="password-input-group">
+            <input type="password" id="create-password" value="Freshers@2026" required style="padding-right: 2.8rem;">
+            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('create-password', this)">👁️</button>
+          </div>
         </div>
 
         <div class="form-group">
@@ -101,14 +107,9 @@
           </select>
         </div>
 
-        <div class="form-group">
-          <label for="create-password">Initial Password *</label>
-          <input type="text" id="create-password" value="Freshers@2026" required>
-        </div>
-
-        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
-          <button type="button" onclick="closeModal('create-student-modal')" class="btn btn-secondary btn-sm">Cancel</button>
-          <button type="submit" id="create-account-submit-btn" class="btn btn-primary btn-sm">Create Account</button>
+        <div style="display: flex; gap: 0.85rem; margin-top: 1.5rem;">
+          <button type="button" onclick="closeModal('create-student-modal')" class="btn btn-secondary btn-full">Cancel</button>
+          <button type="submit" id="create-account-submit-btn" class="btn btn-primary btn-full">Create Account</button>
         </div>
       </form>
     </div>
@@ -116,7 +117,7 @@
 
   <footer class="footer">
     <div class="container">
-      <p>© 2026 Freshers Party Admin Console.</p>
+      <p>© 2026 CRUD 2026 Admin Portal.</p>
     </div>
   </footer>
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ticket Repository — Admin Portal</title>
+  <title>Tickets Repository — CRUD 2026 Admin</title>
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/admin.css">
 </head>
@@ -13,15 +13,15 @@
   <nav class="navbar">
     <div class="container nav-container">
       <a href="dashboard.html" class="nav-logo">
-        <span>FRESHERS 2026</span>
+        <span>CRUD 2026</span>
         <span class="logo-badge" style="background: var(--accent);">ADMIN</span>
       </a>
       <ul class="nav-links">
         <li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
         <li><a href="students.html" class="nav-link">Students</a></li>
-        <li><a href="tickets.html" class="nav-link active">Tickets</a></li>
-        <li><a href="settings.html" class="nav-link">Settings</a></li>
-        <li><button onclick="logoutUser('../login.html')" class="btn btn-sm btn-secondary">Logout</button></li>
+        <li><a href="tickets.html" class="nav-link active">Tickets Storage</a></li>
+        <li><a href="settings.html" class="nav-link">Event Settings</a></li>
+        <li><button onclick="logoutUser()" class="btn btn-sm btn-secondary">Logout</button></li>
       </ul>
     </div>
   </nav>
@@ -30,24 +30,22 @@
 
     <div class="admin-header-bar">
       <div>
-        <h1 style="font-size: 2rem;">Ticket <span class="gradient-text">Repository</span></h1>
-        <p>Overview of all uploaded PDF tickets in private storage bucket</p>
+        <h1 style="font-size: 2rem;">PDF Tickets <span class="gradient-text">Storage Repository</span></h1>
+        <p>Private cloud storage bucket overview for student event tickets</p>
       </div>
-      <div>
-        <a href="students.html" class="btn btn-primary btn-sm">+ Upload Ticket for Student</a>
-      </div>
+      <a href="students.html" class="btn btn-primary btn-sm">+ Upload New Student Ticket</a>
     </div>
 
-    <!-- Tickets Table -->
+    <!-- Tickets Overview Table -->
     <div class="table-responsive">
       <table class="admin-table">
         <thead>
           <tr>
-            <th>Ticket Pass ID</th>
+            <th>Ticket ID</th>
             <th>Student Name & Email</th>
-            <th>Uploaded Date</th>
+            <th>Upload Date</th>
             <th>Storage Status</th>
-            <th>Action</th>
+            <th>PDF Action</th>
           </tr>
         </thead>
         <tbody id="tickets-overview-table-body">
@@ -62,7 +60,7 @@
 
   <footer class="footer">
     <div class="container">
-      <p>© 2026 Freshers Party Admin Console.</p>
+      <p>© 2026 CRUD 2026 Admin Console.</p>
     </div>
   </footer>
 

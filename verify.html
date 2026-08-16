@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Email Verification — Freshers Party 2026</title>
+  <title>Email Verification — CRUD 2026</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/auth.css">
   <link rel="stylesheet" href="css/dashboard.css">
 </head>
 <body>
@@ -12,7 +13,7 @@
   <nav class="navbar">
     <div class="container nav-container">
       <a href="dashboard.html" class="nav-logo">
-        <span>FRESHERS 2026</span>
+        <span>CRUD 2026</span>
       </a>
       <ul class="nav-links">
         <li><a href="dashboard.html" class="nav-link">← Dashboard</a></li>
@@ -20,43 +21,36 @@
     </div>
   </nav>
 
-  <main class="container container-narrow" style="padding: 4rem 1.5rem;">
-    <div class="glass-card" style="text-align: center; padding: 3rem 2rem;">
-      <div style="font-size: 3rem; margin-bottom: 0.5rem;">📧</div>
-      <h2>VERIFY YOUR <span class="gradient-text">EMAIL</span></h2>
-      <p style="margin-top: 0.5rem;">We sent a 6-digit security verification code to:</p>
+  <div class="auth-wrapper">
+    <div class="auth-card" style="max-width: 460px; text-align: center;">
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--primary);">📧</div>
+      <h2 style="margin-bottom: 0.5rem;">VERIFY YOUR <span class="gradient-text">EMAIL</span></h2>
+      <p style="font-size: 0.875rem; margin-bottom: 1.5rem;">
+        We sent a 6-digit security verification code to: <br>
+        <strong id="masked-email-display" style="color: var(--text-main); font-size: 1rem;">n*********5@gmail.com</strong>
+      </p>
 
-      <div style="font-weight: 700; font-size: 1.1rem; color: var(--text-main); margin: 0.75rem 0; letter-spacing: 0.05em;">
-        <span id="masked-email-display">r*****@gmail.com</span>
-      </div>
-
-      <form id="verify-otp-form" style="margin-top: 2rem;">
+      <form id="verify-otp-form">
         <div class="otp-container">
-          <input type="text" maxlength="1" class="otp-input" autofocus>
-          <input type="text" maxlength="1" class="otp-input">
-          <input type="text" maxlength="1" class="otp-input">
-          <input type="text" maxlength="1" class="otp-input">
-          <input type="text" maxlength="1" class="otp-input">
-          <input type="text" maxlength="1" class="otp-input">
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" required autofocus>
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" required>
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" required>
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" required>
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" required>
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" required>
         </div>
 
-        <button type="submit" id="verify-submit-btn" class="btn btn-primary btn-full" style="padding: 1rem; font-size: 1rem; margin-bottom: 1.5rem;">
+        <button type="submit" id="verify-submit-btn" class="btn btn-primary btn-full" style="padding: 0.9rem; font-size: 1rem; margin-bottom: 1.5rem;">
           VERIFY & UNLOCK TICKET
         </button>
       </form>
 
       <div class="resend-timer">
-        <p id="resend-timer-text" style="margin-bottom: 0.5rem;">Resend available in 60s</p>
-        <button id="resend-code-btn" class="btn btn-secondary btn-sm" disabled>Resend Verification Code</button>
+        <span id="resend-timer-text">Resend available in 60s</span> <br>
+        <button id="resend-code-btn" class="btn btn-sm btn-secondary" style="margin-top: 0.5rem;" disabled>Resend Code</button>
       </div>
     </div>
-  </main>
-
-  <footer class="footer">
-    <div class="container">
-      <p>© 2026 Freshers Party Security Portal.</p>
-    </div>
-  </footer>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>

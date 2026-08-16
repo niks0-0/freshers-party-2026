@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard — Freshers Party 2026</title>
+  <title>Admin Dashboard — CRUD 2026</title>
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/admin.css">
 </head>
@@ -13,15 +13,15 @@
   <nav class="navbar">
     <div class="container nav-container">
       <a href="dashboard.html" class="nav-logo">
-        <span>FRESHERS 2026</span>
+        <span>CRUD 2026</span>
         <span class="logo-badge" style="background: var(--accent);">ADMIN</span>
       </a>
       <ul class="nav-links">
         <li><a href="dashboard.html" class="nav-link active">Dashboard</a></li>
         <li><a href="students.html" class="nav-link">Students</a></li>
-        <li><a href="tickets.html" class="nav-link">Tickets</a></li>
-        <li><a href="settings.html" class="nav-link">Settings</a></li>
-        <li><button onclick="logoutUser('../login.html')" class="btn btn-sm btn-secondary">Logout</button></li>
+        <li><a href="tickets.html" class="nav-link">Tickets Storage</a></li>
+        <li><a href="settings.html" class="nav-link">Event Settings</a></li>
+        <li><button onclick="logoutUser()" class="btn btn-sm btn-secondary">Logout</button></li>
       </ul>
     </div>
   </nav>
@@ -30,62 +30,56 @@
 
     <div class="admin-header-bar">
       <div>
-        <h1 style="font-size: 2rem;">Admin <span class="gradient-text">Overview</span></h1>
-        <p>Live event system analytics & statistics</p>
+        <h1 style="font-size: 2rem;">Admin <span class="gradient-text">Control Center</span></h1>
+        <p>Real-time analytics and management for CRUD 2026</p>
       </div>
-      <div>
-        <a href="settings.html" class="btn btn-primary btn-sm">⚙️ Global Settings & Controls</a>
-      </div>
+      <a href="settings.html" class="btn btn-primary btn-sm">⚙️ Manage Event & Live Switch</a>
     </div>
 
-    <!-- Stats Grid -->
+    <!-- Analytics Stats Grid -->
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-value" id="stat-total-students">0</div>
-        <div class="stat-label">Total Registrations</div>
+        <div id="stat-total-students" class="stat-value">0</div>
+        <div class="stat-label">Total Registered Students</div>
       </div>
 
       <div class="stat-card success">
-        <div class="stat-value" id="stat-active-accounts">0</div>
+        <div id="stat-active-accounts" class="stat-value">0</div>
         <div class="stat-label">Active Login Accounts</div>
       </div>
 
-      <div class="stat-card success">
-        <div class="stat-value" id="stat-tickets-uploaded">0</div>
+      <div class="stat-card warning">
+        <div id="stat-tickets-uploaded" class="stat-value">0</div>
         <div class="stat-label">PDF Tickets Uploaded</div>
       </div>
 
       <div class="stat-card danger">
-        <div class="stat-value" id="stat-tickets-missing">0</div>
+        <div id="stat-tickets-missing" class="stat-value">0</div>
         <div class="stat-label">Tickets Pending Upload</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-value" style="font-size: 1.5rem;">
-          <span id="stat-ticket-live-status" class="badge badge-off">OFF</span>
-        </div>
-        <div class="stat-label">Global Ticket Status</div>
       </div>
     </div>
 
-    <!-- Quick Action Cards -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+    <!-- Quick Navigation Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
       <div class="glass-card">
-        <h3>👥 Student Management</h3>
-        <p style="margin: 0.75rem 0 1.25rem;">Search, create accounts, filter registrations, enable/disable students.</p>
-        <a href="students.html" class="btn btn-secondary btn-full">Manage Students</a>
+        <h3 style="margin-bottom: 0.5rem;">👨‍🎓 Manage Registered Students</h3>
+        <p style="margin-bottom: 1.25rem;">View, search, enable/disable student login accounts or delete registrations.</p>
+        <a href="students.html" class="btn btn-secondary btn-full">Open Student Manager →</a>
       </div>
 
       <div class="glass-card">
-        <h3>🎟️ Ticket Operations</h3>
-        <p style="margin: 0.75rem 0 1.25rem;">Upload individual PDF tickets, replace tickets, view private ticket bucket.</p>
-        <a href="tickets.html" class="btn btn-secondary btn-full">Manage Tickets</a>
+        <h3 style="margin-bottom: 0.5rem;">🎟️ Global Ticket Release Switch</h3>
+        <p style="margin-bottom: 1rem;">Current Global Status:</p>
+        <div style="margin-bottom: 1.25rem;">
+          <span id="stat-ticket-live-status" class="badge badge-off"><span class="badge-dot"></span> OFF</span>
+        </div>
+        <a href="settings.html" class="btn btn-primary btn-full">Toggle Ticket Status →</a>
       </div>
 
       <div class="glass-card">
-        <h3>🔴 Global Ticket LIVE/OFF Switch</h3>
-        <p style="margin: 0.75rem 0 1.25rem;">Control student ticket release state globally with a single click.</p>
-        <a href="settings.html" class="btn btn-primary btn-full">Open Settings Switch</a>
+        <h3 style="margin-bottom: 0.5rem;">📁 Ticket Storage Repository</h3>
+        <p style="margin-bottom: 1.25rem;">View all uploaded student PDF tickets stored in Supabase private bucket.</p>
+        <a href="tickets.html" class="btn btn-secondary btn-full">View Tickets Repository →</a>
       </div>
     </div>
 
@@ -93,7 +87,7 @@
 
   <footer class="footer">
     <div class="container">
-      <p>© 2026 Freshers Party Admin Control Center.</p>
+      <p>© 2026 CRUD 2026 Admin Portal.</p>
     </div>
   </footer>
 

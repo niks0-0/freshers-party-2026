@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Login — Freshers Party 2026</title>
+  <title>Student Login — CRUD 2026</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/auth.css">
 </head>
@@ -13,7 +13,7 @@
   <nav class="navbar">
     <div class="container nav-container">
       <a href="index.html" class="nav-logo">
-        <span>FRESHERS 2026</span>
+        <span>CRUD 2026</span>
       </a>
       <ul class="nav-links">
         <li><a href="index.html" class="nav-link">Home</a></li>
@@ -29,6 +29,11 @@
         <p>Enter your account credentials to access your ticket</p>
       </div>
 
+      <!-- Password Notice Box -->
+      <div style="padding: 0.85rem 1rem; background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.35); border-radius: var(--radius-md); font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.25rem; text-align: center;">
+        🔑 Default Student Password: <strong style="color: #a5b4fc;">Freshers@2026</strong>
+      </div>
+
       <form id="student-login-form">
         <div class="form-group">
           <label for="login-email">Email Address</label>
@@ -40,7 +45,10 @@
             <label for="login-password">Password</label>
             <a href="forgot-password.html" class="auth-link" style="font-size: 0.8rem;">Forgot Password?</a>
           </div>
-          <input type="password" id="login-password" placeholder="••••••••" required>
+          <div class="password-input-group">
+            <input type="password" id="login-password" placeholder="••••••••" required style="padding-right: 2.8rem;">
+            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('login-password', this)">👁️</button>
+          </div>
         </div>
 
         <button type="submit" id="login-submit-btn" class="btn btn-primary btn-full" style="margin-top: 1rem;">
@@ -49,7 +57,7 @@
       </form>
 
       <div class="auth-footer">
-        <span>Haven't registered for Freshers Party yet?</span>
+        <span>Haven't registered for CRUD 2026 yet?</span>
         <a href="index.html#register" class="auth-link">Register Here</a>
       </div>
     </div>
@@ -57,7 +65,7 @@
 
   <footer class="footer">
     <div class="container">
-      <p>© 2026 Freshers Party Digital Portal.</p>
+      <p>© 2026 CRUD 2026 Digital Portal.</p>
     </div>
   </footer>
 

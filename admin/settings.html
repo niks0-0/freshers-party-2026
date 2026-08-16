@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Event Settings — Admin Portal</title>
+  <title>Event Settings — CRUD 2026 Admin</title>
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/admin.css">
 </head>
@@ -13,33 +13,33 @@
   <nav class="navbar">
     <div class="container nav-container">
       <a href="dashboard.html" class="nav-logo">
-        <span>FRESHERS 2026</span>
+        <span>CRUD 2026</span>
         <span class="logo-badge" style="background: var(--accent);">ADMIN</span>
       </a>
       <ul class="nav-links">
         <li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
         <li><a href="students.html" class="nav-link">Students</a></li>
-        <li><a href="tickets.html" class="nav-link">Tickets</a></li>
-        <li><a href="settings.html" class="nav-link active">Settings</a></li>
-        <li><button onclick="logoutUser('../login.html')" class="btn btn-sm btn-secondary">Logout</button></li>
+        <li><a href="tickets.html" class="nav-link">Tickets Storage</a></li>
+        <li><a href="settings.html" class="nav-link active">Event Settings</a></li>
+        <li><button onclick="logoutUser()" class="btn btn-sm btn-secondary">Logout</button></li>
       </ul>
     </div>
   </nav>
 
-  <main class="container container-narrow" style="padding: 2.5rem 1.5rem 5rem;">
+  <main class="container" style="padding: 2.5rem 1.5rem 5rem;">
 
     <div class="admin-header-bar">
       <div>
-        <h1 style="font-size: 2rem;">Event <span class="gradient-text">Settings</span></h1>
-        <p>Global ticket LIVE toggle switch & event metadata</p>
+        <h1 style="font-size: 2rem;">Event Settings & <span class="gradient-text">Ticket Release</span></h1>
+        <p>Control global ticket release status and event details displayed on the landing page</p>
       </div>
     </div>
 
-    <!-- CORE REQUIREMENT: GLOBAL TICKET LIVE / OFF SWITCH -->
+    <!-- Master Ticket Release Switch Card -->
     <div class="glass-card" style="margin-bottom: 2rem; border-left: 4px solid var(--primary);">
-      <h3 style="margin-bottom: 0.5rem;">🔴 GLOBAL TICKET LIVE CONTROL</h3>
-      <p style="font-size: 0.9rem; margin-bottom: 1.25rem;">
-        When <strong>OFF</strong>, tickets are locked for all students regardless of account status. When <strong>LIVE</strong>, verified students can generate and download their tickets.
+      <h3 style="margin-bottom: 0.5rem;">🟢 MASTER TICKET RELEASE SWITCH</h3>
+      <p style="margin-bottom: 1.5rem; font-size: 0.9rem;">
+        When set to <strong>LIVE</strong>, verified students can generate and download their PDF tickets. When set to <strong>OFF</strong>, tickets remain locked.
       </p>
 
       <div class="switch-container">
@@ -48,17 +48,17 @@
           <span class="slider"></span>
         </label>
         <div>
-          <div style="font-weight: 700; font-size: 1rem; color: var(--text-main);">TICKET RELEASE SWITCH</div>
-          <div id="switch-status-label" class="badge badge-off" style="margin-top: 0.25rem;">
-            <span class="badge-dot"></span> TICKETS OFF
+          <div style="font-weight: 700; font-size: 1.1rem;" id="switch-status-label">
+            <span class="badge badge-off"><span class="badge-dot"></span> TICKETS OFF</span>
           </div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem;">Click toggle switch to change release mode in real-time.</div>
         </div>
       </div>
     </div>
 
-    <!-- Event Information Form -->
+    <!-- Event Details Form -->
     <div class="glass-card">
-      <h3 style="margin-bottom: 1.5rem;">📝 Event Details Configurator</h3>
+      <h3 style="margin-bottom: 1.5rem;">📝 Edit Event Public Information</h3>
 
       <form id="event-settings-form">
         <div class="form-group">
@@ -77,22 +77,23 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="event-venue-input">Venue *</label>
-          <input type="text" id="event-venue-input" required>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="event-venue-input">Venue Location *</label>
+            <input type="text" id="event-venue-input" required>
+          </div>
+          <div class="form-group">
+            <label for="event-college-input">College / Organization Name *</label>
+            <input type="text" id="event-college-input" required>
+          </div>
         </div>
 
         <div class="form-group">
-          <label for="event-college-input">College Name *</label>
-          <input type="text" id="event-college-input" required>
+          <label for="event-instructions-input">Important Guidelines / Instructions</label>
+          <textarea id="event-instructions-input" rows="4" style="resize: vertical;"></textarea>
         </div>
 
-        <div class="form-group">
-          <label for="event-instructions-input">Important Event Instructions</label>
-          <textarea id="event-instructions-input" rows="4"></textarea>
-        </div>
-
-        <button type="submit" id="save-settings-submit-btn" class="btn btn-primary btn-full" style="margin-top: 1rem;">
+        <button type="submit" id="save-settings-submit-btn" class="btn btn-primary" style="margin-top: 1rem;">
           SAVE EVENT SETTINGS
         </button>
       </form>
@@ -102,7 +103,7 @@
 
   <footer class="footer">
     <div class="container">
-      <p>© 2026 Freshers Party Admin Console.</p>
+      <p>© 2026 CRUD 2026 Admin Portal.</p>
     </div>
   </footer>
 

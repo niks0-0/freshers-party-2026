@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Freshers Party 2026 — Official Digital Portal</title>
-  <meta name="description" content="Official registration and secure digital ticket portal for Freshers Party 2026.">
+  <title>CRUD 2026 — Official Digital Portal</title>
+  <meta name="description" content="Official registration and secure digital ticket portal for CRUD 2026.">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/auth.css">
 </head>
@@ -14,11 +14,12 @@
   <nav class="navbar">
     <div class="container nav-container">
       <a href="index.html" class="nav-logo">
-        <span>FRESHERS 2026</span>
+        <span>CRUD 2026</span>
         <span class="logo-badge">PORTAL</span>
       </a>
       <ul class="nav-links">
         <li><a href="#event-info" class="nav-link">Event Details</a></li>
+        <li><a href="#poster" class="nav-link">Official Poster</a></li>
         <li><a href="#register" class="nav-link">Registration</a></li>
         <li><a href="login.html" class="btn btn-sm btn-primary">Student Login</a></li>
         <li><a href="admin/login.html" class="nav-link" style="font-size: 0.8rem; opacity: 0.7;">Admin</a></li>
@@ -27,85 +28,102 @@
   </nav>
 
   <!-- Hero Section -->
-  <header class="hero-section" style="padding: 5rem 0 3rem; text-align: center;">
+  <header class="hero-section" style="padding: 4rem 0 2rem; text-align: center;">
     <div class="container container-narrow">
-      <span class="badge badge-live" style="margin-bottom: 1.5rem;">🎉 REGISTRATION OPEN FOR BATCH 2026</span>
-      <h1 style="margin-bottom: 1rem;">
+      <span class="badge badge-live" style="margin-bottom: 1.25rem;">🎉 REGISTRATION OPEN FOR BATCH 2026</span>
+      <h1 style="margin-bottom: 0.75rem;">
         WELCOME TO <br>
-        <span class="gradient-text event-name-display">FRESHERS PARTY 2026</span>
+        <span class="gradient-text event-name-display">CRUD 2026</span>
       </h1>
-      <p style="font-size: 1.15rem; margin-bottom: 2rem;">
-        Get ready for the most awaited night of the year! Music, dance, food, awards, and unforgettable memories.
+      <p style="font-size: 1.15rem; font-weight: 600; color: #a5b4fc; margin-bottom: 0.5rem; letter-spacing: 0.05em;">
+        COME ROCK UR DAY • WELCOME FRESHERS
+      </p>
+      <p style="font-size: 0.95rem; margin-bottom: 2rem;">
+        A new chapter begins! Step into the spotlight for an unforgettable evening of music, celebration & memories.
       </p>
       <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-        <a href="#register" class="btn btn-primary" style="padding: 1rem 2.2rem; font-size: 1.05rem;">REGISTER NOW 🎟️</a>
-        <a href="login.html" class="btn btn-secondary" style="padding: 1rem 2rem; font-size: 1.05rem;">ACCESS TICKET 🔐</a>
+        <a href="#register" class="btn btn-primary" style="padding: 0.9rem 2rem; font-size: 1rem;">REGISTER NOW 🎟️</a>
+        <a href="#poster" class="btn btn-secondary" style="padding: 0.9rem 1.8rem; font-size: 1rem;">VIEW POSTER 🖼️</a>
       </div>
     </div>
   </header>
 
+  <!-- Official Poster Showcase Section -->
+  <section id="poster" style="padding: 2rem 0 3rem; text-align: center;">
+    <div class="container container-narrow">
+      <div class="glass-card" style="padding: 1.25rem; border: 1px solid var(--border-accent);">
+        <h3 style="margin-bottom: 1rem;">✨ OFFICIAL EVENT POSTER ✨</h3>
+        <div style="position: relative; border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-glow); cursor: pointer;" onclick="openModal('poster-modal')">
+          <img src="assets/images/poster.jpg" alt="CRUD 2026 Official Poster" style="width: 100%; height: auto; display: block; border-radius: var(--radius-md);">
+          <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(9, 13, 22, 0.95)); padding: 1.5rem 1rem 0.85rem; font-size: 0.85rem; color: var(--text-main); font-weight: 600;">
+            🔍 Click to Expand Full Poster
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Event Information Section -->
-  <section id="event-info" style="padding: 3rem 0;">
+  <section id="event-info" style="padding: 2rem 0 3rem;">
     <div class="container">
-      <div style="text-align: center; margin-bottom: 2.5rem;">
+      <div style="text-align: center; margin-bottom: 2rem;">
         <h2>Event <span class="gradient-text">Information</span></h2>
         <p>Key event guidelines, venue details, and schedules</p>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem;">
         <div class="glass-card">
-          <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">📅</div>
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">📅</div>
           <h3>Date & Time</h3>
-          <p id="display-event-date" style="font-weight: 600; color: var(--text-main); margin-top: 0.5rem;">August 21, 2026</p>
-          <p id="display-event-time">05:00 PM IST</p>
+          <p id="display-event-date" style="font-weight: 600; color: var(--text-main); margin-top: 0.5rem;">August 21, 2026 (Friday)</p>
+          <p id="display-event-time">12:30 PM - 05:00 PM</p>
         </div>
 
         <div class="glass-card">
-          <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">📍</div>
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">📍</div>
           <h3>Venue & Campus</h3>
-          <p id="display-event-venue" style="font-weight: 600; color: var(--text-main); margin-top: 0.5rem;">Grand College Auditorium</p>
-          <p id="display-college-name" style="margin-bottom: 1rem;">College of Engineering & Technology</p>
+          <p id="display-event-venue" style="font-weight: 600; color: var(--text-main); margin-top: 0.5rem;">HOTEL DARSHAN INN</p>
+          <p id="display-college-name" style="margin-bottom: 1rem;">COME ROCK UR DAY — Welcome Freshers</p>
           <a id="display-maps-link" href="https://maps.app.goo.gl/Zm8jTnD2EFBkySLG7?g_st=ac" target="_blank" rel="noopener" class="btn btn-sm btn-secondary" style="width: 100%; border-color: var(--primary); color: #a5b4fc;">
             📍 Open in Google Maps 🗺️
           </a>
         </div>
 
         <div class="glass-card">
-          <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">👗</div>
-          <h3>Dress Code</h3>
-          <p style="font-weight: 600; color: var(--text-main); margin-top: 0.5rem;">Ethnic / Western Formal</p>
-          <p>Dazzle in your best evening attire!</p>
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎉</div>
+          <h3>Party Highlights</h3>
+          <p style="font-weight: 600; color: var(--text-main); margin-top: 0.5rem;">Non-Stop Entertainment</p>
+          <p style="font-size: 0.85rem; margin-top: 0.2rem;">🎵 Live Music • 🎧 DJ Night • 🕺 Dance Floor • 🎮 Fun Games • 🍸 Food & Drinks</p>
         </div>
       </div>
 
       <!-- Instructions Box -->
-      <div class="glass-card" style="margin-top: 2rem; background: rgba(13, 18, 30, 0.7);">
+      <div class="glass-card" style="margin-top: 1.5rem; background: rgba(13, 18, 30, 0.7);">
         <h3 style="margin-bottom: 0.75rem;">📋 Important Instructions</h3>
         <p id="display-instructions" style="white-space: pre-line; line-height: 1.7;">
-          1. Carry your physical College ID card along with your digital ticket PDF.
-          2. Gate opens at 04:30 PM. Entry will strictly close at 06:00 PM.
-          3. Digital ticket QR code will be scanned at the venue entrance.
+          1. Carry your digital ticket QR code along with your College ID Card for venue entry.
+          2. Entry gates open at 12:30 PM.
+          3. Strictly formal / party attire.
         </p>
       </div>
     </div>
   </section>
 
   <!-- Registration Form Section -->
-  <section id="register" style="padding: 3rem 0 5rem;">
+  <section id="register" style="padding: 2rem 0 5rem;">
     <div class="container container-narrow">
       <div class="glass-card">
-        <div style="text-align: center; margin-bottom: 2rem;">
+        <div style="text-align: center; margin-bottom: 1.75rem;">
           <h2>Student <span class="gradient-text">Registration</span></h2>
-          <p>Fill out the form below to register your entry for Freshers Party 2026.</p>
+          <p>Fill out the form below to register your entry for CRUD 2026.</p>
         </div>
 
         <!-- Registration Success Notification Box -->
         <div id="registration-success-box" style="display: none; padding: 1.5rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: var(--radius-md); text-align: center; margin-bottom: 1.5rem;">
           <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎉</div>
-          <h3 style="color: var(--success);">Registration & Account Created!</h3>
+          <h3 style="color: var(--success);">Registration Submitted!</h3>
           <p style="margin-top: 0.5rem; color: var(--text-main);">
-            Your student account has been created successfully. <br>
-            Default Login Password: <strong style="color: var(--primary);">Freshers@2026</strong>
+            Your account is ready. Default Login Password: <strong style="color: var(--primary);">Freshers@2026</strong>
           </p>
           <a href="login.html" class="btn btn-primary btn-sm" style="margin-top: 1rem;">Go to Student Login</a>
         </div>
@@ -153,10 +171,21 @@
     </div>
   </section>
 
+  <!-- Poster Modal -->
+  <div id="poster-modal" class="modal-overlay" onclick="closeModal('poster-modal')">
+    <div class="modal-container" style="max-width: 600px; padding: 1rem;" onclick="event.stopPropagation()">
+      <div class="modal-header" style="margin-bottom: 0.5rem; border: none;">
+        <h3 style="font-size: 1.1rem;">CRUD 2026 — Official Poster</h3>
+        <button onclick="closeModal('poster-modal')" class="close-btn">×</button>
+      </div>
+      <img src="assets/images/poster.jpg" alt="CRUD 2026 Official Poster Full" style="width: 100%; height: auto; border-radius: var(--radius-md); display: block;">
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer class="footer">
     <div class="container">
-      <p>© 2026 Freshers Party Digital Portal. All rights reserved.</p>
+      <p>© 2026 CRUD 2026 Digital Portal. All rights reserved.</p>
     </div>
   </footer>
 

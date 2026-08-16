@@ -63,6 +63,35 @@
   margin-left: 0.2rem;
 }
 
+/* Password Eye Button Input Group */
+.password-input-group {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.15rem;
+  padding: 0.25rem;
+  line-height: 1;
+  user-select: none;
+  z-index: 10;
+  transition: transform 0.15s ease;
+}
+
+.toggle-password:hover {
+  transform: translateY(-50%) scale(1.15);
+}
+
 @media (max-width: 480px) {
   .auth-card {
     padding: 1.5rem 1rem;

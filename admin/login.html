@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Login — Freshers Party 2026</title>
+  <title>Admin Login — CRUD 2026</title>
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/auth.css">
 </head>
@@ -12,7 +12,7 @@
   <nav class="navbar">
     <div class="container nav-container">
       <a href="../index.html" class="nav-logo">
-        <span>FRESHERS 2026</span>
+        <span>CRUD 2026</span>
         <span class="logo-badge" style="background: var(--accent);">ADMIN</span>
       </a>
       <ul class="nav-links">
@@ -36,7 +36,10 @@
 
         <div class="form-group">
           <label for="admin-password">Password</label>
-          <input type="password" id="admin-password" placeholder="••••••••" required>
+          <div class="password-input-group">
+            <input type="password" id="admin-password" placeholder="••••••••" required style="padding-right: 2.8rem;">
+            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('admin-password', this)">👁️</button>
+          </div>
         </div>
 
         <button type="submit" id="admin-login-submit-btn" class="btn btn-primary btn-full" style="margin-top: 1rem; background: linear-gradient(135deg, var(--accent), var(--primary));">
