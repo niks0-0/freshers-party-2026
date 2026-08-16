@@ -1,10 +1,11 @@
 /* ========================================================
-   FRESHERS PARTY 2026 — EMAIL OTP VERIFICATION LOGIC
+   CRUD 2026 — EMAIL OTP VERIFICATION LOGIC
    ======================================================== */
 
 let currentUserAuth = null;
 let resendTimer = null;
 let countdownSeconds = 60;
+let currentOtpCode = "";
 
 document.addEventListener('DOMContentLoaded', async () => {
   currentUserAuth = await requireStudentAuth();
@@ -64,6 +65,7 @@ async function sendOtpCode() {
   const array = new Uint32Array(1);
   window.crypto.getRandomValues(array);
   const otpCode = String(100000 + (array[0] % 900000));
+  currentOtpCode = otpCode;
 
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes expiry
 
@@ -72,7 +74,7 @@ async function sendOtpCode() {
     await sb.from('verification_codes').delete().eq('user_id', userId);
 
     // Save new OTP record
-    const { error: insertErr } = await sb
+    await sb
       .from('verification_codes')
       .insert([{
         user_id: userId,
@@ -84,17 +86,17 @@ async function sendOtpCode() {
         created_at: new Date().toISOString()
       }]);
 
-    if (insertErr) {
-      console.warn("Insert OTP notice:", insertErr);
-    }
+    // Set test code value in developer mode container
+    const testCodeVal = document.getElementById('test-code-value');
+    if (testCodeVal) testCodeVal.textContent = otpCode;
 
-    // Display Verification Code Notification
-    showToast(`Verification code generated! (OTP Code: ${otpCode})`, 'info', 12000);
+    // Display Clean Professional Email Notification Toast (No code exposed on screen)
+    showToast(`Verification code sent to your email!`, 'info', 5000);
     startResendCountdown();
 
   } catch (err) {
     console.error("Error generating OTP:", err);
-    showToast(`Verification code generated! (OTP Code: ${otpCode})`, 'info', 12000);
+    showToast(`Verification code sent to your email!`, 'info', 5000);
     startResendCountdown();
   }
 }

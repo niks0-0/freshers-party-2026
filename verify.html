@@ -22,35 +22,61 @@
   </nav>
 
   <div class="auth-wrapper">
-    <div class="auth-card" style="max-width: 460px; text-align: center;">
-      <div style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--primary);">📧</div>
-      <h2 style="margin-bottom: 0.5rem;">VERIFY YOUR <span class="gradient-text">EMAIL</span></h2>
-      <p style="font-size: 0.875rem; margin-bottom: 1.5rem;">
-        We sent a 6-digit security verification code to: <br>
+    <div class="auth-card" style="max-width: 480px; text-align: center;">
+      <div style="font-size: 2.75rem; margin-bottom: 0.5rem; color: var(--accent);">📧</div>
+      <h2 style="margin-bottom: 0.35rem;">VERIFY YOUR <span class="gradient-text">EMAIL</span></h2>
+      <p style="font-size: 0.875rem; margin-bottom: 1.25rem;">
+        Security verification required for registered student: <br>
         <strong id="masked-email-display" style="color: var(--text-main); font-size: 1rem;">n*********5@gmail.com</strong>
       </p>
 
+      <!-- Email Notification Card -->
+      <div style="padding: 0.85rem 1rem; background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.35); border-radius: var(--radius-md); font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem; text-align: left;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-main); font-weight: 600; margin-bottom: 0.2rem;">
+          <span>📩</span> <span>Check Your Registered Email Inbox</span>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">
+          A 6-digit verification security code has been generated for your account. Please enter the code below to unlock your ticket.
+        </p>
+      </div>
+
       <form id="verify-otp-form">
         <div class="otp-container">
-          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" required autofocus>
-          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" required>
-          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" required>
-          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" required>
-          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" required>
-          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" required>
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required autofocus>
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
         </div>
 
-        <button type="submit" id="verify-submit-btn" class="btn btn-primary btn-full" style="padding: 0.9rem; font-size: 1rem; margin-bottom: 1.5rem;">
-          VERIFY & UNLOCK TICKET
+        <button type="submit" id="verify-submit-btn" class="btn btn-primary btn-full" style="padding: 1rem; font-size: 1rem; margin-bottom: 1.25rem;">
+          VERIFY & UNLOCK TICKET 🔓
         </button>
       </form>
 
+      <!-- Developer Test Code Reveal Link -->
+      <div style="margin-bottom: 1rem;">
+        <button type="button" onclick="toggleTestCodeDisplay()" class="btn btn-sm btn-secondary" style="font-size: 0.75rem; opacity: 0.8;">
+          🔍 Revealer (Developer Test Mode)
+        </button>
+        <div id="test-code-box" style="display: none; margin-top: 0.75rem; padding: 0.6rem; background: rgba(0,0,0,0.5); border-radius: var(--radius-sm); font-size: 0.85rem; color: #a5b4fc; font-weight: 700;">
+          Test Code: <span id="test-code-value">######</span>
+        </div>
+      </div>
+
       <div class="resend-timer">
         <span id="resend-timer-text">Resend available in 60s</span> <br>
-        <button id="resend-code-btn" class="btn btn-sm btn-secondary" style="margin-top: 0.5rem;" disabled>Resend Code</button>
+        <button id="resend-code-btn" class="btn btn-sm btn-secondary" style="margin-top: 0.5rem;" disabled>Resend Verification Code</button>
       </div>
     </div>
   </div>
+
+  <footer class="footer">
+    <div class="container">
+      <p>© 2026 CRUD 2026 Digital Ticket System.</p>
+    </div>
+  </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
@@ -58,6 +84,15 @@
   <script src="js/ui-helpers.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/verify.js"></script>
+
+  <script>
+    function toggleTestCodeDisplay() {
+      const box = document.getElementById('test-code-box');
+      if (box) {
+        box.style.display = box.style.display === 'none' ? 'block' : 'none';
+      }
+    }
+  </script>
 
 </body>
 </html>

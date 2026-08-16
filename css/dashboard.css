@@ -1,10 +1,10 @@
 /* ========================================================
-   FRESHERS PARTY 2026 — STUDENT DASHBOARD & TICKET STYLES (MOBILE FRIENDLY)
+   CRUD 2026 — DASHBOARD & OTP VERIFICATION STYLES
    ======================================================== */
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 1fr 1.2fr;
+  grid-template-columns: 1fr 1.15fr;
   gap: 1.5rem;
   margin-top: 1.5rem;
   width: 100%;
@@ -31,24 +31,24 @@
 }
 
 .avatar-circle {
-  width: 52px;
-  height: 52px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  background: linear-gradient(135deg, var(--accent), var(--secondary));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.35rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 800;
   color: white;
-  box-shadow: 0 4px 12px var(--primary-glow);
+  box-shadow: 0 6px 18px var(--accent-glow);
   flex-shrink: 0;
 }
 
 .profile-info-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 
 @media (max-width: 480px) {
@@ -58,23 +58,23 @@
 }
 
 .info-item {
-  background: rgba(13, 18, 30, 0.6);
-  padding: 0.75rem 0.85rem;
+  background: rgba(10, 14, 24, 0.7);
+  padding: 0.85rem 1rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
 }
 
 .info-label {
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   color: var(--text-dim);
-  letter-spacing: 0.04em;
-  margin-bottom: 0.15rem;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.2rem;
 }
 
 .info-value {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-main);
   word-break: break-word;
@@ -84,89 +84,98 @@
 .ticket-preview-card {
   position: relative;
   border: 1px solid var(--border-accent);
-  background: linear-gradient(145deg, rgba(20, 26, 42, 0.95), rgba(12, 16, 28, 0.98));
+  background: linear-gradient(145deg, rgba(18, 24, 40, 0.95), rgba(10, 14, 24, 0.98));
   border-radius: var(--radius-lg);
-  padding: 1.5rem 1rem;
+  padding: 1.75rem 1.25rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   overflow: hidden;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-md), var(--shadow-glow);
   width: 100%;
 }
 
 .ticket-locked-overlay {
   position: relative;
   width: 100%;
-  padding: 2.25rem 1rem;
-  background: rgba(13, 18, 30, 0.85);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  padding: 2.5rem 1rem;
+  background: rgba(10, 14, 24, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: var(--radius-md);
-  border: 1px dashed var(--border-color);
+  border: 1px dashed var(--border-accent);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.85rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
 .lock-icon {
-  font-size: 2.5rem;
-  opacity: 0.9;
+  font-size: 2.75rem;
+  opacity: 0.95;
   animation: pulse 2s infinite ease-in-out;
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.08); opacity: 1; }
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.1); opacity: 1; }
 }
 
 .blurred-stub {
   user-select: none;
-  filter: blur(7px);
-  opacity: 0.35;
-  font-size: 1.1rem;
+  filter: blur(8px);
+  opacity: 0.4;
+  font-size: 1.2rem;
   letter-spacing: 0.15em;
-  color: var(--primary);
+  color: var(--accent);
+  font-weight: 700;
 }
 
-/* OTP Box Styles (Mobile Fluid Width) */
+/* OTP Input Boxes (High Precision & Fluid Width) */
 .otp-container {
   display: flex;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
   margin: 1.5rem 0;
   width: 100%;
 }
 
 .otp-input {
-  width: 42px;
-  height: 50px;
+  width: 46px;
+  height: 54px;
   text-align: center;
-  font-size: 1.35rem;
-  font-weight: 700;
+  font-size: 1.45rem;
+  font-weight: 800;
   border-radius: var(--radius-md);
   background: var(--bg-input);
-  border: 1px solid var(--border-color);
+  border: 1.5px solid var(--border-color);
   color: var(--text-main);
   padding: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: var(--transition);
 }
 
-@media (max-width: 380px) {
+.otp-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 15px var(--accent-glow);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 400px) {
   .otp-container {
     gap: 0.35rem;
   }
   .otp-input {
-    width: 36px;
-    height: 44px;
-    font-size: 1.15rem;
+    width: 38px;
+    height: 48px;
+    font-size: 1.25rem;
   }
 }
 
 .resend-timer {
-  font-size: 0.825rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   text-align: center;
 }
@@ -174,16 +183,17 @@
 /* Ticket Viewer Frame */
 .pdf-container {
   width: 100%;
-  height: 520px;
+  height: 540px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
-  background: #111;
+  background: #090c15;
   overflow: hidden;
   margin-top: 1.25rem;
+  box-shadow: var(--shadow-md);
 }
 
 @media (max-width: 600px) {
   .pdf-container {
-    height: 400px;
+    height: 420px;
   }
 }
