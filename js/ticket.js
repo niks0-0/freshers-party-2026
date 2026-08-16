@@ -1,41 +1,30 @@
 /* ========================================================
-   FRESHERS PARTY 2026 — DIRECT OFFICIAL TICKET PASS VIEWER
+   FRESHERS PARTY 2026 — DIRECT PDF PREVIEW TICKET VIEWER
    ======================================================== */
 
 let currentUserAuth = null;
+let signedPdfUrl = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   currentUserAuth = await requireStudentAuth();
   if (!currentUserAuth) return;
 
-  setupSecurityShortcutBlocker();
+  setupSecurityProtection();
   await loadAndUnlockTicket();
 });
 
-// Security Shortcut & Print Blocker
-function setupSecurityShortcutBlocker() {
+function setupSecurityProtection() {
   document.addEventListener('contextmenu', e => e.preventDefault());
   document.addEventListener('selectstart', e => e.preventDefault());
   document.addEventListener('dragstart', e => e.preventDefault());
 
-  document.addEventListener('keyup', e => {
-    if (e.key === 'PrintScreen') {
-      navigator.clipboard.writeText('');
-      showToast('Screenshot attempt blocked! Ticket pass protected.', 'warning');
-    }
-  });
-
   document.addEventListener('keydown', e => {
-    if (e.key === 'PrintScreen') {
-      navigator.clipboard.writeText('');
-      e.preventDefault();
-    }
     if (
       (e.ctrlKey || e.metaKey) &&
       (e.key === 'p' || e.key === 'P' || e.key === 's' || e.key === 'S' || e.key === 'u' || e.key === 'U')
     ) {
       e.preventDefault();
-      showToast('Screenshots and printing are restricted.', 'warning');
+      showToast('Action restricted. PDF ticket is protected.', 'warning');
     }
     if (e.key === 'F12') {
       e.preventDefault();
@@ -49,12 +38,10 @@ async function loadAndUnlockTicket() {
   const userEmail = currentUserAuth.user.email;
 
   try {
-    const studentName = currentUserAuth.profile?.full_name || currentUserAuth.user.user_metadata?.full_name || 'Student';
-    const passNameEl = document.getElementById('pass-attendee-name');
-    if (passNameEl) passNameEl.textContent = studentName;
-
-    const emailTagEl = document.getElementById('ticket-email-tag');
-    if (emailTagEl) emailTagEl.textContent = userEmail;
+    const nameEl = document.getElementById('ticket-student-name');
+    if (nameEl) {
+      nameEl.textContent = currentUserAuth.profile?.full_name || currentUserAuth.user.user_metadata?.full_name || 'Student Ticket Pass';
+    }
 
     const { data: settings } = await sb
       .from('event_settings')
@@ -102,13 +89,11 @@ async function loadAndUnlockTicket() {
     if (!ticket || !ticket.storage_path) {
       const { data: detail } = await sb
         .from('student_details')
-        .select('id, full_name')
+        .select('id')
         .eq('email', userEmail)
         .maybeSingle();
 
       if (detail) {
-        if (detail.full_name && passNameEl) passNameEl.textContent = detail.full_name;
-
         const { data: tFallback } = await sb
           .from('tickets')
           .select('*')
@@ -119,15 +104,32 @@ async function loadAndUnlockTicket() {
       }
     }
 
-    // Display Ticket ID & QR Code
-    const ticketCode = ticket ? (ticket.ticket_id || 'FP26-PASS') : 'FP26-PASS';
-    const passTicketIdEl = document.getElementById('pass-ticket-id');
-    if (passTicketIdEl) passTicketIdEl.textContent = ticketCode;
+    if (!ticket || !ticket.storage_path) {
+      showErrorState("Your individual ticket PDF has not been uploaded yet by administrators.");
+      return;
+    }
 
-    const qrImg = document.getElementById('pass-qr-image');
-    if (qrImg) {
-      const qrData = encodeURIComponent(`CRUD2026-ENTRY-${ticketCode}-${userEmail}`);
-      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}`;
+    const { data: signedData, error: storageErr } = await sb
+      .storage
+      .from('tickets')
+      .createSignedUrl(ticket.storage_path, 300, { download: false });
+
+    if (storageErr || !signedData || !signedData.signedUrl) {
+      showErrorState("Failed to authorize private ticket access.");
+      return;
+    }
+
+    signedPdfUrl = signedData.signedUrl;
+
+    const ticketIdEl = document.getElementById('display-ticket-id');
+    if (ticketIdEl) {
+      ticketIdEl.textContent = `Ticket ID: ${ticket.ticket_id || 'FP26-PASS'}`;
+    }
+
+    // Embed signed PDF URL directly into iframe preview
+    const iframe = document.getElementById('pdf-frame');
+    if (iframe) {
+      iframe.src = `${signedPdfUrl}#toolbar=0&navpanes=0&scrollbar=0`;
     }
 
   } catch (err) {
