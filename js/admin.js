@@ -120,18 +120,19 @@ async function fetchAndRenderStudents() {
 
     const { data: tickets } = await sb
       .from('tickets')
-      .select('student_profile_id, is_uploaded');
+      .select('student_profile_id, is_uploaded, storage_path');
 
     const ticketMap = new Map();
     if (tickets) {
-      tickets.forEach(t => ticketMap.set(t.student_profile_id, t.is_uploaded));
+      tickets.forEach(t => ticketMap.set(t.student_profile_id, t));
     }
 
     allStudentsList = (students || []).map(s => {
       const profileId = s.profile ? s.profile.id : s.profile_id;
       const isActive = s.profile ? s.profile.is_active : true;
-      const hasTicket = profileId ? (ticketMap.get(profileId) || false) : false;
-      return { ...s, profileId, isActive, hasTicket };
+      const ticketRecord = profileId ? ticketMap.get(profileId) : null;
+      const hasTicket = ticketRecord ? ticketRecord.is_uploaded : false;
+      return { ...s, profileId, isActive, hasTicket, ticketRecord };
     });
 
     renderStudentsTable(allStudentsList);
@@ -171,7 +172,7 @@ function renderStudentsTable(students) {
       </td>
       <td>
         <div class="table-actions">
-          <a href="student.html?id=${s.id}" class="btn btn-sm btn-secondary">Manage</a>
+          <a href="student.html?id=${s.id}" class="btn btn-sm btn-secondary">Manage Profile & Ticket</a>
           <button class="btn btn-sm ${s.isActive ? 'btn-danger' : 'btn-success'}" onclick="toggleAccountStatus('${s.profileId || s.id}', '${s.email}', ${!s.isActive})">
             ${s.isActive ? 'Disable' : 'Enable'}
           </button>
@@ -327,7 +328,7 @@ function setupCreateStudentModal() {
 }
 
 // --------------------------------------------------------
-// 3. SINGLE STUDENT DETAIL & TICKET UPLOAD
+// 3. SINGLE STUDENT DETAIL & TICKET UPLOAD / DELETE
 // --------------------------------------------------------
 let currentStudentDetail = null;
 
@@ -382,6 +383,7 @@ async function initAdminSingleStudentPage() {
     const mobileEl = document.getElementById('detail-mobile');
     if (mobileEl) mobileEl.textContent = student.mobile;
 
+    let existingTicket = null;
     if (profileId) {
       const { data: ticket } = await sb
         .from('tickets')
@@ -389,16 +391,46 @@ async function initAdminSingleStudentPage() {
         .eq('student_profile_id', profileId)
         .maybeSingle();
 
-      const ticketStatusEl = document.getElementById('detail-ticket-status');
+      if (ticket) existingTicket = ticket;
+    }
+
+    // Update UI elements for Ticket Status & File Box
+    const ticketStatusEl = document.getElementById('detail-ticket-status');
+    const infoBox = document.getElementById('uploaded-file-info-box');
+    const filenameEl = document.getElementById('uploaded-filename-text');
+    const uploadLabel = document.getElementById('upload-file-label');
+
+    if (existingTicket && existingTicket.storage_path) {
+      const fileNameOnly = existingTicket.storage_path.split('/').pop() || 'ticket.pdf';
+
       if (ticketStatusEl) {
-        if (ticket && ticket.storage_path) {
-          ticketStatusEl.className = 'badge badge-live';
-          ticketStatusEl.textContent = `UPLOADED (${ticket.ticket_id})`;
-        } else {
-          ticketStatusEl.className = 'badge badge-pending';
-          ticketStatusEl.textContent = 'NOT UPLOADED';
-        }
+        ticketStatusEl.className = 'badge badge-live';
+        ticketStatusEl.textContent = `UPLOADED (${existingTicket.ticket_id})`;
       }
+
+      if (infoBox) infoBox.style.display = 'block';
+      if (filenameEl) filenameEl.textContent = `📄 ${fileNameOnly}`;
+      if (uploadLabel) uploadLabel.textContent = `Select New PDF File to Replace Existing Ticket (.pdf) *`;
+
+      // Setup View PDF button
+      const viewBtn = document.getElementById('view-current-ticket-btn');
+      if (viewBtn) {
+        viewBtn.onclick = () => viewPrivateTicket(existingTicket.storage_path);
+      }
+
+      // Setup Delete Ticket button
+      const deleteBtn = document.getElementById('delete-current-ticket-btn');
+      if (deleteBtn) {
+        deleteBtn.onclick = () => deleteStudentTicket(profileId, existingTicket.storage_path);
+      }
+
+    } else {
+      if (ticketStatusEl) {
+        ticketStatusEl.className = 'badge badge-pending';
+        ticketStatusEl.textContent = 'NOT UPLOADED';
+      }
+      if (infoBox) infoBox.style.display = 'none';
+      if (uploadLabel) uploadLabel.textContent = `Select PDF File (.pdf, Max 10MB) *`;
     }
 
     setupTicketUploadForm(student, profileId);
@@ -408,6 +440,32 @@ async function initAdminSingleStudentPage() {
     showToast('Failed to load student details.', 'error');
   }
 }
+
+// DELETE STUDENT TICKET FUNCTION
+async function deleteStudentTicket(profileId, storagePath) {
+  if (!confirm("Are you sure you want to delete this student's uploaded PDF ticket?")) {
+    return;
+  }
+
+  const sb = window.getSupabase();
+  try {
+    // 1. Delete from Storage Bucket
+    if (storagePath) {
+      await sb.storage.from('tickets').remove([storagePath]);
+    }
+
+    // 2. Delete from PostgreSQL Database
+    await sb.from('tickets').delete().eq('student_profile_id', profileId);
+
+    showToast('Ticket PDF deleted successfully!', 'success');
+    setTimeout(() => location.reload(), 1000);
+
+  } catch (err) {
+    console.error("Error deleting ticket:", err);
+    showToast('Failed to delete ticket.', 'error');
+  }
+}
+window.deleteStudentTicket = deleteStudentTicket;
 
 function setupTicketUploadForm(student, profileId) {
   const uploadForm = document.getElementById('ticket-upload-form');
@@ -518,20 +576,29 @@ async function initAdminTicketsPage() {
       return;
     }
 
-    container.innerHTML = tickets.map(t => `
-      <tr>
-        <td><strong>${escapeHtml(t.ticket_id)}</strong></td>
-        <td>
-          <div style="font-weight: 600;">${escapeHtml(t.profile ? t.profile.full_name : 'N/A')}</div>
-          <div style="font-size: 0.8rem; color: var(--text-muted);">${escapeHtml(t.profile ? t.profile.email : '')}</div>
-        </td>
-        <td>${formatDate(t.uploaded_at)}</td>
-        <td><span class="badge badge-live">UPLOADED</span></td>
-        <td>
-          <button class="btn btn-sm btn-secondary" onclick="viewPrivateTicket('${t.storage_path}')">View PDF</button>
-        </td>
-      </tr>
-    `).join('');
+    container.innerHTML = tickets.map(t => {
+      const fileNameOnly = t.storage_path ? t.storage_path.split('/').pop() : 'ticket.pdf';
+      return `
+        <tr>
+          <td>
+            <strong>${escapeHtml(t.ticket_id)}</strong> <br>
+            <span style="font-size: 0.78rem; color: #34d399; font-family: monospace;">📄 ${escapeHtml(fileNameOnly)}</span>
+          </td>
+          <td>
+            <div style="font-weight: 600;">${escapeHtml(t.profile ? t.profile.full_name : 'N/A')}</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">${escapeHtml(t.profile ? t.profile.email : '')}</div>
+          </td>
+          <td>${formatDate(t.uploaded_at)}</td>
+          <td><span class="badge badge-live">UPLOADED</span></td>
+          <td>
+            <div class="table-actions">
+              <button class="btn btn-sm btn-secondary" onclick="viewPrivateTicket('${t.storage_path}')">👁️ View PDF</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteStudentTicket('${t.student_profile_id}', '${t.storage_path}')">🗑️ Delete</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
 
   } catch (err) {
     console.error("Error loading tickets page:", err);

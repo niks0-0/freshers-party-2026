@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manage Student — Admin Portal</title>
-  <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/style.css?v=7.0">
+  <link rel="stylesheet" href="../css/admin.css?v=7.0">
   <style>
     .admin-detail-grid {
       display: grid;
@@ -19,6 +19,16 @@
         grid-template-columns: 1fr;
       }
     }
+    .uploaded-file-box {
+      padding: 0.85rem 1rem;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: var(--radius-md);
+      margin-bottom: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
   </style>
 </head>
 <body>
@@ -27,7 +37,7 @@
   <nav class="navbar">
     <div class="container nav-container">
       <a href="dashboard.html" class="nav-logo">
-        <span>FRESHERS 2026</span>
+        <span>CRUD 2026</span>
         <span class="logo-badge" style="background: var(--accent);">ADMIN</span>
       </a>
       <ul class="nav-links">
@@ -73,23 +83,41 @@
         </div>
       </div>
 
-      <!-- Ticket Upload Card -->
+      <!-- Ticket Upload & Management Card -->
       <div class="glass-card">
-        <h3 style="margin-bottom: 0.5rem;">🎟️ Upload Individual Ticket PDF</h3>
-        <p style="font-size: 0.875rem; margin-bottom: 1.25rem;">Select the student's personalized PDF ticket to upload to private storage.</p>
+        <h3 style="margin-bottom: 0.5rem;">🎟️ Individual Ticket PDF Manager</h3>
+        <p style="font-size: 0.875rem; margin-bottom: 1.25rem;">View uploaded file details, replace PDF, or delete existing ticket.</p>
+
+        <!-- Uploaded File Info Box (Hidden if not uploaded) -->
+        <div id="uploaded-file-info-box" class="uploaded-file-box" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+              <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Current Uploaded Ticket File</div>
+              <strong id="uploaded-filename-text" style="color: #34d399; font-size: 0.95rem;">FP26-9119_ticket.pdf</strong>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button id="view-current-ticket-btn" type="button" class="btn btn-sm btn-secondary" style="font-size: 0.8rem;">
+                👁️ View PDF
+              </button>
+              <button id="delete-current-ticket-btn" type="button" class="btn btn-sm btn-danger" style="font-size: 0.8rem;">
+                🗑️ Delete Ticket
+              </button>
+            </div>
+          </div>
+        </div>
 
         <form id="ticket-upload-form">
           <div class="form-group">
-            <label for="ticket-pdf-file">Select PDF File (.pdf, Max 10MB) *</label>
+            <label for="ticket-pdf-file" id="upload-file-label">Select PDF File (.pdf, Max 10MB) *</label>
             <input type="file" id="ticket-pdf-file" accept="application/pdf" required style="padding: 0.6rem;">
           </div>
 
           <div style="padding: 0.85rem 1rem; background: rgba(13, 18, 30, 0.6); border-radius: var(--radius-md); border: 1px solid var(--border-color); margin: 1rem 0; font-size: 0.825rem; color: var(--text-muted);">
-            🛡️ PDF files are stored strictly in private Supabase Storage. Students can download their ticket ONLY after completing email verification when tickets are set LIVE.
+            🛡️ Uploading a new PDF file will automatically replace the existing ticket file for this student.
           </div>
 
           <button type="submit" id="upload-ticket-submit-btn" class="btn btn-primary btn-full">
-            UPLOAD / REPLACE TICKET PDF
+            UPLOAD / REPLACE TICKET PDF 📤
           </button>
         </form>
       </div>
@@ -99,16 +127,16 @@
 
   <footer class="footer">
     <div class="container">
-      <p>© 2026 Freshers Party Admin Console.</p>
+      <p>© 2026 CRUD 2026 Admin Console.</p>
     </div>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../js/config.js"></script>
-  <script src="../js/supabase.js"></script>
-  <script src="../js/ui-helpers.js"></script>
-  <script src="../js/auth.js"></script>
-  <script src="../js/admin.js"></script>
+  <script src="../js/config.js?v=7.0"></script>
+  <script src="../js/supabase.js?v=7.0"></script>
+  <script src="../js/ui-helpers.js?v=7.0"></script>
+  <script src="../js/auth.js?v=7.0"></script>
+  <script src="../js/admin.js?v=7.0"></script>
 
 </body>
 </html>
