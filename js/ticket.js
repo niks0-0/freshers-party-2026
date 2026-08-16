@@ -15,25 +15,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadAndUnlockTicket() {
   const sb = window.getSupabase();
   const userId = currentUserAuth.user.id;
-
-  const loadingSpinner = document.getElementById('ticket-loading-state');
-  const errorContainer = document.getElementById('ticket-error-state');
-  const viewerContainer = document.getElementById('ticket-viewer-content');
+  const userEmail = currentUserAuth.user.email;
 
   try {
-    // 1. Check Global LIVE State
+    // 1. Render Student Name
+    const nameEl = document.getElementById('ticket-student-name');
+    if (nameEl) {
+      nameEl.textContent = currentUserAuth.profile?.full_name || currentUserAuth.user.user_metadata?.full_name || 'Student Ticket Pass';
+    }
+
+    // 2. Check Global LIVE State
     const { data: settings } = await sb
       .from('event_settings')
       .select('ticket_live')
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (!settings || !settings.ticket_live) {
       showErrorState("Tickets are currently OFF. The organizer has not released tickets yet.");
       return;
     }
 
-    // 2. Check Email Verification Status
+    // 3. Check Email Verification Status
     const { data: verifyRecord } = await sb
       .from('verification_codes')
       .select('is_verified')
@@ -46,19 +49,38 @@ async function loadAndUnlockTicket() {
       return;
     }
 
-    // 3. Fetch Ticket Record from Database
-    const { data: ticket, error: ticketErr } = await sb
+    // 4. Fetch Ticket Record from Database
+    let { data: ticket } = await sb
       .from('tickets')
       .select('*')
       .eq('student_profile_id', userId)
-      .single();
+      .maybeSingle();
 
-    if (ticketErr || !ticket || !ticket.storage_path) {
+    if (!ticket || !ticket.storage_path) {
+      // Fallback: check by student_details id
+      const { data: detail } = await sb
+        .from('student_details')
+        .select('id')
+        .eq('email', userEmail)
+        .maybeSingle();
+
+      if (detail) {
+        const { data: tFallback } = await sb
+          .from('tickets')
+          .select('*')
+          .eq('student_profile_id', detail.id)
+          .maybeSingle();
+
+        if (tFallback) ticket = tFallback;
+      }
+    }
+
+    if (!ticket || !ticket.storage_path) {
       showErrorState("Your individual ticket PDF has not been uploaded yet by administrators.");
       return;
     }
 
-    // 4. Request Private Signed URL from Supabase Storage (Valid for 5 minutes)
+    // 5. Request Private Signed URL from Supabase Storage (Valid for 5 minutes)
     const { data: signedData, error: storageErr } = await sb
       .storage
       .from('tickets')
@@ -72,9 +94,11 @@ async function loadAndUnlockTicket() {
 
     signedPdfUrl = signedData.signedUrl;
 
-    // Display Ticket Info
+    // Display Ticket ID
     const ticketIdEl = document.getElementById('display-ticket-id');
-    if (ticketIdEl) ticketIdEl.textContent = ticket.ticket_id || 'FP26-TICKET';
+    if (ticketIdEl) {
+      ticketIdEl.textContent = `Ticket ID: ${ticket.ticket_id || 'FP26-PASS'}`;
+    }
 
     // Embed PDF into Viewer iframe
     const iframe = document.getElementById('pdf-frame');
@@ -86,15 +110,11 @@ async function loadAndUnlockTicket() {
     const downloadBtn = document.getElementById('download-pdf-btn');
     if (downloadBtn) {
       downloadBtn.href = signedPdfUrl;
-      downloadBtn.setAttribute('download', `${ticket.ticket_id || 'Freshers_Party_2026_Ticket'}.pdf`);
+      downloadBtn.setAttribute('download', `${ticket.ticket_id || 'CRUD_2026_Ticket'}.pdf`);
       downloadBtn.addEventListener('click', () => {
         showToast('Downloading your PDF ticket...', 'success');
       });
     }
-
-    // Show Viewer Container
-    if (loadingSpinner) loadingSpinner.style.display = 'none';
-    if (viewerContainer) viewerContainer.style.display = 'block';
 
   } catch (err) {
     console.error("Error unlocking ticket:", err);
@@ -103,12 +123,12 @@ async function loadAndUnlockTicket() {
 }
 
 function showErrorState(message, redirectUrl = "dashboard.html", redirectBtnText = "Back to Dashboard") {
-  const loadingSpinner = document.getElementById('ticket-loading-state');
+  const viewerContainer = document.getElementById('ticket-viewer-content');
   const errorContainer = document.getElementById('ticket-error-state');
   const errorMessage = document.getElementById('ticket-error-message');
   const redirectBtn = document.getElementById('ticket-error-redirect-btn');
 
-  if (loadingSpinner) loadingSpinner.style.display = 'none';
+  if (viewerContainer) viewerContainer.style.display = 'none';
   if (errorMessage) errorMessage.textContent = message;
   if (redirectBtn) {
     redirectBtn.href = redirectUrl;
