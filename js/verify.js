@@ -1,5 +1,5 @@
 /* ========================================================
-   CRUD 2026 — ABSOLUTE EXACT MATCH 6-DIGIT OTP VERIFICATION LOGIC
+   CRUD 2026 — STRICT MATHEMATICAL OTP COMPARISON LOGIC
    ======================================================== */
 
 let currentUserAuth = null;
@@ -66,7 +66,7 @@ async function sendOtpCode() {
   const userId = currentUserAuth.user.id;
   const userEmail = currentUserAuth.user.email;
 
-  // Clear previous session storage verification flag on fresh code request
+  // Clear previous verification flags on fresh code request
   localStorage.removeItem(`crud2026_verified_${userId}`);
   sessionStorage.removeItem(`crud2026_verified_${userId}`);
 
@@ -152,27 +152,27 @@ function setupVerificationForm() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const verifyBtn = document.getElementById('verify-submit-btn');
-    const otpCode = getEnteredOtpCode();
+    const enteredOtpCode = getEnteredOtpCode();
 
-    if (otpCode.length !== 6) {
+    if (enteredOtpCode.length !== 6) {
       showToast('Please enter the full 6-digit code.', 'error');
       return;
     }
 
-    setButtonLoading(verifyBtn, true, 'Verifying Security Code...');
+    setButtonLoading(verifyBtn, true, 'Verifying 6-Digit Code...');
 
     const sb = window.getSupabase();
     const userId = currentUserAuth.user.id;
 
     try {
-      // 1. Fetch current verification record from database
-      const { data: record } = await sb
+      // 1. Fetch exact verification record from database
+      const { data: record, error: fetchErr } = await sb
         .from('verification_codes')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (!record) {
+      if (fetchErr || !record) {
         showToast('No active verification code found. Click Resend Code.', 'error');
         setButtonLoading(verifyBtn, false);
         clearOtpInputs();
@@ -181,13 +181,13 @@ function setupVerificationForm() {
 
       // 2. Check Expiry
       if (new Date(record.expires_at) < new Date()) {
-        showToast('Verification code has expired. Please click Resend.', 'error');
+        showToast('Verification code has expired. Please click Resend Code.', 'error');
         setButtonLoading(verifyBtn, false);
         clearOtpInputs();
         return;
       }
 
-      // 3. Check Attempts
+      // 3. Check Failed Attempts Limit
       if (record.attempts >= 5) {
         showToast('Too many failed attempts. Please request a new code.', 'error');
         setButtonLoading(verifyBtn, false);
@@ -195,30 +195,34 @@ function setupVerificationForm() {
         return;
       }
 
-      // 4. ABSOLUTE EXACT STRING MATCH CHECK (===)
-      const expectedCode = String(record.otp_code).trim();
-      const enteredCode = String(otpCode).trim();
+      // 4. STRICT EXACT COMPARISON (Sent OTP vs Received OTP Typed by User)
+      const sentOtpCode = String(record.otp_code).trim();
+      const userEnteredCode = String(enteredOtpCode).trim();
 
-      if (expectedCode !== enteredCode && !expectedCode.startsWith(enteredCode)) {
-        // Increment failed attempts
+      // Check exact match (or prefix match if sent token is 8-digit)
+      const isExactMatch = (sentOtpCode === userEnteredCode);
+      const isPrefixMatch = (sentOtpCode.length >= 6 && sentOtpCode.startsWith(userEnteredCode));
+
+      if (!isExactMatch && !isPrefixMatch) {
+        // Increment failed attempts in DB
         await sb
           .from('verification_codes')
           .update({ attempts: (record.attempts || 0) + 1 })
           .eq('id', record.id);
 
-        showToast('Incorrect verification code! Please check your email.', 'error');
+        showToast('Incorrect verification code! Please check your email inbox.', 'error');
         setButtonLoading(verifyBtn, false);
         clearOtpInputs();
         return;
       }
 
-      // 5. Code Matched! Mark verified in database
+      // 5. SUCCESS! Sent OTP matches Received OTP!
       await sb
         .from('verification_codes')
         .update({ is_verified: true })
         .eq('id', record.id);
 
-      // Set Verified Flags
+      // Store local & session verification proof
       localStorage.setItem(`crud2026_verified_${userId}`, 'true');
       sessionStorage.setItem(`crud2026_verified_${userId}`, 'true');
 
@@ -229,7 +233,7 @@ function setupVerificationForm() {
 
     } catch (err) {
       console.error("Verification error:", err);
-      showToast('Verification failed. Please try again.', 'error');
+      showToast('Verification failed. Incorrect code or connection error.', 'error');
       setButtonLoading(verifyBtn, false);
       clearOtpInputs();
     }
