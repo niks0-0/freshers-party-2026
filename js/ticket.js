@@ -1,5 +1,5 @@
 /* ========================================================
-   FRESHERS PARTY 2026 — PURE ORIGINAL PDF TICKET VIEWER
+   FRESHERS PARTY 2026 — HIGH-DEFINITION PDF.JS TICKET RENDERER
    ======================================================== */
 
 let currentUserAuth = null;
@@ -106,15 +106,63 @@ async function loadAndUnlockTicket() {
       ticketIdEl.textContent = `Ticket ID: ${ticket.ticket_id || 'FP26-PASS'}`;
     }
 
-    // Embed signed PDF URL directly into iframe
-    const iframe = document.getElementById('pdf-frame');
-    if (iframe) {
-      iframe.src = signedPdfUrl;
+    const directOpenBtn = document.getElementById('direct-pdf-open-btn');
+    if (directOpenBtn) {
+      directOpenBtn.href = signedPdfUrl;
+      directOpenBtn.style.display = 'inline-flex';
     }
+
+    // Render exact PDF file using Mozilla PDF.js (Fixes Android Mobile Chrome white box bug)
+    await renderPdfWithPdfJs(signedPdfUrl);
 
   } catch (err) {
     console.error("Error unlocking ticket:", err);
     showErrorState("An unexpected error occurred while loading your ticket.");
+  }
+}
+
+async function renderPdfWithPdfJs(url) {
+  const canvas = document.getElementById('pdf-render-canvas');
+  const loadingEl = document.getElementById('pdf-loading-spinner');
+  const iframe = document.getElementById('pdf-frame');
+
+  if (!window.pdfjsLib || !canvas) {
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (iframe) {
+      iframe.src = `${url}#toolbar=0&navpanes=0&scrollbar=0`;
+      iframe.style.display = 'block';
+    }
+    return;
+  }
+
+  try {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    const loadingTask = pdfjsLib.getDocument(url);
+    const pdf = await loadingTask.promise;
+    const page = await pdf.getPage(1);
+
+    const viewport = page.getViewport({ scale: 2.0 }); // HD Scale
+    const context = canvas.getContext('2d');
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+
+    const renderContext = {
+      canvasContext: context,
+      viewport: viewport
+    };
+
+    await page.render(renderContext).promise;
+
+    if (loadingEl) loadingEl.style.display = 'none';
+    canvas.style.display = 'block';
+
+  } catch (err) {
+    console.error("PDF.js render error, fallback to iframe:", err);
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (iframe) {
+      iframe.src = `${url}#toolbar=0&navpanes=0&scrollbar=0`;
+      iframe.style.display = 'block';
+    }
   }
 }
 
