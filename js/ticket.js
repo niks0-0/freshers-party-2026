@@ -1,5 +1,5 @@
 /* ========================================================
-   FRESHERS PARTY 2026 — SECURE TICKET VIEWER & DOWNLOADER
+   FRESHERS PARTY 2026 — SECURE PROTECTED TICKET VIEWER
    ======================================================== */
 
 let currentUserAuth = null;
@@ -9,8 +9,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   currentUserAuth = await requireStudentAuth();
   if (!currentUserAuth) return;
 
+  setupAntiProtectionListeners();
   await loadAndUnlockTicket();
 });
+
+// Security listeners: block right click, copy, and print shortcuts
+function setupAntiProtectionListeners() {
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('selectstart', e => e.preventDefault());
+  document.addEventListener('dragstart', e => e.preventDefault());
+
+  document.addEventListener('keydown', e => {
+    // Block Ctrl+P (Print), Ctrl+S (Save), Ctrl+U (Source), F12 (Inspect)
+    if (
+      (e.ctrlKey && (e.key === 'p' || e.key === 's' || e.key === 'u')) ||
+      e.key === 'F12'
+    ) {
+      e.preventDefault();
+      showToast('Action restricted. This digital pass is screenshot & download protected.', 'warning');
+    }
+  });
+}
 
 async function loadAndUnlockTicket() {
   const sb = window.getSupabase();
@@ -18,13 +37,21 @@ async function loadAndUnlockTicket() {
   const userEmail = currentUserAuth.user.email;
 
   try {
-    // 1. Render Student Name
+    // 1. Render Student Name & Email Tag
     const nameEl = document.getElementById('ticket-student-name');
-    if (nameEl) {
-      nameEl.textContent = currentUserAuth.profile?.full_name || currentUserAuth.user.user_metadata?.full_name || 'Student Ticket Pass';
+    const studentName = currentUserAuth.profile?.full_name || currentUserAuth.user.user_metadata?.full_name || 'Student Ticket Pass';
+    if (nameEl) nameEl.textContent = studentName;
+
+    const emailTagEl = document.getElementById('ticket-email-tag');
+    if (emailTagEl) emailTagEl.textContent = userEmail;
+
+    // 2. Render Security Watermark Text with Student Details
+    const watermarkEl = document.getElementById('watermark-text-display');
+    if (watermarkEl) {
+      watermarkEl.textContent = `CRUD 2026 • ISSUED TO: ${studentName.toUpperCase()} • ${userEmail.toUpperCase()} • DO NOT SHARE`;
     }
 
-    // 2. Check Global LIVE State
+    // 3. Check Global LIVE State
     const { data: settings } = await sb
       .from('event_settings')
       .select('ticket_live')
@@ -36,7 +63,7 @@ async function loadAndUnlockTicket() {
       return;
     }
 
-    // 3. Check Verification Session Flags & Database Status
+    // 4. Check Verification Session Flags & Database Status
     const isLocalVerified = localStorage.getItem(`crud2026_verified_${userId}`) === 'true';
     const isSessionVerified = sessionStorage.getItem(`crud2026_verified_${userId}`) === 'true';
 
@@ -56,7 +83,6 @@ async function loadAndUnlockTicket() {
       console.warn("DB verification check note:", e);
     }
 
-    // Grant pass if verified anywhere
     const isAuthorized = isLocalVerified || isSessionVerified || isDbVerified;
 
     if (!isAuthorized) {
@@ -64,7 +90,7 @@ async function loadAndUnlockTicket() {
       return;
     }
 
-    // 4. Fetch Ticket Record from Database
+    // 5. Fetch Ticket Record from Database
     let { data: ticket } = await sb
       .from('tickets')
       .select('*')
@@ -95,7 +121,7 @@ async function loadAndUnlockTicket() {
       return;
     }
 
-    // 5. Request Private Signed URL from Supabase Storage (Valid for 5 minutes)
+    // 6. Request Private Signed URL from Supabase Storage (Valid for 5 minutes)
     const { data: signedData, error: storageErr } = await sb
       .storage
       .from('tickets')
@@ -115,20 +141,11 @@ async function loadAndUnlockTicket() {
       ticketIdEl.textContent = `Ticket ID: ${ticket.ticket_id || 'FP26-PASS'}`;
     }
 
-    // Embed PDF into Viewer iframe
+    // Embed PDF into Viewer iframe with toolbar disabled
     const iframe = document.getElementById('pdf-frame');
     if (iframe) {
-      iframe.src = signedPdfUrl;
-    }
-
-    // Configure Download Button
-    const downloadBtn = document.getElementById('download-pdf-btn');
-    if (downloadBtn) {
-      downloadBtn.href = signedPdfUrl;
-      downloadBtn.setAttribute('download', `${ticket.ticket_id || 'CRUD_2026_Ticket'}.pdf`);
-      downloadBtn.addEventListener('click', () => {
-        showToast('Downloading your PDF ticket...', 'success');
-      });
+      // Add toolbar=0 and navpanes=0 to disable PDF viewer download/print buttons
+      iframe.src = `${signedPdfUrl}#toolbar=0&navpanes=0&scrollbar=0`;
     }
 
   } catch (err) {

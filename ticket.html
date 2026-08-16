@@ -3,18 +3,77 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your Digital Ticket — CRUD 2026</title>
-  <link rel="stylesheet" href="css/style.css?v=3.3">
-  <link rel="stylesheet" href="css/dashboard.css?v=3.3">
+  <title>Protected Digital Ticket Pass — CRUD 2026</title>
+  <link rel="stylesheet" href="css/style.css?v=3.5">
+  <link rel="stylesheet" href="css/dashboard.css?v=3.5">
+  <style>
+    /* Anti-Print & Protection Styles */
+    @media print {
+      html, body {
+        display: none !important;
+      }
+    }
+    .protected-viewer-wrapper {
+      position: relative;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      overflow: hidden;
+      border-radius: var(--radius-md);
+    }
+    .watermark-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(139, 92, 246, 0.04),
+        rgba(139, 92, 246, 0.04) 100px,
+        rgba(236, 72, 153, 0.04) 100px,
+        rgba(236, 72, 153, 0.04) 200px
+      );
+    }
+    .watermark-text {
+      transform: rotate(-25deg);
+      font-size: clamp(1.2rem, 3.5vw, 2.2rem);
+      font-weight: 900;
+      color: rgba(255, 255, 255, 0.12);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      text-align: center;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .security-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.85rem;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #34d399;
+    }
+  </style>
 </head>
-<body>
+<body oncontextmenu="return false;" onselectstart="return false;" ondragstart="return false;">
 
   <!-- Navigation Bar -->
   <nav class="navbar">
     <div class="container nav-container">
       <a href="dashboard.html" class="nav-logo">
         <span>CRUD 2026</span>
-        <span class="logo-badge" style="background: var(--success);">VERIFIED PASS</span>
+        <span class="logo-badge" style="background: var(--success);">PROTECTED PASS</span>
       </a>
       <ul class="nav-links">
         <li><a href="dashboard.html" class="btn btn-sm btn-secondary">← Back to Dashboard</a></li>
@@ -24,31 +83,42 @@
 
   <main class="container" style="padding: 2.5rem 1.5rem 5rem;">
 
-    <div style="text-align: center; margin-bottom: 2rem;">
-      <span class="badge badge-live" style="margin-bottom: 0.85rem;">✅ VERIFIED DIGITAL TICKET PASS</span>
-      <h1 style="font-size: 2.25rem;">CRUD 2026 <span class="gradient-text">Ticket Pass</span></h1>
-      <p>Your personalized event ticket PDF is ready. Download or present this pass at entry scanning.</p>
+    <div style="text-align: center; margin-bottom: 1.75rem;">
+      <span class="security-badge" style="margin-bottom: 0.85rem;">🔒 SECURE IN-APP TICKET PASS</span>
+      <h1 style="font-size: 2.25rem;">CRUD 2026 <span class="gradient-text">Personal Ticket</span></h1>
+      <p>Personalized digital pass for venue entry scanning. Screenshot & download protection active.</p>
     </div>
 
-    <!-- Ticket Viewer Container -->
+    <!-- Protected Ticket Viewer Container -->
     <div id="ticket-viewer-content" class="glass-card" style="max-width: 800px; margin: 0 auto; padding: 1.5rem;">
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
         <div>
           <h3 id="ticket-student-name">Student Pass</h3>
           <p id="display-ticket-id" style="font-size: 0.875rem; color: var(--primary); font-weight: 600;">Ticket ID: Loading...</p>
         </div>
-        <a id="download-pdf-btn" href="#" target="_blank" class="btn btn-primary" style="display: inline-flex;">
-          📥 DOWNLOAD PDF TICKET
-        </a>
+        <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--success); font-weight: 600;">
+          <span class="badge-dot"></span> LIVE SCANNING READY
+        </div>
       </div>
 
-      <!-- PDF Frame View -->
-      <div class="pdf-container" style="margin-top: 1.25rem;">
-        <iframe id="pdf-frame" style="width: 100%; height: 100%; border: none; border-radius: var(--radius-md);"></iframe>
+      <!-- Protected Viewer Canvas / Frame Wrapper -->
+      <div class="protected-viewer-wrapper pdf-container" style="margin-top: 1.25rem;">
+        <!-- Watermark Overlay -->
+        <div class="watermark-overlay">
+          <div id="watermark-text-display" class="watermark-text">
+            CRUD 2026 OFFICIAL PASS • DO NOT SHARE
+          </div>
+        </div>
+        <!-- PDF Embedded Viewer Frame -->
+        <iframe id="pdf-frame" style="width: 100%; height: 100%; border: none; border-radius: var(--radius-md);" src="about:blank"></iframe>
       </div>
 
-      <div style="margin-top: 1.25rem; padding: 0.85rem 1rem; background: rgba(13, 18, 30, 0.6); border-radius: var(--radius-md); border: 1px solid var(--border-color); font-size: 0.825rem; color: var(--text-muted);">
-        🛡️ <strong>Security Notice:</strong> This digital pass is protected by temporary 5-minute cryptographic tokens. Do not share your login credentials.
+      <div style="margin-top: 1.25rem; padding: 0.85rem 1rem; background: rgba(13, 18, 30, 0.7); border-radius: var(--radius-md); border: 1px solid var(--border-color); font-size: 0.825rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.75rem;">
+        <span style="font-size: 1.5rem;">🛡️</span>
+        <div>
+          <strong style="color: var(--text-main);">Anti-Fraud Protection:</strong>
+          This ticket is cryptographically bound to your student profile (<span id="ticket-email-tag" style="color: var(--accent);">loading...</span>). Sharing or reproducing this pass is strictly prohibited.
+        </div>
       </div>
     </div>
 
@@ -69,11 +139,11 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=3.3"></script>
-  <script src="js/supabase.js?v=3.3"></script>
-  <script src="js/ui-helpers.js?v=3.3"></script>
-  <script src="js/auth.js?v=3.3"></script>
-  <script src="js/ticket.js?v=3.3"></script>
+  <script src="js/config.js?v=3.5"></script>
+  <script src="js/supabase.js?v=3.5"></script>
+  <script src="js/ui-helpers.js?v=3.5"></script>
+  <script src="js/auth.js?v=3.5"></script>
+  <script src="js/ticket.js?v=3.5"></script>
 
 </body>
 </html>
