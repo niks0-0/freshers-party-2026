@@ -1,6 +1,59 @@
 /* ========================================================
-   FRESHERS PARTY 2026 — UI HELPERS & NOTIFICATIONS
+   CRUD 2026 — UI HELPERS & MOBILE MENU CONTROLLER
    ======================================================== */
+
+document.addEventListener('DOMContentLoaded', () => {
+  setupMobileMenuToggle();
+});
+
+// Mobile Hamburger Menu Handler
+function setupMobileMenuToggle() {
+  const navContainers = document.querySelectorAll('.nav-container');
+  
+  navContainers.forEach(container => {
+    const navLinks = container.querySelector('.nav-links');
+    if (!navLinks) return;
+
+    // Check if toggle button already exists
+    let toggleBtn = container.querySelector('.mobile-menu-toggle');
+    if (!toggleBtn) {
+      toggleBtn = document.createElement('button');
+      toggleBtn.className = 'mobile-menu-toggle';
+      toggleBtn.setAttribute('aria-label', 'Toggle Navigation Menu');
+      toggleBtn.innerHTML = '☰';
+      container.appendChild(toggleBtn);
+    }
+
+    toggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isActive = navLinks.classList.toggle('active');
+      toggleBtn.innerHTML = isActive ? '✕' : '☰';
+    });
+
+    // Close menu when a link inside is clicked
+    const links = navLinks.querySelectorAll('a, button');
+    links.forEach(link => {
+      link.addEventListener('click', () => {
+        navLinks.classList.remove('active');
+        toggleBtn.innerHTML = '☰';
+      });
+    });
+  });
+
+  // Close menu when clicking outside
+  document.addEventListener('click', (e) => {
+    document.querySelectorAll('.nav-links.active').forEach(navLinks => {
+      if (!navLinks.contains(e.target)) {
+        navLinks.classList.remove('active');
+        const container = navLinks.closest('.nav-container');
+        if (container) {
+          const toggleBtn = container.querySelector('.mobile-menu-toggle');
+          if (toggleBtn) toggleBtn.innerHTML = '☰';
+        }
+      }
+    });
+  });
+}
 
 // Toast Notifications
 function showToast(message, type = 'info', duration = 4000) {
@@ -27,7 +80,7 @@ function showToast(message, type = 'info', duration = 4000) {
 
   setTimeout(() => {
     toast.style.opacity = '0';
-    toast.style.transform = 'translateY(10px)';
+    toast.style.transform = 'translateY(-10px)';
     toast.style.transition = 'all 0.3s ease';
     setTimeout(() => toast.remove(), 300);
   }, duration);

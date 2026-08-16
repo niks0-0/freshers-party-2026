@@ -133,7 +133,7 @@ a:hover {
 .navbar {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
   background: rgba(7, 10, 18, 0.94);
   backdrop-filter: var(--backdrop-blur);
   -webkit-backdrop-filter: var(--backdrop-blur);
@@ -146,7 +146,7 @@ a:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
+  position: relative;
 }
 
 .nav-logo {
@@ -174,20 +174,44 @@ a:hover {
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
   list-style: none;
-  flex-wrap: wrap;
 }
 
 .nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   color: var(--text-muted);
-  font-weight: 500;
-  font-size: 0.875rem;
-  white-space: nowrap;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
 }
 
 .nav-link:hover, .nav-link.active {
   color: var(--text-main);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Mobile Menu Toggle Button (Hamburger ☰) */
+.mobile-menu-toggle {
+  display: none;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-accent);
+  color: var(--text-main);
+  font-size: 1.35rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  line-height: 1;
+  transition: var(--transition);
+}
+
+.mobile-menu-toggle:hover {
+  background: rgba(139, 92, 246, 0.2);
+  color: white;
 }
 
 /* Premium Glass Card */
@@ -264,7 +288,7 @@ a:hover {
 }
 
 .btn-sm {
-  padding: 0.5rem 0.9rem;
+  padding: 0.55rem 1rem;
   font-size: 0.85rem;
   border-radius: var(--radius-sm);
 }
@@ -309,7 +333,7 @@ input, select, textarea {
   border-radius: var(--radius-md);
   color: var(--text-main);
   font-family: var(--font-body);
-  font-size: 16px; /* Prevents auto-zoom on iOS */
+  font-size: 16px;
   transition: var(--transition);
   outline: none;
   -webkit-appearance: none;
@@ -369,7 +393,7 @@ select option {
   box-shadow: 0 0 8px currentColor;
 }
 
-/* HIGH VISIBILITY TOP-CENTER TOAST NOTIFICATIONS (MOBILE & DESKTOP) */
+/* HIGH VISIBILITY TOP-CENTER TOAST NOTIFICATIONS */
 #toast-container {
   position: fixed;
   top: 1.25rem;
@@ -436,28 +460,74 @@ select option {
   color: var(--text-dim);
 }
 
-/* Responsive Mobile Layout Adjustments */
-@media (max-width: 600px) {
-  .nav-container {
-    flex-wrap: wrap;
-    justify-content: space-between;
+/* Mobile Navigation System (Hamburger Drawer & Interactive Menu Cards) */
+@media (max-width: 768px) {
+  .mobile-menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
+
   .nav-links {
-    gap: 0.4rem;
-  }
-  .nav-link {
-    font-size: 0.8rem;
-  }
-  .glass-card {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(10, 14, 24, 0.98);
+    backdrop-filter: var(--backdrop-blur);
+    -webkit-backdrop-filter: var(--backdrop-blur);
+    border-bottom: 1px solid var(--border-accent);
     padding: 1.25rem 1rem;
-    border-radius: var(--radius-md);
-  }
-  .btn {
-    width: 100%;
-    padding: 0.9rem 1rem;
-  }
-  .form-row {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: stretch;
     gap: 0.75rem;
+    box-shadow: var(--shadow-md), var(--shadow-glow);
+    display: none;
+    animation: menuSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
+
+  .nav-links.active {
+    display: flex;
+  }
+
+  /* Clear Interactive Button Styling for Nav Links on Mobile */
+  .nav-link {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 0.95rem;
+    justify-content: space-between;
+    color: var(--text-main);
+  }
+
+  .nav-link::after {
+    content: '→';
+    font-size: 1rem;
+    opacity: 0.6;
+    transition: var(--transition);
+  }
+
+  .nav-link:hover, .nav-link.active {
+    background: rgba(139, 92, 246, 0.18);
+    border-color: var(--border-accent);
+    color: white;
+  }
+
+  .nav-link:hover::after {
+    opacity: 1;
+    transform: translateX(4px);
+  }
+
+  .nav-links .btn {
+    width: 100%;
+    padding: 0.95rem 1rem;
+    font-size: 1rem;
+  }
+}
+
+@keyframes menuSlideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
