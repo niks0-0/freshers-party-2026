@@ -20,13 +20,12 @@ function setupAntiProtectionListeners() {
   document.addEventListener('dragstart', e => e.preventDefault());
 
   document.addEventListener('keydown', e => {
-    // Block Ctrl+P (Print), Ctrl+S (Save), Ctrl+U (Source), F12 (Inspect)
     if (
       (e.ctrlKey && (e.key === 'p' || e.key === 's' || e.key === 'u')) ||
       e.key === 'F12'
     ) {
       e.preventDefault();
-      showToast('Action restricted. This digital pass is screenshot & download protected.', 'warning');
+      showToast('Action restricted. This digital pass is protected.', 'warning');
     }
   });
 }
@@ -38,20 +37,17 @@ async function loadAndUnlockTicket() {
 
   try {
     // 1. Render Student Name & Email Tag
+    const studentName = currentUserAuth.profile?.full_name || currentUserAuth.user.user_metadata?.full_name || 'Student';
     const nameEl = document.getElementById('ticket-student-name');
-    const studentName = currentUserAuth.profile?.full_name || currentUserAuth.user.user_metadata?.full_name || 'Student Ticket Pass';
     if (nameEl) nameEl.textContent = studentName;
+
+    const passNameEl = document.getElementById('pass-attendee-name');
+    if (passNameEl) passNameEl.textContent = studentName;
 
     const emailTagEl = document.getElementById('ticket-email-tag');
     if (emailTagEl) emailTagEl.textContent = userEmail;
 
-    // 2. Render Security Watermark Text with Student Details
-    const watermarkEl = document.getElementById('watermark-text-display');
-    if (watermarkEl) {
-      watermarkEl.textContent = `CRUD 2026 • ISSUED TO: ${studentName.toUpperCase()} • ${userEmail.toUpperCase()} • DO NOT SHARE`;
-    }
-
-    // 3. Check Global LIVE State
+    // 2. Check Global LIVE State
     const { data: settings } = await sb
       .from('event_settings')
       .select('ticket_live')
@@ -63,7 +59,7 @@ async function loadAndUnlockTicket() {
       return;
     }
 
-    // 4. Check Verification Session Flags & Database Status
+    // 3. Check Verification Session Flags & Database Status
     const isLocalVerified = localStorage.getItem(`crud2026_verified_${userId}`) === 'true';
     const isSessionVerified = sessionStorage.getItem(`crud2026_verified_${userId}`) === 'true';
 
@@ -90,7 +86,7 @@ async function loadAndUnlockTicket() {
       return;
     }
 
-    // 5. Fetch Ticket Record from Database
+    // 4. Fetch Ticket Record from Database
     let { data: ticket } = await sb
       .from('tickets')
       .select('*')
@@ -101,11 +97,13 @@ async function loadAndUnlockTicket() {
       // Fallback: check by student_details id
       const { data: detail } = await sb
         .from('student_details')
-        .select('id')
+        .select('id, full_name')
         .eq('email', userEmail)
         .maybeSingle();
 
       if (detail) {
+        if (detail.full_name && passNameEl) passNameEl.textContent = detail.full_name;
+
         const { data: tFallback } = await sb
           .from('tickets')
           .select('*')
@@ -116,36 +114,41 @@ async function loadAndUnlockTicket() {
       }
     }
 
+    // Display Ticket ID & QR Code
+    const ticketCode = ticket ? (ticket.ticket_id || 'FR002') : 'FR002';
+    const passTicketIdEl = document.getElementById('pass-ticket-id');
+    if (passTicketIdEl) passTicketIdEl.textContent = ticketCode;
+
+    const qrImg = document.getElementById('pass-qr-image');
+    if (qrImg) {
+      const qrData = encodeURIComponent(`CRUD2026-ENTRY-${ticketCode}-${userEmail}`);
+      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}`;
+    }
+
+    // Watermark Overlay
+    const watermarkEl = document.getElementById('watermark-text-display');
+    if (watermarkEl) {
+      watermarkEl.textContent = `CRUD FRESHERS 2K26 • ISSUED TO: ${studentName.toUpperCase()} • ${ticketCode} • DO NOT SHARE`;
+    }
+
     if (!ticket || !ticket.storage_path) {
-      showErrorState("Your individual ticket PDF has not been uploaded yet by administrators.");
+      // Native Ticket Pass is displayed gracefully
       return;
     }
 
-    // 6. Request Private Signed URL from Supabase Storage (Valid for 5 minutes)
+    // 5. Request Private Signed URL from Supabase Storage if PDF exists
     const { data: signedData, error: storageErr } = await sb
       .storage
       .from('tickets')
       .createSignedUrl(ticket.storage_path, 300, { download: false });
 
-    if (storageErr || !signedData || !signedData.signedUrl) {
-      console.error("Storage signed URL error:", storageErr);
-      showErrorState("Failed to authorize private ticket access.");
-      return;
-    }
-
-    signedPdfUrl = signedData.signedUrl;
-
-    // Display Ticket ID
-    const ticketIdEl = document.getElementById('display-ticket-id');
-    if (ticketIdEl) {
-      ticketIdEl.textContent = `Ticket ID: ${ticket.ticket_id || 'FP26-PASS'}`;
-    }
-
-    // Embed PDF into Viewer iframe with toolbar disabled
-    const iframe = document.getElementById('pdf-frame');
-    if (iframe) {
-      // Add toolbar=0 and navpanes=0 to disable PDF viewer download/print buttons
-      iframe.src = `${signedPdfUrl}#toolbar=0&navpanes=0&scrollbar=0`;
+    if (!storageErr && signedData && signedData.signedUrl) {
+      signedPdfUrl = signedData.signedUrl;
+      const iframe = document.getElementById('pdf-frame');
+      if (iframe) {
+        iframe.src = `${signedPdfUrl}#toolbar=0&navpanes=0&scrollbar=0`;
+        iframe.style.display = 'block';
+      }
     }
 
   } catch (err) {

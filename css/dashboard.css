@@ -1,5 +1,5 @@
 /* ==========================================================
-   CRUD 2026 — DASHBOARD, OTP & MOBILE PROTECTED VIEWER STYLES
+   CRUD 2026 — DASHBOARD, OTP & LANDSCAPE TICKET PASS STYLES
    ========================================================== */
 
 .dashboard-grid {
@@ -180,30 +180,163 @@
   text-align: center;
 }
 
-/* Protected Ticket Viewer Container (Mobile Optimized) */
+/* LANDSCAPE 16:9 TICKET PASS CONTAINER (EXACT MATCH FOR OFFICIAL PASS) */
 .pdf-container {
   position: relative;
   width: 100%;
-  height: 580px;
+  aspect-ratio: 16 / 9;
+  max-height: 460px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
-  background: #090c15;
+  border: 1px solid var(--border-accent);
+  background: #070b14;
   overflow: hidden;
   margin-top: 1.25rem;
-  box-shadow: var(--shadow-md);
-  -webkit-overflow-scrolling: touch;
+  box-shadow: var(--shadow-md), var(--shadow-glow);
+}
+
+/* Official Ticket Pass Native Layout */
+.official-ticket-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 80% 20%, rgba(30, 41, 69, 0.9), #0b1120);
+  border-radius: 16px;
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  padding: 2.2rem 2.5rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6);
+  user-select: none;
+  overflow: hidden;
+}
+
+/* Perforated Dashed Line Divider & Circles */
+.ticket-tear-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 61.5%;
+  width: 1px;
+  border-left: 2px dashed rgba(255, 255, 255, 0.22);
+  z-index: 5;
+}
+
+.ticket-tear-circle-top {
+  position: absolute;
+  top: -14px;
+  left: 61.5%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #070a12;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  z-index: 6;
+}
+
+.ticket-tear-circle-bottom {
+  position: absolute;
+  bottom: -14px;
+  left: 61.5%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #070a12;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  z-index: 6;
+}
+
+.ticket-left-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.4rem;
+  z-index: 2;
+}
+
+.admit-tag {
+  font-size: clamp(0.65rem, 1.8vw, 0.85rem);
+  font-weight: 800;
+  color: #06b6d4;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.ticket-main-title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.3rem, 3.8vw, 2.3rem);
+  font-weight: 900;
+  color: white;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+}
+
+.ticket-subtitle {
+  font-size: clamp(0.65rem, 1.6vw, 0.8rem);
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+
+.ticket-detail-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: clamp(0.75rem, 2vw, 1.05rem);
+}
+
+.detail-label {
+  font-size: clamp(0.6rem, 1.5vw, 0.75rem);
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.detail-value {
+  font-family: monospace;
+  font-size: clamp(0.9rem, 2.4vw, 1.35rem);
+  font-weight: 800;
+  color: #34d399;
+  letter-spacing: 0.05em;
+}
+
+.ticket-right-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 1.5rem;
+  z-index: 2;
+}
+
+.qr-white-card {
+  background: white;
+  padding: clamp(0.5rem, 1.8vw, 1rem);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-white-card img, .qr-white-card svg, .qr-white-card canvas {
+  width: clamp(90px, 22vw, 170px);
+  height: clamp(90px, 22vw, 170px);
+  display: block;
 }
 
 @media (max-width: 600px) {
-  .pdf-container {
-    height: 520px;
-    min-height: 70vh;
+  .official-ticket-card {
+    padding: 1.25rem 1.25rem;
+    grid-template-columns: 1.4fr 1fr;
   }
 }
 
-@media (max-width: 400px) {
-  .pdf-container {
-    height: 480px;
-    min-height: 65vh;
+@media (max-width: 420px) {
+  .official-ticket-card {
+    padding: 0.85rem 0.85rem;
   }
 }
