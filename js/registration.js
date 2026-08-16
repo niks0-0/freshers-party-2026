@@ -54,6 +54,11 @@ async function loadEventSettings() {
     if (instructionsEl && settings.instructions) {
       instructionsEl.textContent = settings.instructions;
     }
+
+    const mapsLinkEl = document.getElementById('display-maps-link');
+    if (mapsLinkEl && settings.google_maps_url) {
+      mapsLinkEl.href = settings.google_maps_url;
+    }
   } catch (err) {
     console.error("Error loading event settings:", err);
   }
@@ -118,7 +123,7 @@ function setupRegistrationForm() {
 
       // 2. Create Auth User directly with fixed password 'Freshers@2026'
       let userId = null;
-      const { data: authData, error: authErr } = await sb.auth.signUp({
+      const { data: authData } = await sb.auth.signUp({
         email: email,
         password: FIXED_STUDENT_PASSWORD,
         options: {
