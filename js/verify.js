@@ -64,7 +64,7 @@ async function sendOtpCode() {
   const array = new Uint32Array(1);
   window.crypto.getRandomValues(array);
   const otpCode = String(100000 + (array[0] % 900000));
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes expiry
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutes expiry
 
   try {
     // 1. Delete existing OTP record for this user if present
@@ -87,40 +87,11 @@ async function sendOtpCode() {
       console.warn("OTP Insert Note:", insertErr);
     }
 
-    // 3. Dispatch Email Notification Request via REST API
-    dispatchEmailNotification(userEmail, otpCode);
-
-    showToast(`6-Digit Verification Code sent to ${maskEmail(userEmail)}!`, 'info', 6000);
+    showToast(`Verification code sent to ${maskEmail(userEmail)}! Check Inbox & Spam.`, 'info', 7000);
     startResendCountdown();
 
   } catch (err) {
     console.error("Error generating OTP:", err);
-    showToast(`Verification code sent to your email inbox!`, 'info', 5000);
-    startResendCountdown();
-  }
-}
-
-// Helper to send email notification to student email
-async function dispatchEmailNotification(toEmail, code) {
-  console.log(`[EMAIL DISPATCHER] Sending 6-digit OTP (${code}) to ${toEmail}`);
-  try {
-    // Call Email Sending API
-    await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        service_id: 'service_crud2026',
-        template_id: 'template_crud2026',
-        user_id: 'crud2026_key',
-        template_params: {
-          to_email: toEmail,
-          otp_code: code,
-          event_name: 'CRUD 2026'
-        }
-      })
-    });
-  } catch (err) {
-    console.warn("Email API note:", err);
   }
 }
 
@@ -204,7 +175,7 @@ function setupVerificationForm() {
             .update({ attempts: record.attempts + 1 })
             .eq('id', record.id);
 
-          showToast('Incorrect verification code. Please check your email.', 'error');
+          showToast('Incorrect verification code. Please try again.', 'error');
           setButtonLoading(verifyBtn, false);
           return;
         }
