@@ -1,5 +1,5 @@
 /* ========================================================
-   CRUD 2026 — DYNAMIC EMAIL OTP VERIFICATION LOGIC (6 to 8 DIGITS)
+   CRUD 2026 — 6-DIGIT NUMERIC EMAIL OTP VERIFICATION LOGIC
    ======================================================== */
 
 let currentUserAuth = null;
@@ -25,7 +25,7 @@ function setupMaskedEmail() {
   }
 }
 
-// Auto focus movement across OTP boxes
+// Auto focus movement across 6 OTP boxes
 function setupOtpInputHandlers() {
   const inputs = document.querySelectorAll('.otp-input');
   inputs.forEach((input, index) => {
@@ -54,23 +54,23 @@ function getEnteredOtpCode() {
   return code;
 }
 
-// Generate & Dispatch OTP Code to Real Gmail Inbox
+// Generate & Dispatch 6-Digit Numeric OTP Code to Real Gmail Inbox
 async function sendOtpCode() {
   const sb = window.getSupabase();
   const userId = currentUserAuth.user.id;
   const userEmail = currentUserAuth.user.email;
 
-  // Generate fallback numeric OTP
+  // Generate cryptographically random 6-digit numeric OTP
   const array = new Uint32Array(1);
   window.crypto.getRandomValues(array);
   const otpCode = String(100000 + (array[0] % 900000));
-  const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutes expiry
 
   try {
     // 1. Delete existing OTP record for this user if present
     await sb.from('verification_codes').delete().eq('user_id', userId);
 
-    // 2. Save new OTP record in PostgreSQL database table
+    // 2. Save new 6-digit OTP record in PostgreSQL database table
     await sb
       .from('verification_codes')
       .insert([{
@@ -83,13 +83,13 @@ async function sendOtpCode() {
         created_at: new Date().toISOString()
       }]);
 
-    // 3. Trigger Supabase Auth Instant Email Dispatch
+    // 3. Trigger Supabase Auth Email Dispatch
     await sb.auth.signInWithOtp({
       email: userEmail,
       options: { shouldCreateUser: false }
     });
 
-    showToast(`Verification code sent to your Gmail (${maskEmail(userEmail)})! Check Inbox & Spam.`, 'info', 7000);
+    showToast(`6-Digit Verification code sent to your Gmail (${maskEmail(userEmail)})! Check Inbox & Spam.`, 'info', 7000);
     startResendCountdown();
 
   } catch (err) {
@@ -140,43 +140,18 @@ function setupVerificationForm() {
     const verifyBtn = document.getElementById('verify-submit-btn');
     const otpCode = getEnteredOtpCode();
 
-    if (otpCode.length < 6) {
-      showToast('Please enter the full code sent to your email.', 'error');
+    if (otpCode.length !== 6) {
+      showToast('Please enter the full 6-digit code.', 'error');
       return;
     }
 
-    setButtonLoading(verifyBtn, true, 'Verifying Security Code...');
+    setButtonLoading(verifyBtn, true, 'Verifying 6-Digit Code...');
 
     const sb = window.getSupabase();
     const userId = currentUserAuth.user.id;
-    const userEmail = currentUserAuth.user.email;
 
     try {
-      // 1. Try Supabase Auth verifyOtp
-      const { data: authVerify, error: authVerifyErr } = await sb.auth.verifyOtp({
-        email: userEmail,
-        token: otpCode,
-        type: 'email'
-      });
-
-      if (!authVerifyErr && authVerify) {
-        await sb.from('verification_codes').delete().eq('user_id', userId);
-        await sb.from('verification_codes').insert([{
-          user_id: userId,
-          email: userEmail,
-          otp_code: otpCode,
-          is_verified: true,
-          created_at: new Date().toISOString()
-        }]);
-
-        showToast('Email verified successfully! Opening your ticket...', 'success');
-        setTimeout(() => {
-          window.location.href = 'ticket.html';
-        }, 1000);
-        return;
-      }
-
-      // 2. Database verification check fallback
+      // 1. Check Database OTP Record
       const { data: record } = await sb
         .from('verification_codes')
         .select('*')
@@ -196,7 +171,8 @@ function setupVerificationForm() {
           return;
         }
 
-        if (record.otp_code !== otpCode) {
+        // Compare 6-digit code (first 6 characters or exact match)
+        if (record.otp_code !== otpCode && !record.otp_code.startsWith(otpCode)) {
           await sb
             .from('verification_codes')
             .update({ attempts: record.attempts + 1 })
@@ -207,6 +183,7 @@ function setupVerificationForm() {
           return;
         }
 
+        // Matched! Mark verified
         await sb
           .from('verification_codes')
           .update({ is_verified: true })
