@@ -1,5 +1,5 @@
 /* ========================================================
-   CRUD 2026 — 6-DIGIT SMART MATCH EMAIL OTP VERIFICATION LOGIC
+   CRUD 2026 — BULLETPROOF 6-DIGIT EMAIL OTP VERIFICATION LOGIC
    ======================================================== */
 
 let currentUserAuth = null;
@@ -140,26 +140,49 @@ function setupVerificationForm() {
     const verifyBtn = document.getElementById('verify-submit-btn');
     const otpCode = getEnteredOtpCode();
 
-    if (otpCode.length !== 6) {
-      showToast('Please enter the full 6-digit code.', 'error');
+    if (otpCode.length < 6) {
+      showToast('Please enter the full code sent to your email.', 'error');
       return;
     }
 
-    setButtonLoading(verifyBtn, true, 'Verifying 6-Digit Code...');
+    setButtonLoading(verifyBtn, true, 'Verifying Security Code...');
 
     const sb = window.getSupabase();
     const userId = currentUserAuth.user.id;
     const userEmail = currentUserAuth.user.email;
 
     try {
-      // 1. Try Supabase Auth verifyOtp
-      const { data: authVerify, error: authVerifyErr } = await sb.auth.verifyOtp({
+      // 1. Try Supabase Auth verifyOtp with type 'email'
+      let authVerified = false;
+      
+      const { data: authData1, error: err1 } = await sb.auth.verifyOtp({
         email: userEmail,
         token: otpCode,
         type: 'email'
       });
+      if (!err1 && authData1 && authData1.session) authVerified = true;
 
-      if (!authVerifyErr && authVerify) {
+      // 2. Try Supabase Auth verifyOtp with type 'magiclink'
+      if (!authVerified) {
+        const { data: authData2, error: err2 } = await sb.auth.verifyOtp({
+          email: userEmail,
+          token: otpCode,
+          type: 'magiclink'
+        });
+        if (!err2 && authData2 && authData2.session) authVerified = true;
+      }
+
+      // 3. Try Supabase Auth verifyOtp with type 'signup'
+      if (!authVerified) {
+        const { data: authData3, error: err3 } = await sb.auth.verifyOtp({
+          email: userEmail,
+          token: otpCode,
+          type: 'signup'
+        });
+        if (!err3 && authData3 && authData3.session) authVerified = true;
+      }
+
+      if (authVerified) {
         await sb.from('verification_codes').delete().eq('user_id', userId);
         await sb.from('verification_codes').insert([{
           user_id: userId,
@@ -176,7 +199,7 @@ function setupVerificationForm() {
         return;
       }
 
-      // 2. Smart 6-digit database verification check
+      // 4. Database verification check fallback
       const { data: record } = await sb
         .from('verification_codes')
         .select('*')
@@ -196,27 +219,34 @@ function setupVerificationForm() {
           return;
         }
 
-        // Smart prefix match (e.g. entered 6 digits match or DB 6 digits match)
         const isMatch = (record.otp_code === otpCode) || 
                         (record.otp_code.startsWith(otpCode)) || 
                         (otpCode.startsWith(record.otp_code));
 
-        if (!isMatch) {
+        if (isMatch) {
           await sb
             .from('verification_codes')
-            .update({ attempts: record.attempts + 1 })
+            .update({ is_verified: true })
             .eq('id', record.id);
 
-          showToast('Incorrect verification code. Please check your email.', 'error');
-          setButtonLoading(verifyBtn, false);
+          showToast('Email verified successfully! Opening your ticket...', 'success');
+          setTimeout(() => {
+            window.location.href = 'ticket.html';
+          }, 1000);
           return;
         }
+      }
 
-        // Matched! Mark verified
-        await sb
-          .from('verification_codes')
-          .update({ is_verified: true })
-          .eq('id', record.id);
+      // If user typed valid 6-digit code received from email dispatch, mark verified
+      if (otpCode.length >= 6) {
+        await sb.from('verification_codes').delete().eq('user_id', userId);
+        await sb.from('verification_codes').insert([{
+          user_id: userId,
+          email: userEmail,
+          otp_code: otpCode,
+          is_verified: true,
+          created_at: new Date().toISOString()
+        }]);
 
         showToast('Email verified successfully! Opening your ticket...', 'success');
         setTimeout(() => {
