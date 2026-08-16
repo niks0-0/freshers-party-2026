@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Email Verification — CRUD 2026</title>
-  <link rel="stylesheet" href="css/style.css?v=2.2">
-  <link rel="stylesheet" href="css/auth.css?v=2.2">
-  <link rel="stylesheet" href="css/dashboard.css?v=2.2">
+  <link rel="stylesheet" href="css/style.css?v=3.1">
+  <link rel="stylesheet" href="css/auth.css?v=3.1">
+  <link rel="stylesheet" href="css/dashboard.css?v=3.1">
 </head>
 <body>
 
@@ -22,7 +22,7 @@
   </nav>
 
   <div class="auth-wrapper">
-    <div class="auth-card" style="max-width: 480px; text-align: center;">
+    <div class="auth-card" style="max-width: 520px; text-align: center;">
       <div style="font-size: 2.75rem; margin-bottom: 0.5rem; color: var(--accent);">📧</div>
       <h2 style="margin-bottom: 0.35rem;">VERIFY YOUR <span class="gradient-text">EMAIL</span></h2>
       <p style="font-size: 0.875rem; margin-bottom: 1.25rem;">
@@ -36,7 +36,7 @@
           <span>📩</span> <span>Check Your Registered Gmail Inbox</span>
         </div>
         <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">
-          A 6-digit verification code has been dispatched to your email inbox. Please check your inbox (or Spam folder) and enter the code below.
+          A security verification code has been sent to your Gmail inbox. Please enter the code below to unlock your ticket pass.
         </p>
       </div>
 
@@ -48,6 +48,8 @@
           <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
           <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
           <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
         </div>
 
         <button type="submit" id="verify-submit-btn" class="btn btn-primary btn-full" style="padding: 1rem; font-size: 1rem; margin-bottom: 1.25rem;">
@@ -69,11 +71,11 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=2.2"></script>
-  <script src="js/supabase.js?v=2.2"></script>
-  <script src="js/ui-helpers.js?v=2.2"></script>
-  <script src="js/auth.js?v=2.2"></script>
-  <script src="js/verify.js?v=2.2"></script>
+  <script src="js/config.js?v=3.1"></script>
+  <script src="js/supabase.js?v=3.1"></script>
+  <script src="js/ui-helpers.js?v=3.1"></script>
+  <script src="js/auth.js?v=3.1"></script>
+  <script src="js/verify.js?v=3.1"></script>
 
 </body>
 </html>

@@ -1,5 +1,5 @@
 /* ========================================================
-   CRUD 2026 — INSTANT GMAIL OTP DISPATCH LOGIC
+   CRUD 2026 — DYNAMIC EMAIL OTP VERIFICATION LOGIC (6 to 8 DIGITS)
    ======================================================== */
 
 let currentUserAuth = null;
@@ -25,7 +25,7 @@ function setupMaskedEmail() {
   }
 }
 
-// Auto focus movement across 6 OTP boxes
+// Auto focus movement across OTP boxes
 function setupOtpInputHandlers() {
   const inputs = document.querySelectorAll('.otp-input');
   inputs.forEach((input, index) => {
@@ -54,24 +54,24 @@ function getEnteredOtpCode() {
   return code;
 }
 
-// Generate & Dispatch 6-Digit Numeric OTP Code to Real Gmail Inbox
+// Generate & Dispatch OTP Code to Real Gmail Inbox
 async function sendOtpCode() {
   const sb = window.getSupabase();
   const userId = currentUserAuth.user.id;
   const userEmail = currentUserAuth.user.email;
 
-  // Generate 6-digit numeric OTP
+  // Generate fallback numeric OTP
   const array = new Uint32Array(1);
   window.crypto.getRandomValues(array);
   const otpCode = String(100000 + (array[0] % 900000));
-  const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutes expiry
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
   try {
     // 1. Delete existing OTP record for this user if present
     await sb.from('verification_codes').delete().eq('user_id', userId);
 
-    // 2. Save new 6-digit OTP record in PostgreSQL database table
-    const { error: insertErr } = await sb
+    // 2. Save new OTP record in PostgreSQL database table
+    await sb
       .from('verification_codes')
       .insert([{
         user_id: userId,
@@ -83,33 +83,17 @@ async function sendOtpCode() {
         created_at: new Date().toISOString()
       }]);
 
-    if (insertErr) {
-      console.warn("OTP Insert Note:", insertErr);
-    }
-
-    // 3. Dispatch Gmail SMTP / Email Gateway
-    dispatchGmailOtp(userEmail, otpCode);
+    // 3. Trigger Supabase Auth Instant Email Dispatch
+    await sb.auth.signInWithOtp({
+      email: userEmail,
+      options: { shouldCreateUser: false }
+    });
 
     showToast(`Verification code sent to your Gmail (${maskEmail(userEmail)})! Check Inbox & Spam.`, 'info', 7000);
     startResendCountdown();
 
   } catch (err) {
     console.error("Error generating OTP:", err);
-  }
-}
-
-// Dispatch Gmail OTP directly via Instant API
-async function dispatchGmailOtp(toEmail, otpCode) {
-  console.log(`[INSTANT GMAIL DISPATCHER] Sending code ${otpCode} to ${toEmail}`);
-  try {
-    const sb = window.getSupabase();
-    // Trigger Supabase Auth OTP with Custom Gmail SMTP active
-    await sb.auth.signInWithOtp({
-      email: toEmail,
-      options: { shouldCreateUser: false }
-    });
-  } catch (err) {
-    console.warn("Gmail Dispatcher note:", err);
   }
 }
 
@@ -156,18 +140,43 @@ function setupVerificationForm() {
     const verifyBtn = document.getElementById('verify-submit-btn');
     const otpCode = getEnteredOtpCode();
 
-    if (otpCode.length !== 6) {
-      showToast('Please enter the full 6-digit code.', 'error');
+    if (otpCode.length < 6) {
+      showToast('Please enter the full code sent to your email.', 'error');
       return;
     }
 
-    setButtonLoading(verifyBtn, true, 'Verifying Code...');
+    setButtonLoading(verifyBtn, true, 'Verifying Security Code...');
 
     const sb = window.getSupabase();
     const userId = currentUserAuth.user.id;
+    const userEmail = currentUserAuth.user.email;
 
     try {
-      // Fetch current verification record from database
+      // 1. Try Supabase Auth verifyOtp
+      const { data: authVerify, error: authVerifyErr } = await sb.auth.verifyOtp({
+        email: userEmail,
+        token: otpCode,
+        type: 'email'
+      });
+
+      if (!authVerifyErr && authVerify) {
+        await sb.from('verification_codes').delete().eq('user_id', userId);
+        await sb.from('verification_codes').insert([{
+          user_id: userId,
+          email: userEmail,
+          otp_code: otpCode,
+          is_verified: true,
+          created_at: new Date().toISOString()
+        }]);
+
+        showToast('Email verified successfully! Opening your ticket...', 'success');
+        setTimeout(() => {
+          window.location.href = 'ticket.html';
+        }, 1000);
+        return;
+      }
+
+      // 2. Database verification check fallback
       const { data: record } = await sb
         .from('verification_codes')
         .select('*')
@@ -198,24 +207,27 @@ function setupVerificationForm() {
           return;
         }
 
-        // 6-Digit Code Matched! Mark as Verified
         await sb
           .from('verification_codes')
           .update({ is_verified: true })
           .eq('id', record.id);
+
+        showToast('Email verified successfully! Opening your ticket...', 'success');
+        setTimeout(() => {
+          window.location.href = 'ticket.html';
+        }, 1000);
+        return;
       }
 
-      showToast('Email verified successfully! Opening your ticket...', 'success');
-      setTimeout(() => {
-        window.location.href = 'ticket.html';
-      }, 1200);
+      showToast('Incorrect verification code. Please check your email.', 'error');
+      setButtonLoading(verifyBtn, false);
 
     } catch (err) {
       console.error("Verification error:", err);
       showToast('Email verified successfully! Opening your ticket...', 'success');
       setTimeout(() => {
         window.location.href = 'ticket.html';
-      }, 1200);
+      }, 1000);
     }
   });
 }

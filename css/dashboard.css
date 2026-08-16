@@ -133,20 +133,21 @@
   font-weight: 700;
 }
 
-/* OTP Input Boxes (High Precision & Fluid Width) */
+/* OTP Input Boxes (Fluid Support for 6 to 8 Digits) */
 .otp-container {
   display: flex;
   justify-content: center;
-  gap: 0.6rem;
+  gap: 0.4rem;
   margin: 1.5rem 0;
   width: 100%;
+  flex-wrap: nowrap;
 }
 
 .otp-input {
-  width: 46px;
-  height: 54px;
+  width: 40px;
+  height: 50px;
   text-align: center;
-  font-size: 1.45rem;
+  font-size: 1.3rem;
   font-weight: 800;
   border-radius: var(--radius-md);
   background: var(--bg-input);
@@ -155,6 +156,7 @@
   padding: 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   transition: var(--transition);
+  flex-shrink: 1;
 }
 
 .otp-input:focus {
@@ -163,14 +165,26 @@
   transform: translateY(-2px);
 }
 
-@media (max-width: 400px) {
+@media (max-width: 480px) {
   .otp-container {
-    gap: 0.35rem;
+    gap: 0.25rem;
   }
   .otp-input {
-    width: 38px;
-    height: 48px;
-    font-size: 1.25rem;
+    width: 34px;
+    height: 44px;
+    font-size: 1.15rem;
+    border-radius: 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  .otp-container {
+    gap: 0.18rem;
+  }
+  .otp-input {
+    width: 30px;
+    height: 40px;
+    font-size: 1rem;
   }
 }
 
