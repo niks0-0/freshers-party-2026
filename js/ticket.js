@@ -1,5 +1,5 @@
 /* ========================================================
-   FRESHERS PARTY 2026 — PURE SCREENSHOT & CAPTURE PREVENTOR
+   FRESHERS PARTY 2026 — PURE PDF VIEWER WITH SS PROTECTION
    ======================================================== */
 
 let currentUserAuth = null;
@@ -9,51 +9,43 @@ document.addEventListener('DOMContentLoaded', async () => {
   currentUserAuth = await requireStudentAuth();
   if (!currentUserAuth) return;
 
-  setupPureScreenshotProtection();
+  setupScreenshotProtection();
   await loadAndUnlockTicket();
 });
 
 // Pure anti-screenshot & anti-capture protection engine
-function setupPureScreenshotProtection() {
-  // 1. Disable Right Click, Text Select & Drag
+function setupScreenshotProtection() {
   document.addEventListener('contextmenu', e => e.preventDefault());
   document.addEventListener('selectstart', e => e.preventDefault());
   document.addEventListener('dragstart', e => e.preventDefault());
 
-  // 2. Keyboard Screenshot & Record Key Combinations Blocker
   document.addEventListener('keyup', e => {
     if (e.key === 'PrintScreen') {
-      triggerInstantBlurShield();
-      navigator.clipboard.writeText(''); // Clear clipboard immediately
-      showToast('Screenshot blocked! Copying ticket is restricted.', 'warning');
+      triggerBlurShield();
+      navigator.clipboard.writeText('');
+      showToast('Screenshot attempt blocked.', 'warning');
     }
   });
 
   document.addEventListener('keydown', e => {
-    // PrintScreen key
     if (e.key === 'PrintScreen') {
-      triggerInstantBlurShield();
+      triggerBlurShield();
       navigator.clipboard.writeText('');
       e.preventDefault();
-      return;
     }
-
-    // Ctrl/Cmd + P (Print), S (Save), U (Source), Shift+I/S (DevTools / Snipping Tool), Mac Cmd+Shift+3/4/5
     if (
       (e.ctrlKey || e.metaKey) &&
       (e.key === 'p' || e.key === 'P' || e.key === 's' || e.key === 'S' || e.key === 'u' || e.key === 'U')
     ) {
       e.preventDefault();
-      triggerInstantBlurShield();
-      showToast('Action restricted. Screenshots & printing are protected.', 'warning');
+      triggerBlurShield();
+      showToast('Screenshots & printing are restricted.', 'warning');
     }
-
     if (e.key === 'F12') {
       e.preventDefault();
     }
   });
 
-  // 3. Instant Window Blur Shield (Triggers when OS screenshot / App switcher / Snipping tool opens)
   window.addEventListener('blur', () => {
     document.body.classList.add('screen-protected');
   });
@@ -71,7 +63,7 @@ function setupPureScreenshotProtection() {
   });
 }
 
-function triggerInstantBlurShield() {
+function triggerBlurShield() {
   document.body.classList.add('screen-protected');
   setTimeout(() => {
     document.body.classList.remove('screen-protected');
@@ -84,18 +76,11 @@ async function loadAndUnlockTicket() {
   const userEmail = currentUserAuth.user.email;
 
   try {
-    // 1. Render Student Name & Email Tag
-    const studentName = currentUserAuth.profile?.full_name || currentUserAuth.user.user_metadata?.full_name || 'Student';
     const nameEl = document.getElementById('ticket-student-name');
-    if (nameEl) nameEl.textContent = studentName;
+    if (nameEl) {
+      nameEl.textContent = currentUserAuth.profile?.full_name || currentUserAuth.user.user_metadata?.full_name || 'Student Ticket Pass';
+    }
 
-    const passNameEl = document.getElementById('pass-attendee-name');
-    if (passNameEl) passNameEl.textContent = studentName;
-
-    const emailTagEl = document.getElementById('ticket-email-tag');
-    if (emailTagEl) emailTagEl.textContent = userEmail;
-
-    // 2. Check Global LIVE State
     const { data: settings } = await sb
       .from('event_settings')
       .select('ticket_live')
@@ -107,7 +92,6 @@ async function loadAndUnlockTicket() {
       return;
     }
 
-    // 3. Check Verification Session Flags & Database Status
     const isLocalVerified = localStorage.getItem(`crud2026_verified_${userId}`) === 'true';
     const isSessionVerified = sessionStorage.getItem(`crud2026_verified_${userId}`) === 'true';
 
@@ -124,7 +108,7 @@ async function loadAndUnlockTicket() {
         isDbVerified = true;
       }
     } catch (e) {
-      console.warn("DB verification check note:", e);
+      console.warn("DB verification note:", e);
     }
 
     const isAuthorized = isLocalVerified || isSessionVerified || isDbVerified;
@@ -134,7 +118,6 @@ async function loadAndUnlockTicket() {
       return;
     }
 
-    // 4. Fetch Ticket Record from Database
     let { data: ticket } = await sb
       .from('tickets')
       .select('*')
@@ -142,16 +125,13 @@ async function loadAndUnlockTicket() {
       .maybeSingle();
 
     if (!ticket || !ticket.storage_path) {
-      // Fallback: check by student_details id
       const { data: detail } = await sb
         .from('student_details')
-        .select('id, full_name')
+        .select('id')
         .eq('email', userEmail)
         .maybeSingle();
 
       if (detail) {
-        if (detail.full_name && passNameEl) passNameEl.textContent = detail.full_name;
-
         const { data: tFallback } = await sb
           .from('tickets')
           .select('*')
@@ -162,34 +142,31 @@ async function loadAndUnlockTicket() {
       }
     }
 
-    // Display Ticket ID & QR Code
-    const ticketCode = ticket ? (ticket.ticket_id || 'FR002') : 'FR002';
-    const passTicketIdEl = document.getElementById('pass-ticket-id');
-    if (passTicketIdEl) passTicketIdEl.textContent = ticketCode;
-
-    const qrImg = document.getElementById('pass-qr-image');
-    if (qrImg) {
-      const qrData = encodeURIComponent(`CRUD2026-ENTRY-${ticketCode}-${userEmail}`);
-      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}`;
-    }
-
     if (!ticket || !ticket.storage_path) {
+      showErrorState("Your individual ticket PDF has not been uploaded yet by administrators.");
       return;
     }
 
-    // 5. Request Private Signed URL from Supabase Storage if PDF exists
     const { data: signedData, error: storageErr } = await sb
       .storage
       .from('tickets')
       .createSignedUrl(ticket.storage_path, 300, { download: false });
 
-    if (!storageErr && signedData && signedData.signedUrl) {
-      signedPdfUrl = signedData.signedUrl;
-      const iframe = document.getElementById('pdf-frame');
-      if (iframe) {
-        iframe.src = `${signedPdfUrl}#toolbar=0&navpanes=0&scrollbar=0`;
-        iframe.style.display = 'block';
-      }
+    if (storageErr || !signedData || !signedData.signedUrl) {
+      showErrorState("Failed to authorize private ticket access.");
+      return;
+    }
+
+    signedPdfUrl = signedData.signedUrl;
+
+    const ticketIdEl = document.getElementById('display-ticket-id');
+    if (ticketIdEl) {
+      ticketIdEl.textContent = `Ticket ID: ${ticket.ticket_id || 'FP26-PASS'}`;
+    }
+
+    const iframe = document.getElementById('pdf-frame');
+    if (iframe) {
+      iframe.src = `${signedPdfUrl}#toolbar=0&navpanes=0&scrollbar=0`;
     }
 
   } catch (err) {
