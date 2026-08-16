@@ -90,14 +90,16 @@ async function initAdminDashboard() {
 }
 
 // --------------------------------------------------------
-// 2. ADMIN STUDENTS MANAGEMENT
+// 2. ADMIN STUDENTS MANAGEMENT & EXCEL BULK IMPORT
 // --------------------------------------------------------
 let allStudentsList = [];
+let parsedExcelStudents = [];
 
 async function initAdminStudentsPage() {
   await fetchAndRenderStudents();
   setupSearchAndFilters();
   setupCreateStudentModal();
+  setupExcelImportModal();
 }
 
 async function fetchAndRenderStudents() {
@@ -198,6 +200,144 @@ function setupSearchAndFilters() {
     );
     renderStudentsTable(filtered);
   });
+}
+
+// --------------------------------------------------------
+// EXCEL BULK IMPORT MODAL ENGINE
+// --------------------------------------------------------
+function setupExcelImportModal() {
+  const fileInput = document.getElementById('excel-file-input');
+  const importBtn = document.getElementById('import-excel-submit-btn');
+  const previewArea = document.getElementById('excel-preview-area');
+  const countEl = document.getElementById('excel-parsed-count');
+  const sampleEl = document.getElementById('excel-parsed-sample');
+
+  if (!fileInput) return;
+
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = evt.target.result;
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const rawJson = XLSX.utils.sheet_to_json(sheet);
+
+        parsedExcelStudents = [];
+
+        rawJson.forEach(row => {
+          // Normalize Column Names
+          let name = '';
+          let email = '';
+          let mobile = 'N/A';
+          let course = 'BCA';
+
+          Object.keys(row).forEach(key => {
+            const lowerKey = key.toLowerCase().trim();
+            const val = String(row[key] || '').trim();
+
+            if (lowerKey.includes('name')) name = val;
+            else if (lowerKey.includes('email')) email = val.toLowerCase();
+            else if (lowerKey.includes('mobile') || lowerKey.includes('phone') || lowerKey.includes('contact')) mobile = val;
+            else if (lowerKey.includes('course') || lowerKey.includes('stream') || lowerKey.includes('branch')) course = val;
+          });
+
+          if (name && email) {
+            parsedExcelStudents.push({ fullName: name, email: email, mobile: mobile || 'N/A', course: course || 'BCA' });
+          }
+        });
+
+        if (parsedExcelStudents.length > 0) {
+          if (previewArea) previewArea.style.display = 'block';
+          if (countEl) countEl.textContent = `✅ Ready to import ${parsedExcelStudents.length} student accounts`;
+          if (sampleEl) {
+            sampleEl.innerHTML = parsedExcelStudents.slice(0, 5).map(s => `
+              <div>• <strong>${escapeHtml(s.fullName)}</strong> (${escapeHtml(s.email)}) — ${escapeHtml(s.course)} — ${escapeHtml(s.mobile)}</div>
+            `).join('') + (parsedExcelStudents.length > 5 ? `<div style="margin-top:0.3rem;">...and ${parsedExcelStudents.length - 5} more records</div>` : '');
+          }
+          if (importBtn) importBtn.disabled = false;
+        } else {
+          showToast('No valid student rows found in Excel sheet.', 'error');
+          if (importBtn) importBtn.disabled = true;
+        }
+
+      } catch (err) {
+        console.error("Excel parse error:", err);
+        showToast('Failed to read Excel file format.', 'error');
+      }
+    };
+    reader.readAsBinaryString(file);
+  });
+
+  if (importBtn) {
+    importBtn.addEventListener('click', async () => {
+      if (parsedExcelStudents.length === 0) return;
+
+      setButtonLoading(importBtn, true, `Registering ${parsedExcelStudents.length} Students...`);
+      const sb = window.getSupabase();
+      let successCount = 0;
+
+      for (const student of parsedExcelStudents) {
+        try {
+          // 1. Create Auth User Account
+          const { data: authData } = await sb.auth.signUp({
+            email: student.email,
+            password: 'Freshers@2026',
+            options: {
+              data: { full_name: student.fullName, role: 'student' }
+            }
+          });
+
+          const autoStudentId = `FP26-${Math.floor(100000 + Math.random() * 900000)}`;
+
+          // 2. Check & Upsert student_details
+          const { data: existingDetail } = await sb
+            .from('student_details')
+            .select('id')
+            .eq('email', student.email)
+            .maybeSingle();
+
+          if (existingDetail) {
+            await sb
+              .from('student_details')
+              .update({
+                profile_id: authData?.user?.id || null,
+                full_name: student.fullName,
+                mobile: student.mobile,
+                course: student.course,
+                registration_status: 'excel_imported'
+              })
+              .eq('id', existingDetail.id);
+          } else {
+            await sb
+              .from('student_details')
+              .insert([{
+                profile_id: authData?.user?.id || null,
+                student_id: autoStudentId,
+                full_name: student.fullName,
+                email: student.email,
+                mobile: student.mobile,
+                course: student.course,
+                semester: student.course.includes('Sem-3') ? 'Sem 3' : 'Sem 1',
+                registration_status: 'excel_imported'
+              }]);
+          }
+          successCount++;
+        } catch (e) {
+          console.warn("Excel single import note:", e);
+        }
+      }
+
+      setButtonLoading(importBtn, false);
+      showToast(`Successfully registered ${successCount} students from Excel sheet!`, 'success');
+      closeModal('excel-import-modal');
+      await fetchAndRenderStudents();
+    });
+  }
 }
 
 // Enable or Disable Account
