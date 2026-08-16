@@ -1,5 +1,5 @@
 /* ========================================================
-   FRESHERS PARTY 2026 — STUDENT DASHBOARD LOGIC
+   CRUD 2026 — STUDENT DASHBOARD LOGIC
    ======================================================== */
 
 let currentUserAuth = null;
@@ -88,16 +88,6 @@ async function loadStudentDashboardData() {
 
     ticketData = tData;
 
-    // 4. Fetch Verification Status for this student
-    const { data: verifyRecord } = await sb
-      .from('verification_codes')
-      .select('is_verified')
-      .eq('user_id', userId)
-      .eq('is_verified', true)
-      .maybeSingle();
-
-    isEmailVerified = !!verifyRecord;
-
     // Render Ticket Status Box Text & Banner
     const statusBanner = document.getElementById('ticket-status-message');
     if (statusBanner) {
@@ -107,12 +97,9 @@ async function loadStudentDashboardData() {
       } else if (!ticketData) {
         statusBanner.className = 'info-banner danger-banner';
         statusBanner.innerHTML = `⚠️ <strong>Ticket pending upload.</strong> Your individual PDF ticket has not been uploaded by organizers yet.`;
-      } else if (!isEmailVerified) {
-        statusBanner.className = 'info-banner warning-banner';
-        statusBanner.innerHTML = `📧 <strong>Email Verification Required.</strong> Click 'Generate Ticket' below to verify your email.`;
       } else {
         statusBanner.className = 'info-banner success-banner';
-        statusBanner.innerHTML = `✓ <strong>Ticket Unlocked & Ready!</strong> Click below to view and download your ticket PDF.`;
+        statusBanner.innerHTML = `📧 <strong>Security OTP Verification Required.</strong> Click 'Generate Ticket' below to send a 6-digit OTP code to your Gmail inbox.`;
       }
     }
 
@@ -125,7 +112,7 @@ function setupGenerateTicketButton() {
   const generateBtn = document.getElementById('generate-ticket-btn');
   if (!generateBtn) return;
 
-  generateBtn.addEventListener('click', () => {
+  generateBtn.addEventListener('click', async () => {
     if (!isTicketLive) {
       showToast('Tickets are not live yet. Please wait for administrator release.', 'error');
       return;
@@ -136,18 +123,16 @@ function setupGenerateTicketButton() {
       return;
     }
 
-    if (!isEmailVerified) {
-      showToast('Redirecting to email verification...', 'info');
-      setTimeout(() => {
-        window.location.href = 'verify.html';
-      }, 1000);
-      return;
-    }
+    // ALWAYS FORCE FRESH EMAIL OTP VERIFICATION BEFORE ACCESSING TICKET!
+    const sb = window.getSupabase();
+    const userId = currentUserAuth.user.id;
 
-    // All checks pass -> Redirect to Ticket Viewer
-    showToast('Unlocking your digital ticket...', 'success');
+    // Reset previous verification status so student MUST enter fresh OTP sent to Gmail
+    await sb.from('verification_codes').delete().eq('user_id', userId);
+
+    showToast('Sending fresh OTP code to your Gmail inbox...', 'info');
     setTimeout(() => {
-      window.location.href = 'ticket.html';
-    }, 1000);
+      window.location.href = 'verify.html';
+    }, 800);
   });
 }
