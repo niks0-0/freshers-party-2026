@@ -47,6 +47,12 @@ function setupOtpInputHandlers() {
   });
 }
 
+function clearOtpInputs() {
+  const inputs = document.querySelectorAll('.otp-input');
+  inputs.forEach(input => input.value = '');
+  if (inputs.length > 0) inputs[0].focus();
+}
+
 function getEnteredOtpCode() {
   const inputs = document.querySelectorAll('.otp-input');
   let code = '';
@@ -169,6 +175,7 @@ function setupVerificationForm() {
       if (!record) {
         showToast('No active verification code found. Click Resend Code.', 'error');
         setButtonLoading(verifyBtn, false);
+        clearOtpInputs();
         return;
       }
 
@@ -176,6 +183,7 @@ function setupVerificationForm() {
       if (new Date(record.expires_at) < new Date()) {
         showToast('Verification code has expired. Please click Resend.', 'error');
         setButtonLoading(verifyBtn, false);
+        clearOtpInputs();
         return;
       }
 
@@ -183,6 +191,7 @@ function setupVerificationForm() {
       if (record.attempts >= 5) {
         showToast('Too many failed attempts. Please request a new code.', 'error');
         setButtonLoading(verifyBtn, false);
+        clearOtpInputs();
         return;
       }
 
@@ -199,6 +208,7 @@ function setupVerificationForm() {
 
         showToast('Incorrect verification code! Please check your email.', 'error');
         setButtonLoading(verifyBtn, false);
+        clearOtpInputs();
         return;
       }
 
@@ -221,6 +231,9 @@ function setupVerificationForm() {
       console.error("Verification error:", err);
       showToast('Verification failed. Please try again.', 'error');
       setButtonLoading(verifyBtn, false);
+      clearOtpInputs();
     }
   });
 }
+
+window.clearOtpInputs = clearOtpInputs;
