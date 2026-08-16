@@ -1,9 +1,8 @@
 /* ========================================================
-   FRESHERS PARTY 2026 — TOUCH-REVEAL & LIVE CLOCK TICKET PASS
+   FRESHERS PARTY 2026 — SECURE PROTECTED TICKET PASS PASS
    ======================================================== */
 
 let currentUserAuth = null;
-let signedPdfUrl = null;
 let liveClockInterval = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -11,7 +10,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!currentUserAuth) return;
 
   setupLiveSecondsClock();
-  setupTouchRevealEngine();
   setupSecurityShortcutBlocker();
   await loadAndUnlockTicket();
 });
@@ -42,41 +40,7 @@ function setupLiveSecondsClock() {
   liveClockInterval = setInterval(updateClock, 1000);
 }
 
-// 2. Press & Hold Touch-Reveal Engine for Mobile & Desktop
-function setupTouchRevealEngine() {
-  const interactiveCard = document.getElementById('ticket-interactive-card');
-  const shieldOverlay = document.getElementById('touch-reveal-shield');
-
-  if (!interactiveCard || !shieldOverlay) return;
-
-  function revealPass(e) {
-    if (e) e.preventDefault();
-    shieldOverlay.classList.add('revealed');
-  }
-
-  function hidePass(e) {
-    if (e) e.preventDefault();
-    shieldOverlay.classList.remove('revealed');
-  }
-
-  // Touch events for Mobile
-  interactiveCard.addEventListener('touchstart', revealPass, { passive: false });
-  interactiveCard.addEventListener('touchend', hidePass, { passive: false });
-  interactiveCard.addEventListener('touchcancel', hidePass, { passive: false });
-
-  // Mouse events for Laptop / Desktop
-  interactiveCard.addEventListener('mousedown', revealPass);
-  interactiveCard.addEventListener('mouseup', hidePass);
-  interactiveCard.addEventListener('mouseleave', hidePass);
-
-  // Auto hide on window blur or app switch
-  window.addEventListener('blur', hidePass);
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) hidePass();
-  });
-}
-
-// 3. Security Shortcut & Print Blocker
+// 2. Security Shortcut & Print Blocker
 function setupSecurityShortcutBlocker() {
   document.addEventListener('contextmenu', e => e.preventDefault());
   document.addEventListener('selectstart', e => e.preventDefault());
@@ -184,7 +148,7 @@ async function loadAndUnlockTicket() {
     }
 
     // Display Ticket ID & QR Code
-    const ticketCode = ticket ? (ticket.ticket_id || 'FR002') : 'FR002';
+    const ticketCode = ticket ? (ticket.ticket_id || 'FP26-2331') : 'FP26-2331';
     const passTicketIdEl = document.getElementById('pass-ticket-id');
     if (passTicketIdEl) passTicketIdEl.textContent = ticketCode;
 
@@ -192,24 +156,6 @@ async function loadAndUnlockTicket() {
     if (qrImg) {
       const qrData = encodeURIComponent(`CRUD2026-ENTRY-${ticketCode}-${userEmail}`);
       qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}`;
-    }
-
-    if (!ticket || !ticket.storage_path) {
-      return;
-    }
-
-    const { data: signedData, error: storageErr } = await sb
-      .storage
-      .from('tickets')
-      .createSignedUrl(ticket.storage_path, 300, { download: false });
-
-    if (!storageErr && signedData && signedData.signedUrl) {
-      signedPdfUrl = signedData.signedUrl;
-      const iframe = document.getElementById('pdf-frame');
-      if (iframe) {
-        iframe.src = `${signedPdfUrl}#toolbar=0&navpanes=0&scrollbar=0`;
-        iframe.style.display = 'block';
-      }
     }
 
   } catch (err) {
