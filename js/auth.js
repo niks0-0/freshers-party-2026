@@ -1,5 +1,5 @@
 /* ========================================================
-   FRESHERS PARTY 2026 — AUTHENTICATION & ROUTE GUARDS
+   CRUD 2026 — AUTHENTICATION & ROUTE GUARDS
    ======================================================== */
 
 // Get current session and profile
@@ -11,7 +11,7 @@ async function getCurrentUser() {
   if (error || !session) return null;
 
   // Fetch role and active status from profiles table
-  const { data: profile, error: profileErr } = await sb
+  const { data: profile } = await sb
     .from('profiles')
     .select('*')
     .eq('id', session.user.id)
@@ -27,9 +27,7 @@ async function getCurrentUser() {
       is_active: true
     };
 
-    // Auto heal profile record
     await sb.from('profiles').upsert([fallbackProfile], { onConflict: 'id' });
-
     return { session, user: session.user, profile: fallbackProfile };
   }
 
@@ -51,16 +49,19 @@ async function requireStudentAuth() {
   return authData;
 }
 
-// Admin Route Guard
+// Admin Route Guard (Smart Subfolder Path Resolution)
 async function requireAdminAuth() {
   const authData = await getCurrentUser();
+  const isSubfolder = window.location.pathname.includes('/admin/');
+  const loginPath = isSubfolder ? 'login.html' : 'admin/login.html';
+
   if (!authData || !authData.session) {
-    window.location.href = 'admin/login.html';
+    window.location.href = loginPath;
     return null;
   }
   if (!authData.profile || authData.profile.role !== 'admin' || !authData.profile.is_active) {
     showToast('Access denied. Administrator privileges required.', 'error');
-    window.location.href = '../login.html';
+    window.location.href = loginPath;
     return null;
   }
   return authData;
@@ -108,12 +109,13 @@ async function loginUser(email, password, isAdminLogin = false) {
 }
 
 // Logout
-async function logoutUser(redirectTo = 'login.html') {
+async function logoutUser() {
   const sb = window.getSupabase();
   if (sb) {
     await sb.auth.signOut();
   }
-  window.location.href = redirectTo;
+  const isSubfolder = window.location.pathname.includes('/admin/');
+  window.location.href = isSubfolder ? 'login.html' : 'login.html';
 }
 
 // Password Reset Request
