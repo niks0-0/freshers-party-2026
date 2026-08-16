@@ -449,7 +449,7 @@ select option {
   to { transform: rotate(360deg); }
 }
 
-/* Footer */
+/* Footer & NIKSLAB Credit Styling */
 .footer {
   margin-top: auto;
   border-top: 1px solid var(--border-color);
@@ -460,7 +460,19 @@ select option {
   color: var(--text-dim);
 }
 
-/* Mobile Navigation System (Hamburger Drawer & Interactive Menu Cards) */
+.credit-tag {
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  transition: var(--transition);
+}
+
+.credit-tag:hover {
+  color: #c084fc;
+  text-shadow: 0 0 12px var(--accent-glow);
+}
+
+/* Mobile Navigation System */
 @media (max-width: 768px) {
   .mobile-menu-toggle {
     display: inline-flex;
@@ -490,7 +502,6 @@ select option {
     display: flex;
   }
 
-  /* Clear Interactive Button Styling for Nav Links on Mobile */
   .nav-link {
     width: 100%;
     padding: 0.85rem 1rem;
