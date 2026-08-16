@@ -1,5 +1,5 @@
 /* ========================================================
-   CRUD 2026 — 6-DIGIT NUMERIC EMAIL OTP VERIFICATION LOGIC
+   CRUD 2026 — 6-DIGIT SMART MATCH EMAIL OTP VERIFICATION LOGIC
    ======================================================== */
 
 let currentUserAuth = null;
@@ -54,13 +54,13 @@ function getEnteredOtpCode() {
   return code;
 }
 
-// Generate & Dispatch 6-Digit Numeric OTP Code to Real Gmail Inbox
+// Generate & Dispatch OTP Code to Real Gmail Inbox
 async function sendOtpCode() {
   const sb = window.getSupabase();
   const userId = currentUserAuth.user.id;
   const userEmail = currentUserAuth.user.email;
 
-  // Generate cryptographically random 6-digit numeric OTP
+  // Generate 6-digit numeric OTP
   const array = new Uint32Array(1);
   window.crypto.getRandomValues(array);
   const otpCode = String(100000 + (array[0] % 900000));
@@ -89,7 +89,7 @@ async function sendOtpCode() {
       options: { shouldCreateUser: false }
     });
 
-    showToast(`6-Digit Verification code sent to your Gmail (${maskEmail(userEmail)})! Check Inbox & Spam.`, 'info', 7000);
+    showToast(`Verification code sent to your Gmail (${maskEmail(userEmail)})! Check Inbox & Spam.`, 'info', 7000);
     startResendCountdown();
 
   } catch (err) {
@@ -149,9 +149,34 @@ function setupVerificationForm() {
 
     const sb = window.getSupabase();
     const userId = currentUserAuth.user.id;
+    const userEmail = currentUserAuth.user.email;
 
     try {
-      // 1. Check Database OTP Record
+      // 1. Try Supabase Auth verifyOtp
+      const { data: authVerify, error: authVerifyErr } = await sb.auth.verifyOtp({
+        email: userEmail,
+        token: otpCode,
+        type: 'email'
+      });
+
+      if (!authVerifyErr && authVerify) {
+        await sb.from('verification_codes').delete().eq('user_id', userId);
+        await sb.from('verification_codes').insert([{
+          user_id: userId,
+          email: userEmail,
+          otp_code: otpCode,
+          is_verified: true,
+          created_at: new Date().toISOString()
+        }]);
+
+        showToast('Email verified successfully! Opening your ticket...', 'success');
+        setTimeout(() => {
+          window.location.href = 'ticket.html';
+        }, 1000);
+        return;
+      }
+
+      // 2. Smart 6-digit database verification check
       const { data: record } = await sb
         .from('verification_codes')
         .select('*')
@@ -171,8 +196,12 @@ function setupVerificationForm() {
           return;
         }
 
-        // Compare 6-digit code (first 6 characters or exact match)
-        if (record.otp_code !== otpCode && !record.otp_code.startsWith(otpCode)) {
+        // Smart prefix match (e.g. entered 6 digits match or DB 6 digits match)
+        const isMatch = (record.otp_code === otpCode) || 
+                        (record.otp_code.startsWith(otpCode)) || 
+                        (otpCode.startsWith(record.otp_code));
+
+        if (!isMatch) {
           await sb
             .from('verification_codes')
             .update({ attempts: record.attempts + 1 })
