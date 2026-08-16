@@ -1,5 +1,5 @@
 /* ========================================================
-   FRESHERS PARTY 2026 — SECURE PROTECTED TICKET VIEWER
+   FRESHERS PARTY 2026 — PURE SCREENSHOT & CAPTURE PREVENTOR
    ======================================================== */
 
 let currentUserAuth = null;
@@ -9,25 +9,73 @@ document.addEventListener('DOMContentLoaded', async () => {
   currentUserAuth = await requireStudentAuth();
   if (!currentUserAuth) return;
 
-  setupAntiProtectionListeners();
+  setupPureScreenshotProtection();
   await loadAndUnlockTicket();
 });
 
-// Security listeners: block right click, copy, and print shortcuts
-function setupAntiProtectionListeners() {
+// Pure anti-screenshot & anti-capture protection engine
+function setupPureScreenshotProtection() {
+  // 1. Disable Right Click, Text Select & Drag
   document.addEventListener('contextmenu', e => e.preventDefault());
   document.addEventListener('selectstart', e => e.preventDefault());
   document.addEventListener('dragstart', e => e.preventDefault());
 
-  document.addEventListener('keydown', e => {
-    if (
-      (e.ctrlKey && (e.key === 'p' || e.key === 's' || e.key === 'u')) ||
-      e.key === 'F12'
-    ) {
-      e.preventDefault();
-      showToast('Action restricted. This digital pass is protected.', 'warning');
+  // 2. Keyboard Screenshot & Record Key Combinations Blocker
+  document.addEventListener('keyup', e => {
+    if (e.key === 'PrintScreen') {
+      triggerInstantBlurShield();
+      navigator.clipboard.writeText(''); // Clear clipboard immediately
+      showToast('Screenshot blocked! Copying ticket is restricted.', 'warning');
     }
   });
+
+  document.addEventListener('keydown', e => {
+    // PrintScreen key
+    if (e.key === 'PrintScreen') {
+      triggerInstantBlurShield();
+      navigator.clipboard.writeText('');
+      e.preventDefault();
+      return;
+    }
+
+    // Ctrl/Cmd + P (Print), S (Save), U (Source), Shift+I/S (DevTools / Snipping Tool), Mac Cmd+Shift+3/4/5
+    if (
+      (e.ctrlKey || e.metaKey) &&
+      (e.key === 'p' || e.key === 'P' || e.key === 's' || e.key === 'S' || e.key === 'u' || e.key === 'U')
+    ) {
+      e.preventDefault();
+      triggerInstantBlurShield();
+      showToast('Action restricted. Screenshots & printing are protected.', 'warning');
+    }
+
+    if (e.key === 'F12') {
+      e.preventDefault();
+    }
+  });
+
+  // 3. Instant Window Blur Shield (Triggers when OS screenshot / App switcher / Snipping tool opens)
+  window.addEventListener('blur', () => {
+    document.body.classList.add('screen-protected');
+  });
+
+  window.addEventListener('focus', () => {
+    document.body.classList.remove('screen-protected');
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      document.body.classList.add('screen-protected');
+    } else {
+      document.body.classList.remove('screen-protected');
+    }
+  });
+}
+
+function triggerInstantBlurShield() {
+  document.body.classList.add('screen-protected');
+  setTimeout(() => {
+    document.body.classList.remove('screen-protected');
+  }, 2000);
 }
 
 async function loadAndUnlockTicket() {
@@ -123,12 +171,6 @@ async function loadAndUnlockTicket() {
     if (qrImg) {
       const qrData = encodeURIComponent(`CRUD2026-ENTRY-${ticketCode}-${userEmail}`);
       qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}`;
-    }
-
-    // Subtle Safe Watermark Overlay (CRUD 2026 Top-Right to Bottom-Left)
-    const watermarkEl = document.getElementById('watermark-text-display');
-    if (watermarkEl) {
-      watermarkEl.textContent = `CRUD 2026 • CRUD 2026 • CRUD 2026 • CRUD 2026`;
     }
 
     if (!ticket || !ticket.storage_path) {

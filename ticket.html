@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Official Entry Ticket — CRUD 2026</title>
-  <link rel="stylesheet" href="css/style.css?v=4.0">
-  <link rel="stylesheet" href="css/dashboard.css?v=4.0">
+  <link rel="stylesheet" href="css/style.css?v=5.0">
+  <link rel="stylesheet" href="css/dashboard.css?v=5.0">
   <style>
-    /* Anti-Print & Protection Styles */
+    /* Anti-Print & Screenshot Prevention Protection Styles */
     @media print {
       html, body {
         display: none !important;
@@ -20,32 +20,13 @@
       -moz-user-select: none;
       -ms-user-select: none;
       overflow: hidden;
+      transition: filter 0.2s ease, opacity 0.2s ease;
     }
-    /* Subtle Background Watermark (Behind Text Details) */
-    .watermark-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      pointer-events: none;
-      z-index: 1; /* Placed behind ticket content */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-    .watermark-text {
-      transform: rotate(-25deg); /* Top-Right to Bottom-Left direction */
-      font-size: clamp(1.4rem, 4vw, 2.5rem);
-      font-weight: 900;
-      color: rgba(255, 255, 255, 0.05); /* Soft, subtle background opacity */
-      text-transform: uppercase;
-      letter-spacing: 0.25em;
-      text-align: center;
-      white-space: nowrap;
-      user-select: none;
-      pointer-events: none;
+    /* Blur ticket pass instantly when window loses focus or screenshot tool opens */
+    body.screen-protected .protected-viewer-wrapper {
+      filter: blur(35px) brightness(0.2) !important;
+      opacity: 0.1 !important;
+      pointer-events: none !important;
     }
     .security-badge {
       display: inline-flex;
@@ -79,7 +60,7 @@
   <main class="container" style="padding: 2rem 1rem 5rem;">
 
     <div style="text-align: center; margin-bottom: 1.5rem;">
-      <span class="security-badge" style="margin-bottom: 0.75rem;">🔒 OFFICIAL VERIFIED PASS</span>
+      <span class="security-badge" style="margin-bottom: 0.75rem;">🔒 SCREENSHOT PROTECTED PASS</span>
       <h1 style="font-size: clamp(1.6rem, 5vw, 2.4rem);">CRUD FRESHERS <span class="gradient-text">2K26</span></h1>
       <p style="font-size: 0.9rem;">Present this digital ticket pass at the venue entrance scanning point.</p>
     </div>
@@ -95,13 +76,6 @@
 
         <!-- Native Replica Pass Layout -->
         <div id="native-ticket-pass" class="official-ticket-card" style="position: relative; z-index: 2;">
-          
-          <!-- Background Watermark inside Card -->
-          <div class="watermark-overlay">
-            <div id="watermark-text-display" class="watermark-text">
-              CRUD 2026 • CRUD 2026 • CRUD 2026 • CRUD 2026
-            </div>
-          </div>
 
           <!-- Dashed Tear Line & Circle Cutouts -->
           <div class="ticket-tear-line"></div>
@@ -143,8 +117,8 @@
       <div style="margin-top: 1rem; padding: 0.75rem 1rem; background: rgba(13, 18, 30, 0.7); border-radius: var(--radius-md); border: 1px solid var(--border-color); font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.75rem;">
         <span style="font-size: 1.35rem;">🛡️</span>
         <div>
-          <strong style="color: var(--text-main);">Entry Protection:</strong>
-          This official digital ticket pass is verified for <span id="ticket-email-tag" style="color: #34d399; font-weight: 600;">student</span>. Do not share screenshots.
+          <strong style="color: var(--text-main);">Screenshot Protection Active:</strong>
+          This pass is protected against screenshots and screen recording on mobile and desktop.
         </div>
       </div>
     </div>
@@ -166,11 +140,11 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=4.0"></script>
-  <script src="js/supabase.js?v=4.0"></script>
-  <script src="js/ui-helpers.js?v=4.0"></script>
-  <script src="js/auth.js?v=4.0"></script>
-  <script src="js/ticket.js?v=4.0"></script>
+  <script src="js/config.js?v=5.0"></script>
+  <script src="js/supabase.js?v=5.0"></script>
+  <script src="js/ui-helpers.js?v=5.0"></script>
+  <script src="js/auth.js?v=5.0"></script>
+  <script src="js/ticket.js?v=5.0"></script>
 
 </body>
 </html>
