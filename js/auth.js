@@ -1,6 +1,23 @@
 /* ========================================================
-   CRUD 2026 — AUTHENTICATION & ROUTE GUARDS
+   CRUD 2026 — AUTHENTICATION & ROUTE GUARDS (ABSOLUTE PATH SAFE)
    ======================================================== */
+
+// Smart Path Helper to get correct relative root
+function getRootPrefix() {
+  const path = window.location.pathname;
+  if (path.includes('/admin/')) {
+    return '../';
+  }
+  return '';
+}
+
+function getAdminPrefix() {
+  const path = window.location.pathname;
+  if (path.includes('/admin/')) {
+    return '';
+  }
+  return 'admin/';
+}
 
 // Get current session and profile
 async function getCurrentUser() {
@@ -37,8 +54,10 @@ async function getCurrentUser() {
 // Student Route Guard
 async function requireStudentAuth() {
   const authData = await getCurrentUser();
+  const root = getRootPrefix();
+
   if (!authData || !authData.session) {
-    window.location.href = 'login.html';
+    window.location.href = `${root}login.html`;
     return null;
   }
   if (!authData.profile || !authData.profile.is_active) {
@@ -49,19 +68,18 @@ async function requireStudentAuth() {
   return authData;
 }
 
-// Admin Route Guard (Smart Subfolder Path Resolution)
+// Admin Route Guard (Absolute Clean Path Resolution)
 async function requireAdminAuth() {
   const authData = await getCurrentUser();
-  const isSubfolder = window.location.pathname.includes('/admin/');
-  const loginPath = isSubfolder ? 'login.html' : 'admin/login.html';
+  const adminPath = `${getAdminPrefix()}login.html`;
 
   if (!authData || !authData.session) {
-    window.location.href = loginPath;
+    window.location.href = adminPath;
     return null;
   }
   if (!authData.profile || authData.profile.role !== 'admin' || !authData.profile.is_active) {
     showToast('Access denied. Administrator privileges required.', 'error');
-    window.location.href = loginPath;
+    window.location.href = adminPath;
     return null;
   }
   return authData;
@@ -114,8 +132,8 @@ async function logoutUser() {
   if (sb) {
     await sb.auth.signOut();
   }
-  const isSubfolder = window.location.pathname.includes('/admin/');
-  window.location.href = isSubfolder ? 'login.html' : 'login.html';
+  const root = getRootPrefix();
+  window.location.href = `${root}login.html`;
 }
 
 // Password Reset Request
@@ -123,7 +141,8 @@ async function sendPasswordReset(email) {
   const sb = window.getSupabase();
   if (!sb) return { success: false, message: 'Database connection failed.' };
 
-  const redirectTo = `${window.location.origin}/reset-password.html`;
+  const root = getRootPrefix();
+  const redirectTo = `${window.location.origin}${window.location.pathname.replace(/\/[^\/]*$/, '/')}${root}reset-password.html`;
   const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
 
   if (error) {
