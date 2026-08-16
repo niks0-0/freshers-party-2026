@@ -1,5 +1,5 @@
 /* ========================================================
-   CRUD 2026 — STRICT MATHEMATICAL OTP COMPARISON LOGIC
+   CRUD 2026 — SUPABASE AUTH REAL OTP VERIFICATION LOGIC
    ======================================================== */
 
 let currentUserAuth = null;
@@ -60,7 +60,7 @@ function getEnteredOtpCode() {
   return code;
 }
 
-// Generate & Save Exact 6-Digit Numeric OTP Code
+// Trigger Supabase Auth Email OTP Dispatch
 async function sendOtpCode() {
   const sb = window.getSupabase();
   const userId = currentUserAuth.user.id;
@@ -70,34 +70,11 @@ async function sendOtpCode() {
   localStorage.removeItem(`crud2026_verified_${userId}`);
   sessionStorage.removeItem(`crud2026_verified_${userId}`);
 
-  // Generate cryptographically secure 6-digit numeric OTP
-  const array = new Uint32Array(1);
-  window.crypto.getRandomValues(array);
-  const otpCode = String(100000 + (array[0] % 900000));
-  const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutes expiry
-
   try {
-    // 1. Delete existing OTP record for this user if present
+    // 1. Delete previous verification status in DB
     await sb.from('verification_codes').delete().eq('user_id', userId);
 
-    // 2. Save new 6-digit OTP record in PostgreSQL database table
-    const { error: insertErr } = await sb
-      .from('verification_codes')
-      .insert([{
-        user_id: userId,
-        email: userEmail,
-        otp_code: otpCode,
-        is_verified: false,
-        attempts: 0,
-        expires_at: expiresAt,
-        created_at: new Date().toISOString()
-      }]);
-
-    if (insertErr) {
-      console.warn("OTP Insert Note:", insertErr);
-    }
-
-    // 3. Trigger Supabase Auth Email Dispatch
+    // 2. Trigger Supabase Auth Email OTP Dispatch
     await sb.auth.signInWithOtp({
       email: userEmail,
       options: { shouldCreateUser: false }
@@ -152,9 +129,9 @@ function setupVerificationForm() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const verifyBtn = document.getElementById('verify-submit-btn');
-    const enteredOtpCode = getEnteredOtpCode();
+    const otpCode = getEnteredOtpCode();
 
-    if (enteredOtpCode.length !== 6) {
+    if (otpCode.length !== 6) {
       showToast('Please enter the full 6-digit code.', 'error');
       return;
     }
@@ -163,66 +140,34 @@ function setupVerificationForm() {
 
     const sb = window.getSupabase();
     const userId = currentUserAuth.user.id;
+    const userEmail = currentUserAuth.user.email;
 
     try {
-      // 1. Fetch exact verification record from database
-      const { data: record, error: fetchErr } = await sb
-        .from('verification_codes')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
+      // 1. Verify exact token against Supabase Auth Native Engine
+      const { data: authVerify, error: authVerifyErr } = await sb.auth.verifyOtp({
+        email: userEmail,
+        token: otpCode,
+        type: 'email'
+      });
 
-      if (fetchErr || !record) {
-        showToast('No active verification code found. Click Resend Code.', 'error');
-        setButtonLoading(verifyBtn, false);
-        clearOtpInputs();
-        return;
-      }
-
-      // 2. Check Expiry
-      if (new Date(record.expires_at) < new Date()) {
-        showToast('Verification code has expired. Please click Resend Code.', 'error');
-        setButtonLoading(verifyBtn, false);
-        clearOtpInputs();
-        return;
-      }
-
-      // 3. Check Failed Attempts Limit
-      if (record.attempts >= 5) {
-        showToast('Too many failed attempts. Please request a new code.', 'error');
-        setButtonLoading(verifyBtn, false);
-        clearOtpInputs();
-        return;
-      }
-
-      // 4. STRICT EXACT COMPARISON (Sent OTP vs Received OTP Typed by User)
-      const sentOtpCode = String(record.otp_code).trim();
-      const userEnteredCode = String(enteredOtpCode).trim();
-
-      // Check exact match (or prefix match if sent token is 8-digit)
-      const isExactMatch = (sentOtpCode === userEnteredCode);
-      const isPrefixMatch = (sentOtpCode.length >= 6 && sentOtpCode.startsWith(userEnteredCode));
-
-      if (!isExactMatch && !isPrefixMatch) {
-        // Increment failed attempts in DB
-        await sb
-          .from('verification_codes')
-          .update({ attempts: (record.attempts || 0) + 1 })
-          .eq('id', record.id);
-
+      if (authVerifyErr || !authVerify || !authVerify.session) {
         showToast('Incorrect verification code! Please check your email inbox.', 'error');
         setButtonLoading(verifyBtn, false);
         clearOtpInputs();
         return;
       }
 
-      // 5. SUCCESS! Sent OTP matches Received OTP!
-      await sb
-        .from('verification_codes')
-        .update({ is_verified: true })
-        .eq('id', record.id);
+      // 2. Exact Match Verified! Mark in Database
+      await sb.from('verification_codes').delete().eq('user_id', userId);
+      await sb.from('verification_codes').insert([{
+        user_id: userId,
+        email: userEmail,
+        otp_code: otpCode,
+        is_verified: true,
+        created_at: new Date().toISOString()
+      }]);
 
-      // Store local & session verification proof
+      // 3. Set Verified Proof Flags
       localStorage.setItem(`crud2026_verified_${userId}`, 'true');
       sessionStorage.setItem(`crud2026_verified_${userId}`, 'true');
 
@@ -233,7 +178,7 @@ function setupVerificationForm() {
 
     } catch (err) {
       console.error("Verification error:", err);
-      showToast('Verification failed. Incorrect code or connection error.', 'error');
+      showToast('Incorrect verification code! Please check your email inbox.', 'error');
       setButtonLoading(verifyBtn, false);
       clearOtpInputs();
     }
