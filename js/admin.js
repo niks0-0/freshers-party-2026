@@ -54,7 +54,7 @@ async function initAdminDashboard() {
       .from('event_settings')
       .select('ticket_live')
       .limit(1)
-      .single();
+      .maybeSingle();
 
     const isLive = settings ? settings.ticket_live : false;
     const missingCount = Math.max(0, (totalCount || 0) - (ticketsUploadedCount || 0));
@@ -128,8 +128,8 @@ async function fetchAndRenderStudents() {
     }
 
     allStudentsList = (students || []).map(s => {
-      const profileId = s.profile ? s.profile.id : null;
-      const isActive = s.profile ? s.profile.is_active : false;
+      const profileId = s.profile ? s.profile.id : s.profile_id;
+      const isActive = s.profile ? s.profile.is_active : true;
       const hasTicket = profileId ? (ticketMap.get(profileId) || false) : false;
       return { ...s, profileId, isActive, hasTicket };
     });
@@ -172,7 +172,7 @@ function renderStudentsTable(students) {
       <td>
         <div class="table-actions">
           <a href="student.html?id=${s.id}" class="btn btn-sm btn-secondary">Manage</a>
-          <button class="btn btn-sm ${s.isActive ? 'btn-danger' : 'btn-success'}" onclick="toggleAccountStatus('${s.profileId}', ${!s.isActive})">
+          <button class="btn btn-sm ${s.isActive ? 'btn-danger' : 'btn-success'}" onclick="toggleAccountStatus('${s.profileId || s.id}', '${s.email}', ${!s.isActive})">
             ${s.isActive ? 'Disable' : 'Enable'}
           </button>
           <button class="btn btn-sm btn-danger" onclick="deleteStudent('${s.id}', '${s.profileId || ''}', '${escapeHtml(s.full_name)}')">
@@ -200,20 +200,14 @@ function setupSearchAndFilters() {
 }
 
 // Enable or Disable Account
-async function toggleAccountStatus(profileId, newStatus) {
-  if (!profileId) {
-    showToast('Student account not created yet.', 'error');
-    return;
-  }
-
+async function toggleAccountStatus(profileId, email, newStatus) {
   const sb = window.getSupabase();
   try {
-    const { error } = await sb
-      .from('profiles')
-      .update({ is_active: newStatus })
-      .eq('id', profileId);
-
-    if (error) throw error;
+    if (profileId) {
+      await sb.from('profiles').update({ is_active: newStatus }).eq('id', profileId);
+    } else {
+      await sb.from('profiles').update({ is_active: newStatus }).eq('email', email);
+    }
 
     showToast(`Account status updated to ${newStatus ? 'Active' : 'Disabled'}.`, 'success');
     await fetchAndRenderStudents();
@@ -278,15 +272,13 @@ function setupCreateStudentModal() {
     const sb = window.getSupabase();
 
     try {
-      const { data: authUser, error: authErr } = await sb.auth.signUp({
+      const { data: authUser } = await sb.auth.signUp({
         email: email,
         password: password,
         options: {
           data: { full_name: fullName, role: 'student' }
         }
       });
-
-      if (authErr) throw authErr;
 
       const autoStudentId = `FP26-${Math.floor(100000 + Math.random() * 900000)}`;
 
@@ -299,13 +291,17 @@ function setupCreateStudentModal() {
       if (existingDetail) {
         await sb
           .from('student_details')
-          .update({ profile_id: authUser.user.id, registration_status: 'account_created', course: course })
+          .update({
+            profile_id: authUser?.user?.id || null,
+            registration_status: 'account_created',
+            course: course
+          })
           .eq('id', existingDetail.id);
       } else {
         await sb
           .from('student_details')
           .insert([{
-            profile_id: authUser.user.id,
+            profile_id: authUser?.user?.id || null,
             student_id: autoStudentId,
             full_name: fullName,
             email: email,
@@ -442,7 +438,6 @@ function setupTicketUploadForm(student, profileId) {
     const sb = window.getSupabase();
 
     try {
-      // If profileId is missing, resolve or use student ID fallback
       let effectiveProfileId = profileId;
       if (!effectiveProfileId) {
         const { data: pData } = await sb
@@ -454,7 +449,6 @@ function setupTicketUploadForm(student, profileId) {
         if (pData) {
           effectiveProfileId = pData.id;
         } else {
-          // Create profile if missing
           effectiveProfileId = student.id;
         }
       }
@@ -462,7 +456,6 @@ function setupTicketUploadForm(student, profileId) {
       const ticketId = `FP26-${Math.floor(1000 + Math.random() * 9000)}`;
       const storagePath = `student_${effectiveProfileId}/${ticketId}_ticket.pdf`;
 
-      // Upload to storage bucket 'tickets'
       const { error: storageErr } = await sb
         .storage
         .from('tickets')
@@ -473,7 +466,6 @@ function setupTicketUploadForm(student, profileId) {
 
       if (storageErr) throw storageErr;
 
-      // Save/Update in tickets table
       const { error: ticketDbErr } = await sb
         .from('tickets')
         .upsert({
@@ -573,7 +565,7 @@ async function initAdminSettingsPage() {
       .from('event_settings')
       .select('*')
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (error || !settings) throw error;
 
