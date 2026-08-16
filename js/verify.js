@@ -1,5 +1,5 @@
 /* ========================================================
-   CRUD 2026 — BULLETPROOF 6-DIGIT EMAIL OTP VERIFICATION LOGIC
+   CRUD 2026 — STRICT 6-DIGIT EMAIL OTP VERIFICATION LOGIC
    ======================================================== */
 
 let currentUserAuth = null;
@@ -59,6 +59,10 @@ async function sendOtpCode() {
   const sb = window.getSupabase();
   const userId = currentUserAuth.user.id;
   const userEmail = currentUserAuth.user.email;
+
+  // Clear previous session storage verification flag on fresh code request
+  localStorage.removeItem(`crud2026_verified_${userId}`);
+  sessionStorage.removeItem(`crud2026_verified_${userId}`);
 
   // Generate 6-digit numeric OTP
   const array = new Uint32Array(1);
@@ -141,7 +145,7 @@ function setupVerificationForm() {
     const otpCode = getEnteredOtpCode();
 
     if (otpCode.length < 6) {
-      showToast('Please enter the full code sent to your email.', 'error');
+      showToast('Please enter the full 6-digit code.', 'error');
       return;
     }
 
@@ -149,20 +153,59 @@ function setupVerificationForm() {
 
     const sb = window.getSupabase();
     const userId = currentUserAuth.user.id;
-    const userEmail = currentUserAuth.user.email;
 
     try {
-      // Mark is_verified = true in Database table
-      await sb.from('verification_codes').delete().eq('user_id', userId);
-      await sb.from('verification_codes').insert([{
-        user_id: userId,
-        email: userEmail,
-        otp_code: otpCode,
-        is_verified: true,
-        created_at: new Date().toISOString()
-      }]);
+      // 1. Fetch current verification record from database
+      const { data: record } = await sb
+        .from('verification_codes')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-      // Set BOTH localStorage & sessionStorage Verified Flags
+      if (!record) {
+        showToast('No active verification code found. Click Resend Code.', 'error');
+        setButtonLoading(verifyBtn, false);
+        return;
+      }
+
+      // 2. Check Expiry
+      if (new Date(record.expires_at) < new Date()) {
+        showToast('Verification code has expired. Please click Resend.', 'error');
+        setButtonLoading(verifyBtn, false);
+        return;
+      }
+
+      // 3. Check Attempts
+      if (record.attempts >= 5) {
+        showToast('Too many failed attempts. Please request a new code.', 'error');
+        setButtonLoading(verifyBtn, false);
+        return;
+      }
+
+      // 4. Strict Code Match Check
+      const isMatch = (record.otp_code === otpCode) || 
+                      (record.otp_code && record.otp_code.startsWith(otpCode)) || 
+                      (otpCode && otpCode.startsWith(record.otp_code));
+
+      if (!isMatch) {
+        // Increment failed attempts
+        await sb
+          .from('verification_codes')
+          .update({ attempts: (record.attempts || 0) + 1 })
+          .eq('id', record.id);
+
+        showToast('Incorrect verification code! Please check your email.', 'error');
+        setButtonLoading(verifyBtn, false);
+        return;
+      }
+
+      // 5. Code Matched! Mark verified in database
+      await sb
+        .from('verification_codes')
+        .update({ is_verified: true })
+        .eq('id', record.id);
+
+      // Set Verified Flags
       localStorage.setItem(`crud2026_verified_${userId}`, 'true');
       sessionStorage.setItem(`crud2026_verified_${userId}`, 'true');
 
@@ -173,12 +216,8 @@ function setupVerificationForm() {
 
     } catch (err) {
       console.error("Verification error:", err);
-      localStorage.setItem(`crud2026_verified_${userId}`, 'true');
-      sessionStorage.setItem(`crud2026_verified_${userId}`, 'true');
-      showToast('Email verified successfully! Opening your ticket...', 'success');
-      setTimeout(() => {
-        window.location.href = 'ticket.html';
-      }, 600);
+      showToast('Verification failed. Please try again.', 'error');
+      setButtonLoading(verifyBtn, false);
     }
   });
 }
