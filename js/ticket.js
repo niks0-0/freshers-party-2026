@@ -1,5 +1,5 @@
 /* ========================================================
-   FRESHERS PARTY 2026 — DIRECT PDF PREVIEW TICKET VIEWER
+   FRESHERS PARTY 2026 — PURE ORIGINAL PDF TICKET VIEWER
    ======================================================== */
 
 let currentUserAuth = null;
@@ -9,28 +9,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   currentUserAuth = await requireStudentAuth();
   if (!currentUserAuth) return;
 
-  setupSecurityProtection();
   await loadAndUnlockTicket();
 });
-
-function setupSecurityProtection() {
-  document.addEventListener('contextmenu', e => e.preventDefault());
-  document.addEventListener('selectstart', e => e.preventDefault());
-  document.addEventListener('dragstart', e => e.preventDefault());
-
-  document.addEventListener('keydown', e => {
-    if (
-      (e.ctrlKey || e.metaKey) &&
-      (e.key === 'p' || e.key === 'P' || e.key === 's' || e.key === 'S' || e.key === 'u' || e.key === 'U')
-    ) {
-      e.preventDefault();
-      showToast('Action restricted. PDF ticket is protected.', 'warning');
-    }
-    if (e.key === 'F12') {
-      e.preventDefault();
-    }
-  });
-}
 
 async function loadAndUnlockTicket() {
   const sb = window.getSupabase();
@@ -126,10 +106,10 @@ async function loadAndUnlockTicket() {
       ticketIdEl.textContent = `Ticket ID: ${ticket.ticket_id || 'FP26-PASS'}`;
     }
 
-    // Embed signed PDF URL directly into iframe preview
+    // Embed signed PDF URL directly into iframe
     const iframe = document.getElementById('pdf-frame');
     if (iframe) {
-      iframe.src = `${signedPdfUrl}#toolbar=0&navpanes=0&scrollbar=0`;
+      iframe.src = signedPdfUrl;
     }
 
   } catch (err) {
