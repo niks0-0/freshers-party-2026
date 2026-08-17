@@ -42,6 +42,7 @@ async function loadAndUnlockTicket() {
       nameEl.textContent = currentUserAuth.profile?.full_name || currentUserAuth.user.user_metadata?.full_name || 'Student Ticket Pass';
     }
 
+    // CHECK 1: Master Admin Ticket Release Switch
     const { data: settings } = await sb
       .from('event_settings')
       .select('ticket_live')
@@ -49,33 +50,7 @@ async function loadAndUnlockTicket() {
       .maybeSingle();
 
     if (!settings || !settings.ticket_live) {
-      showErrorState("Tickets are currently OFF. The organizer has not released tickets yet.");
-      return;
-    }
-
-    const isLocalVerified = localStorage.getItem(`crud2026_verified_${userId}`) === 'true';
-    const isSessionVerified = sessionStorage.getItem(`crud2026_verified_${userId}`) === 'true';
-
-    let isDbVerified = false;
-    try {
-      const { data: verifyRecord } = await sb
-        .from('verification_codes')
-        .select('is_verified')
-        .eq('user_id', userId)
-        .eq('is_verified', true)
-        .maybeSingle();
-
-      if (verifyRecord && verifyRecord.is_verified) {
-        isDbVerified = true;
-      }
-    } catch (e) {
-      console.warn("DB verification note:", e);
-    }
-
-    const isAuthorized = isLocalVerified || isSessionVerified || isDbVerified;
-
-    if (!isAuthorized) {
-      showErrorState("Email verification required before accessing ticket.", "verify.html", "Verify Email Now");
+      showErrorState("Tickets are currently locked by the administrator. Please wait for official release.", "dashboard.html", "Back to Dashboard");
       return;
     }
 
@@ -103,7 +78,35 @@ async function loadAndUnlockTicket() {
     }
 
     if (!ticket || (!ticket.storage_path && !ticket.ticket_url)) {
-      showErrorState("Your individual ticket PDF has not been uploaded yet by administrators.");
+      showErrorState("Your individual ticket PDF has not been uploaded yet by administrators.", "dashboard.html", "Back to Dashboard");
+      return;
+    }
+
+    // CHECK 2: Authorization & Persistent Generation Status
+    const isLocalVerified = localStorage.getItem(`crud2026_verified_${userId}`) === 'true';
+    const isSessionVerified = sessionStorage.getItem(`crud2026_verified_${userId}`) === 'true';
+    const isDatabaseGenerated = ticket.is_generated === true;
+
+    let isDbVerified = false;
+    try {
+      const { data: verifyRecord } = await sb
+        .from('verification_codes')
+        .select('is_verified')
+        .eq('user_id', userId)
+        .eq('is_verified', true)
+        .limit(1);
+
+      if (verifyRecord && verifyRecord.length > 0) {
+        isDbVerified = true;
+      }
+    } catch (e) {
+      console.warn("DB verification note:", e);
+    }
+
+    const isAuthorized = isDatabaseGenerated || isDbVerified || isLocalVerified || isSessionVerified;
+
+    if (!isAuthorized) {
+      showErrorState("Email security verification required before accessing ticket.", "verify.html", "Verify Email Now");
       return;
     }
 
@@ -122,7 +125,7 @@ async function loadAndUnlockTicket() {
     }
 
     if (!pdfDisplayUrl) {
-      showErrorState("Failed to authorize private ticket access.");
+      showErrorState("Failed to authorize private ticket access.", "dashboard.html", "Back to Dashboard");
       return;
     }
 
@@ -161,7 +164,7 @@ async function loadAndUnlockTicket() {
 
   } catch (err) {
     console.error("Error unlocking ticket:", err);
-    showErrorState("An unexpected error occurred while loading your ticket.");
+    showErrorState("An unexpected error occurred while loading your ticket.", "dashboard.html", "Back to Dashboard");
   }
 }
 

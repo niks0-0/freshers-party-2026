@@ -1,11 +1,12 @@
 /* ========================================================
-   CRUD 2026 — STUDENT DASHBOARD LOGIC
+   CRUD 2026 — STUDENT DASHBOARD LOGIC (PERSISTENT LIFECYCLE)
    ======================================================== */
 
 let currentUserAuth = null;
 let ticketData = null;
 let isTicketLive = false;
 let isEmailOtpEnabled = true;
+let isTicketAlreadyGenerated = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
   currentUserAuth = await requireStudentAuth();
@@ -102,21 +103,80 @@ async function loadStudentDashboardData() {
 
     ticketData = tData;
 
-    // Render Ticket Status Box Text & Banner
+    // 4. Check if student has already generated/verified their ticket once
+    let isDbVerified = false;
+    try {
+      const { data: verifyRecord } = await sb
+        .from('verification_codes')
+        .select('is_verified')
+        .eq('user_id', userId)
+        .eq('is_verified', true)
+        .limit(1);
+
+      if (verifyRecord && verifyRecord.length > 0) {
+        isDbVerified = true;
+      }
+    } catch (e) {
+      console.warn("Verify record check note:", e);
+    }
+
+    isTicketAlreadyGenerated = (ticketData && ticketData.is_generated) || isDbVerified;
+
+    // 5. Render Dynamic Ticket Status Banner & Button States
     const statusBanner = document.getElementById('ticket-status-message');
-    if (statusBanner) {
+    const generateBtn = document.getElementById('generate-ticket-btn');
+    const blurredStub = document.querySelector('.blurred-stub');
+    const lockIcon = document.querySelector('.lock-icon');
+
+    if (statusBanner && generateBtn) {
+      // STATE 1: Master Tickets OFF (Strict Admin Lockout)
       if (!isTicketLive) {
         statusBanner.className = 'info-banner warning-banner';
-        statusBanner.innerHTML = `🔒 <strong>Tickets are not live yet.</strong> Please wait for the administrator to release them.`;
-      } else if (!ticketData) {
+        statusBanner.innerHTML = `🔒 <strong>Tickets are currently locked by Admin.</strong> Please wait for organizers to release tickets.`;
+        generateBtn.textContent = 'TICKETS CURRENTLY LOCKED 🔒';
+        generateBtn.className = 'btn btn-secondary btn-full';
+        generateBtn.disabled = true;
+        if (blurredStub) blurredStub.textContent = 'CRUD26-LOCKED';
+        if (lockIcon) lockIcon.textContent = '🔒';
+      }
+      // STATE 2: Missing Ticket Record in DB
+      else if (!ticketData) {
         statusBanner.className = 'info-banner danger-banner';
         statusBanner.innerHTML = `⚠️ <strong>Ticket pending upload.</strong> Your individual PDF ticket has not been uploaded by organizers yet.`;
-      } else if (!isEmailOtpEnabled) {
+        generateBtn.textContent = 'TICKET PENDING UPLOAD ⚠️';
+        generateBtn.className = 'btn btn-secondary btn-full';
+        generateBtn.disabled = true;
+      }
+      // STATE 3: Already Generated Before & Tickets LIVE -> Direct Instant Access!
+      else if (isTicketAlreadyGenerated) {
+        statusBanner.className = 'info-banner success-banner';
+        statusBanner.innerHTML = `🎉 <strong>Your ticket pass is generated & ready!</strong> Click 'View My Ticket' below to access your digital pass directly.`;
+        generateBtn.textContent = 'VIEW MY TICKET 🎟️';
+        generateBtn.className = 'btn btn-primary btn-full';
+        generateBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+        generateBtn.disabled = false;
+        if (blurredStub) blurredStub.textContent = ticketData.ticket_id || 'CRUD26-READY';
+        if (lockIcon) lockIcon.textContent = '✅';
+      }
+      // STATE 4: Not Generated Yet & Email OTP Paused by Admin
+      else if (!isEmailOtpEnabled) {
         statusBanner.className = 'info-banner warning-banner';
         statusBanner.innerHTML = `🔒 <strong>Email OTP verification is currently paused by Admin.</strong> Please wait for organizers to enable OTP dispatch.`;
-      } else {
+        generateBtn.textContent = 'OTP VERIFICATION PAUSED 🔒';
+        generateBtn.className = 'btn btn-secondary btn-full';
+        generateBtn.disabled = true;
+        if (blurredStub) blurredStub.textContent = 'CRUD26-PAUSED';
+        if (lockIcon) lockIcon.textContent = '⏳';
+      }
+      // STATE 5: First-Time Generation Ready (Tickets LIVE + OTP ALLOWED)
+      else {
         statusBanner.className = 'info-banner success-banner';
         statusBanner.innerHTML = `📧 <strong>Security OTP Verification Required.</strong> Click 'Generate Ticket' below to send a 6-digit OTP code to your Gmail inbox.`;
+        generateBtn.textContent = 'GENERATE TICKET 🎟️';
+        generateBtn.className = 'btn btn-primary btn-full';
+        generateBtn.disabled = false;
+        if (blurredStub) blurredStub.textContent = 'CRUD26-PASS';
+        if (lockIcon) lockIcon.textContent = '🔐';
       }
     }
 
@@ -130,31 +190,41 @@ function setupGenerateTicketButton() {
   if (!generateBtn) return;
 
   generateBtn.addEventListener('click', async () => {
+    // Check 1: Master Ticket Live Switch
     if (!isTicketLive) {
-      showToast('Tickets are not live yet. Please wait for administrator release.', 'error');
+      showToast('Tickets are currently locked by the administrator.', 'error');
       return;
     }
 
+    // Check 2: Ticket Record Exists
     if (!ticketData) {
       showToast('Your ticket has not been uploaded yet. Please contact administrators.', 'error');
       return;
     }
 
+    const userId = currentUserAuth.user.id;
+
+    // Check 3: If already generated before -> DIRECT ACCESS to ticket.html without OTP!
+    if (isTicketAlreadyGenerated) {
+      localStorage.setItem(`crud2026_verified_${userId}`, 'true');
+      sessionStorage.setItem(`crud2026_verified_${userId}`, 'true');
+      window.location.href = 'ticket.html';
+      return;
+    }
+
+    // Check 4: If not generated yet & Email OTP is paused
     if (!isEmailOtpEnabled) {
       showToast('Email OTP dispatch is currently paused by event administrators.', 'error', 6000);
       return;
     }
 
-    // ALWAYS FORCE FRESH EMAIL OTP VERIFICATION BEFORE ACCESSING TICKET!
+    // First Time OTP Verification Flow
     const sb = window.getSupabase();
-    const userId = currentUserAuth.user.id;
-
-    // Reset previous verification status so student MUST enter fresh OTP sent to Gmail
     await sb.from('verification_codes').delete().eq('user_id', userId);
 
     showToast('Sending fresh OTP code to your Gmail inbox...', 'info');
     setTimeout(() => {
       window.location.href = 'verify.html';
-    }, 800);
+    }, 600);
   });
 }

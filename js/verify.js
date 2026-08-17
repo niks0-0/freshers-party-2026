@@ -85,7 +85,11 @@ async function sendOtpCode() {
     const result = await response.json();
 
     if (!result.success) {
-      // Fallback: if serverless function not ready or failed, try Supabase native fallback
+      if (response.status === 403) {
+        showToast(result.message || 'Email OTP dispatch is currently paused by Admin.', 'error', 8000);
+        return;
+      }
+      // Fallback: if serverless function not ready, try Supabase native fallback
       console.warn("Direct API note, trying fallback:", result.message);
       await sb.auth.signInWithOtp({
         email: userEmail,
@@ -98,7 +102,6 @@ async function sendOtpCode() {
 
   } catch (err) {
     console.error("Error generating OTP:", err);
-    // Supabase fallback
     try {
       await sb.auth.signInWithOtp({
         email: userEmail,
@@ -183,7 +186,7 @@ function setupVerificationForm() {
         // Mark as verified in database
         await sb
           .from('verification_codes')
-          .update({ is_verified: true })
+          .update({ is_verified: true, updated_at: new Date().toISOString() })
           .eq('id', records[0].id);
       } else {
         // Fallback check: Supabase verifyOtp
@@ -204,11 +207,40 @@ function setupVerificationForm() {
         return;
       }
 
-      // 2. Set Verified Proof Flags
+      // 2. PERSISTENT TICKET GENERATION: Mark ticket as is_generated = true in database
+      const generatedTimestamp = new Date().toISOString();
+      await sb
+        .from('tickets')
+        .update({ 
+          is_generated: true, 
+          generated_at: generatedTimestamp,
+          updated_at: generatedTimestamp 
+        })
+        .eq('student_profile_id', userId);
+
+      // Failsafe: also update by student_details id if student_profile_id is detail id
+      const { data: sd } = await sb
+        .from('student_details')
+        .select('id')
+        .eq('email', userEmail)
+        .maybeSingle();
+
+      if (sd && sd.id) {
+        await sb
+          .from('tickets')
+          .update({ 
+            is_generated: true, 
+            generated_at: generatedTimestamp,
+            updated_at: generatedTimestamp 
+          })
+          .eq('student_profile_id', sd.id);
+      }
+
+      // 3. Set Verified Proof Flags
       localStorage.setItem(`crud2026_verified_${userId}`, 'true');
       sessionStorage.setItem(`crud2026_verified_${userId}`, 'true');
 
-      showToast('Email verified successfully! Opening your ticket...', 'success');
+      showToast('Email verified successfully! Opening your ticket pass...', 'success');
       setTimeout(() => {
         window.location.href = 'ticket.html';
       }, 600);
