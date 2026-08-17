@@ -36,12 +36,10 @@ async function initAdminDashboard() {
       .from('student_details')
       .select('*', { count: 'exact', head: true });
 
-    // Active Accounts
+    // Active Accounts (From student_details)
     const { count: activeCount } = await sb
-      .from('profiles')
-      .select('*', { count: 'exact', head: true })
-      .eq('role', 'student')
-      .eq('is_active', true);
+      .from('student_details')
+      .select('*', { count: 'exact', head: true });
 
     // Tickets Uploaded
     const { count: ticketsUploadedCount } = await sb
