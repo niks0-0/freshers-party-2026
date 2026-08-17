@@ -237,15 +237,15 @@ function setupExcelImportModal() {
           let ticketUrl = '';
           let ticketId = '';
 
-          // FLEXIBLE FILTER: Extract Name, Email, Mobile, Course & Ticket URL
+          // STRICT & FLEXIBLE KEY MATCHING
           Object.keys(row).forEach(key => {
             const lowerKey = key.toLowerCase().trim();
             const val = String(row[key] || '').trim();
 
-            if (!name && (lowerKey === 'name' || lowerKey.includes('name'))) {
+            if (!name && (lowerKey === 'name' || lowerKey === 'full name' || lowerKey === 'fullname' || lowerKey === 'student name' || lowerKey === 'studentname')) {
               name = val;
             }
-            if (!email && (lowerKey.includes('email') || lowerKey.includes('mail'))) {
+            if (!email && (lowerKey === 'email' || lowerKey.includes('email') || lowerKey.includes('mail'))) {
               email = val.toLowerCase();
             }
             if (lowerKey.includes('mobile') || lowerKey.includes('phone') || lowerKey.includes('contact') || lowerKey.includes('no')) {
@@ -254,7 +254,7 @@ function setupExcelImportModal() {
             if (lowerKey.includes('course') || lowerKey.includes('stream') || lowerKey.includes('branch')) {
               if (val) course = val;
             }
-            if (lowerKey.includes('merged doc url') || lowerKey.includes('ticket url') || lowerKey.includes('link') || lowerKey.includes('url')) {
+            if (lowerKey.includes('merged doc url') || lowerKey.includes('ticket url') || lowerKey.includes('link to merged doc') || lowerKey.includes('doc url')) {
               if (val && val.startsWith('http')) ticketUrl = val;
             }
             if (lowerKey.includes('ticket id') || lowerKey.includes('ticketid')) {
@@ -262,7 +262,11 @@ function setupExcelImportModal() {
             }
           });
 
-          // Fallback email if name exists
+          // Fallback name search if key wasn't named exact
+          if (!name && row['name']) name = String(row['name']).trim();
+          if (!name && row['Name']) name = String(row['Name']).trim();
+
+          // Fallback email generation if name exists
           if (name && !email) {
             const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
             email = `${cleanName || 'student'}${idx + 1}@freshers2026.com`;
