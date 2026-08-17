@@ -213,7 +213,7 @@ function setupSearchAndFilters() {
 }
 
 // --------------------------------------------------------
-// EXCEL BULK IMPORT MODAL ENGINE (FAILSAFE DIRECT INSERT)
+// EXCEL BULK IMPORT MODAL ENGINE (BULK TICKET URL IMPORTER)
 // --------------------------------------------------------
 function setupExcelImportModal() {
   const fileInput = document.getElementById('excel-file-input');
@@ -247,12 +247,12 @@ function setupExcelImportModal() {
           let ticketUrl = '';
           let ticketId = '';
 
-          // STRICT & FLEXIBLE KEY MATCHING
+          // STRICT & FLEXIBLE KEY MATCHING (WITH GOOGLE DRIVE TICKET URL MATCH)
           Object.keys(row).forEach(key => {
             const lowerKey = key.toLowerCase().trim();
             const val = String(row[key] || '').trim();
 
-            if (!name && (lowerKey === 'name' || lowerKey === 'full name' || lowerKey === 'fullname' || lowerKey === 'student name' || lowerKey === 'studentname')) {
+            if (!name && (lowerKey === 'name' || lowerKey === 'full name' || lowerKey === 'fullname' || lowerKey === 'student name')) {
               name = val;
             }
             if (!email && (lowerKey === 'email' || lowerKey.includes('email') || lowerKey.includes('mail'))) {
@@ -264,7 +264,8 @@ function setupExcelImportModal() {
             if (lowerKey.includes('course') || lowerKey.includes('stream') || lowerKey.includes('branch')) {
               if (val) course = val;
             }
-            if (lowerKey.includes('merged doc url') || lowerKey.includes('ticket url') || lowerKey.includes('link to merged doc') || lowerKey.includes('doc url')) {
+            // Match Column H (Merged Doc URL / Google Drive Ticket URL)
+            if (lowerKey.includes('merged doc url') || lowerKey.includes('ticket url') || lowerKey.includes('link to merged doc') || lowerKey.includes('doc url') || (val.startsWith('http') && !lowerKey.includes('qr'))) {
               if (val && val.startsWith('http')) ticketUrl = val;
             }
             if (lowerKey.includes('ticket id') || lowerKey.includes('ticketid')) {
@@ -296,10 +297,10 @@ function setupExcelImportModal() {
 
         if (parsedExcelStudents.length > 0) {
           if (previewArea) previewArea.style.display = 'block';
-          if (countEl) countEl.textContent = `✅ Ready to import ${parsedExcelStudents.length} student records`;
+          if (countEl) countEl.textContent = `✅ Ready to import/update ${parsedExcelStudents.length} student ticket records`;
           if (sampleEl) {
             sampleEl.innerHTML = parsedExcelStudents.slice(0, 5).map(s => `
-              <div>• <strong>${escapeHtml(s.fullName)}</strong> (${escapeHtml(s.email)}) — ${escapeHtml(s.course)} — ${escapeHtml(s.mobile)} ${s.ticketUrl ? '📄 [Ticket Link Included]' : ''}</div>
+              <div>• <strong>${escapeHtml(s.fullName)}</strong> (${escapeHtml(s.email)}) — ${escapeHtml(s.course)} ${s.ticketUrl ? '📄 [Google Drive Ticket Link Found]' : ''}</div>
             `).join('') + (parsedExcelStudents.length > 5 ? `<div style="margin-top:0.3rem;">...and ${parsedExcelStudents.length - 5} more records</div>` : '');
           }
           if (importBtn) importBtn.disabled = false;
@@ -320,7 +321,7 @@ function setupExcelImportModal() {
     importBtn.addEventListener('click', async () => {
       if (parsedExcelStudents.length === 0) return;
 
-      setButtonLoading(importBtn, true, `Registering ${parsedExcelStudents.length} Students...`);
+      setButtonLoading(importBtn, true, `Processing ${parsedExcelStudents.length} Students...`);
       const sb = window.getSupabase();
       let successCount = 0;
 
@@ -360,22 +361,36 @@ function setupExcelImportModal() {
             console.error("student_details upsert error:", detailErr);
           } else {
             successCount++;
-            const targetProfileId = authUserId || (detailData && detailData[0] ? detailData[0].id : null);
+            const targetId = detailData && detailData[0] ? detailData[0].id : null;
+            const targetProfileId = authUserId || (detailData && detailData[0] ? (detailData[0].profile_id || detailData[0].id) : null);
 
-            // 3. Insert or Update Ticket URL record
-            if (student.ticketUrl && targetProfileId) {
-              const { error: ticketErr } = await sb
-                .from('tickets')
-                .upsert({
-                  student_profile_id: targetProfileId,
-                  ticket_id: student.ticketId || `FP26-${Math.floor(1000 + Math.random() * 9000)}`,
-                  ticket_url: student.ticketUrl,
-                  storage_path: null,
-                  is_uploaded: true,
-                  uploaded_at: new Date().toISOString()
-                }, { onConflict: 'student_profile_id' });
+            // 3. Upsert Ticket URL directly linked to Student Detail ID & Profile ID
+            if (student.ticketUrl) {
+              if (targetProfileId) {
+                await sb
+                  .from('tickets')
+                  .upsert({
+                    student_profile_id: targetProfileId,
+                    ticket_id: student.ticketId || `FP26-${Math.floor(1000 + Math.random() * 9000)}`,
+                    ticket_url: student.ticketUrl,
+                    storage_path: null,
+                    is_uploaded: true,
+                    uploaded_at: new Date().toISOString()
+                  }, { onConflict: 'student_profile_id' });
+              }
 
-              if (ticketErr) console.error("Ticket upsert note:", ticketErr);
+              if (targetId && targetId !== targetProfileId) {
+                await sb
+                  .from('tickets')
+                  .upsert({
+                    student_profile_id: targetId,
+                    ticket_id: student.ticketId || `FP26-${Math.floor(1000 + Math.random() * 9000)}`,
+                    ticket_url: student.ticketUrl,
+                    storage_path: null,
+                    is_uploaded: true,
+                    uploaded_at: new Date().toISOString()
+                  }, { onConflict: 'student_profile_id' });
+              }
             }
           }
 
@@ -385,7 +400,7 @@ function setupExcelImportModal() {
       }
 
       setButtonLoading(importBtn, false);
-      showToast(`Successfully registered ${successCount} students from Excel sheet!`, 'success');
+      showToast(`Successfully processed ${successCount} student tickets from Excel sheet!`, 'success');
       closeModal('excel-import-modal');
 
       // Re-fetch and re-render directory table immediately
