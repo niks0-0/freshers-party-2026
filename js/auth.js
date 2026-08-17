@@ -40,7 +40,7 @@ async function getCurrentUser() {
       id: session.user.id,
       email: session.user.email,
       full_name: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
-      role: session.user.email === 'admin@freshers2026.com' ? 'admin' : 'student',
+      role: (session.user.email === 'nikmahant5@gmail.com' || session.user.email === 'admin@freshers2026.com') ? 'admin' : 'student',
       is_active: true
     };
 
