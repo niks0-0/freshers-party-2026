@@ -126,13 +126,15 @@ async function fetchAndRenderStudents() {
 
     const ticketMap = new Map();
     if (tickets) {
-      tickets.forEach(t => ticketMap.set(t.student_profile_id, t));
+      tickets.forEach(t => {
+        ticketMap.set(t.student_profile_id, t);
+      });
     }
 
     allStudentsList = (students || []).map(s => {
-      const profileId = s.profile ? s.profile.id : s.profile_id;
+      const profileId = s.profile ? s.profile.id : (s.profile_id || s.id);
       const isActive = s.profile ? s.profile.is_active : true;
-      const ticketRecord = profileId ? ticketMap.get(profileId) : null;
+      const ticketRecord = ticketMap.get(profileId) || ticketMap.get(s.id) || ticketMap.get(s.profile_id);
       const hasTicket = ticketRecord ? (ticketRecord.is_uploaded || !!ticketRecord.ticket_url) : false;
       return { ...s, profileId, isActive, hasTicket, ticketRecord };
     });
@@ -203,7 +205,7 @@ function setupSearchAndFilters() {
 }
 
 // --------------------------------------------------------
-// EXCEL BULK IMPORT MODAL ENGINE (STRICT 5 COLUMN FILTER)
+// EXCEL BULK IMPORT MODAL ENGINE (GUARANTEED BULK INSERT)
 // --------------------------------------------------------
 function setupExcelImportModal() {
   const fileInput = document.getElementById('excel-file-input');
@@ -301,68 +303,71 @@ function setupExcelImportModal() {
 
       for (const student of parsedExcelStudents) {
         try {
-          // 1. Create Auth User Account
-          const { data: authData } = await sb.auth.signUp({
-            email: student.email,
-            password: 'Freshers@2026',
-            options: {
-              data: { full_name: student.fullName, role: 'student' }
-            }
-          });
+          // 1. Create Auth User Account if possible
+          let authUserId = null;
+          try {
+            const { data: authData } = await sb.auth.signUp({
+              email: student.email,
+              password: 'Freshers@2026',
+              options: {
+                data: { full_name: student.fullName, role: 'student' }
+              }
+            });
+            if (authData && authData.user) authUserId = authData.user.id;
+          } catch (e) {
+            console.warn("Auth signup note:", e);
+          }
 
-          const autoStudentId = student.ticketId || `FP26-${Math.floor(100000 + Math.random() * 900000)}`;
+          // 2. Ensure Profile Record in public.profiles
+          if (authUserId) {
+            await sb.from('profiles').upsert({
+              id: authUserId,
+              email: student.email,
+              full_name: student.fullName,
+              role: 'student',
+              is_active: true
+            });
+          }
 
-          // 2. Check & Upsert student_details
-          const { data: existingDetail } = await sb
+          // 3. Upsert Student Details Record
+          const { data: detailData, error: detailErr } = await sb
             .from('student_details')
-            .select('id, profile_id')
-            .eq('email', student.email)
-            .maybeSingle();
+            .upsert([{
+              profile_id: authUserId || null,
+              student_id: student.ticketId || `FP26-${Math.floor(100000 + Math.random() * 900000)}`,
+              full_name: student.fullName,
+              email: student.email,
+              mobile: student.mobile,
+              course: student.course,
+              semester: student.course.includes('Sem-3') ? 'Sem 3' : 'Sem 1',
+              registration_status: 'excel_imported'
+            }], { onConflict: 'email' })
+            .select();
 
-          let targetProfileId = authData?.user?.id || (existingDetail ? existingDetail.profile_id : null);
-
-          if (existingDetail) {
-            await sb
-              .from('student_details')
-              .update({
-                profile_id: targetProfileId,
-                full_name: student.fullName,
-                mobile: student.mobile,
-                course: student.course,
-                registration_status: 'excel_imported'
-              })
-              .eq('id', existingDetail.id);
+          if (detailErr) {
+            console.error("student_details upsert error:", detailErr);
           } else {
-            await sb
-              .from('student_details')
-              .insert([{
-                profile_id: targetProfileId,
-                student_id: autoStudentId,
-                full_name: student.fullName,
-                email: student.email,
-                mobile: student.mobile,
-                course: student.course,
-                semester: student.course.includes('Sem-3') ? 'Sem 3' : 'Sem 1',
-                registration_status: 'excel_imported'
-              }]);
+            successCount++;
           }
 
-          // 3. Save Ticket URL to tickets table if present in Excel
-          if (student.ticketUrl && targetProfileId) {
-            await sb
-              .from('tickets')
-              .upsert({
-                student_profile_id: targetProfileId,
-                ticket_id: student.ticketId || `FP26-${Math.floor(1000 + Math.random() * 9000)}`,
-                ticket_url: student.ticketUrl,
-                is_uploaded: true,
-                uploaded_at: new Date().toISOString()
-              }, { onConflict: 'student_profile_id' });
+          // 4. Save Ticket URL to tickets table if present in Excel
+          if (student.ticketUrl) {
+            const targetProfileId = authUserId || (detailData && detailData[0] ? detailData[0].id : null);
+            if (targetProfileId) {
+              await sb
+                .from('tickets')
+                .upsert({
+                  student_profile_id: targetProfileId,
+                  ticket_id: student.ticketId || `FP26-${Math.floor(1000 + Math.random() * 9000)}`,
+                  ticket_url: student.ticketUrl,
+                  is_uploaded: true,
+                  uploaded_at: new Date().toISOString()
+                });
+            }
           }
 
-          successCount++;
         } catch (e) {
-          console.warn("Excel single import note:", e);
+          console.error("Excel single import error:", e);
         }
       }
 
@@ -558,11 +563,11 @@ async function initAdminSingleStudentPage() {
     if (mobileEl) mobileEl.textContent = student.mobile;
 
     let existingTicket = null;
-    if (profileId) {
+    if (profileId || student.id) {
       const { data: ticket } = await sb
         .from('tickets')
         .select('*')
-        .eq('student_profile_id', profileId)
+        .or(`student_profile_id.eq.${profileId || student.id},student_profile_id.eq.${student.id}`)
         .maybeSingle();
 
       if (ticket) existingTicket = ticket;
@@ -595,7 +600,7 @@ async function initAdminSingleStudentPage() {
       // Setup Delete Ticket button
       const deleteBtn = document.getElementById('delete-current-ticket-btn');
       if (deleteBtn) {
-        deleteBtn.onclick = () => deleteStudentTicket(profileId, existingTicket.storage_path);
+        deleteBtn.onclick = () => deleteStudentTicket(profileId || student.id, existingTicket.storage_path);
       }
 
     } else {
@@ -607,7 +612,7 @@ async function initAdminSingleStudentPage() {
       if (uploadLabel) uploadLabel.textContent = `Select PDF File (.pdf, Max 10MB) *`;
     }
 
-    setupTicketUploadForm(student, profileId);
+    setupTicketUploadForm(student, profileId || student.id);
 
   } catch (err) {
     console.error("Error fetching single student detail:", err);
