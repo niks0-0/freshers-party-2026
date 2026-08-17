@@ -34,18 +34,25 @@ async function getCurrentUser() {
     .eq('id', session.user.id)
     .maybeSingle();
 
+  const isAdminEmail = (session.user.email === 'nikmahant5@gmail.com' || session.user.email === 'admin@freshers2026.com');
+
   if (!profile) {
     // Fail-safe fallback profile
     const fallbackProfile = {
       id: session.user.id,
       email: session.user.email,
       full_name: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
-      role: (session.user.email === 'nikmahant5@gmail.com' || session.user.email === 'admin@freshers2026.com') ? 'admin' : 'student',
+      role: isAdminEmail ? 'admin' : 'student',
       is_active: true
     };
 
     await sb.from('profiles').upsert([fallbackProfile], { onConflict: 'id' });
     return { session, user: session.user, profile: fallbackProfile };
+  }
+
+  // Override admin role for primary admin emails
+  if (isAdminEmail) {
+    profile.role = 'admin';
   }
 
   return { session, user: session.user, profile };
@@ -77,7 +84,8 @@ async function requireAdminAuth() {
     window.location.href = adminPath;
     return null;
   }
-  if (!authData.profile || authData.profile.role !== 'admin' || !authData.profile.is_active) {
+  const isAdminEmail = (authData.user?.email === 'nikmahant5@gmail.com' || authData.user?.email === 'admin@freshers2026.com');
+  if (!authData.profile || (authData.profile.role !== 'admin' && !isAdminEmail) || !authData.profile.is_active) {
     showToast('Access denied. Administrator privileges required.', 'error');
     window.location.href = adminPath;
     return null;
@@ -90,10 +98,13 @@ async function loginUser(email, password, isAdminLogin = false) {
   const sb = window.getSupabase();
   if (!sb) return { success: false, message: 'Database initialization failed.' };
 
-  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  const cleanEmail = email.trim().toLowerCase();
+  const { data, error } = await sb.auth.signInWithPassword({ email: cleanEmail, password });
   if (error) {
     return { success: false, message: error.message || 'Invalid email or password.' };
   }
+
+  const isAdminEmail = (cleanEmail === 'nikmahant5@gmail.com' || cleanEmail === 'admin@freshers2026.com');
 
   // Verify Role and Active status
   let { data: profile } = await sb
@@ -105,12 +116,16 @@ async function loginUser(email, password, isAdminLogin = false) {
   if (!profile) {
     profile = {
       id: data.user.id,
-      email: data.user.email,
-      full_name: data.user.user_metadata?.full_name || email.split('@')[0],
-      role: isAdminLogin ? 'admin' : 'student',
+      email: cleanEmail,
+      full_name: data.user.user_metadata?.full_name || cleanEmail.split('@')[0],
+      role: (isAdminLogin || isAdminEmail) ? 'admin' : 'student',
       is_active: true
     };
     await sb.from('profiles').upsert([profile], { onConflict: 'id' });
+  }
+
+  if (isAdminEmail) {
+    profile.role = 'admin';
   }
 
   if (!profile.is_active) {
@@ -118,7 +133,7 @@ async function loginUser(email, password, isAdminLogin = false) {
     return { success: false, message: 'Your account is deactivated. Contact admin.' };
   }
 
-  if (isAdminLogin && profile.role !== 'admin') {
+  if (isAdminLogin && profile.role !== 'admin' && !isAdminEmail) {
     await sb.auth.signOut();
     return { success: false, message: 'Unauthorized. Not an admin account.' };
   }
