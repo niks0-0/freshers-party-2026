@@ -693,6 +693,7 @@ function setupTicketUploadForm(student, profileId) {
           student_profile_id: effectiveProfileId,
           ticket_id: ticketId,
           storage_path: storagePath,
+          ticket_url: null,
           is_uploaded: true,
           uploaded_at: new Date().toISOString()
         }, { onConflict: 'student_profile_id' });
