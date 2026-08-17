@@ -1,5 +1,5 @@
 /* ========================================================
-   FRESHERS PARTY 2026 — PURE ORIGINAL PDF TICKET VIEWER
+   FRESHERS PARTY 2026 — DIGITAL TICKET VIEWER & IFRAME PREVIEW
    ======================================================== */
 
 let currentUserAuth = null;
@@ -11,6 +11,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await loadAndUnlockTicket();
 });
+
+// Helper to convert any Google Drive URL into a clean iframe preview URL
+function getGoogleDriveEmbedUrl(url) {
+  if (!url || !url.includes('drive.google.com')) return url;
+  
+  let fileId = null;
+  const matchFileD = url.match(/\/file\/d\/([^\/\?#]+)/);
+  if (matchFileD) {
+    fileId = matchFileD[1];
+  } else {
+    const matchId = url.match(/id=([^\&]+)/);
+    if (matchId) fileId = matchId[1];
+  }
+
+  if (fileId) {
+    return `https://drive.google.com/file/d/${fileId}/preview`;
+  }
+  return url;
+}
 
 async function loadAndUnlockTicket() {
   const sb = window.getSupabase();
@@ -120,7 +139,24 @@ async function loadAndUnlockTicket() {
       directOpenBtn.style.display = 'inline-flex';
     }
 
-    // Render exact PDF file using PDF.js
+    // Check if URL is a Google Drive link -> Render in direct embedded Iframe!
+    if (pdfDisplayUrl.includes('drive.google.com')) {
+      const embedUrl = getGoogleDriveEmbedUrl(pdfDisplayUrl);
+      const loadingEl = document.getElementById('pdf-loading-spinner');
+      const canvas = document.getElementById('pdf-render-canvas');
+      const iframe = document.getElementById('pdf-frame');
+
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (canvas) canvas.style.display = 'none';
+      if (iframe) {
+        iframe.src = embedUrl;
+        iframe.style.display = 'block';
+        iframe.style.height = '600px';
+      }
+      return;
+    }
+
+    // Otherwise render Supabase uploaded PDF using PDF.js
     await renderPdfWithPdfJs(signedPdfUrl);
 
   } catch (err) {
@@ -139,6 +175,7 @@ async function renderPdfWithPdfJs(url) {
     if (iframe) {
       iframe.src = `${url}#toolbar=0&navpanes=0&scrollbar=0`;
       iframe.style.display = 'block';
+      iframe.style.height = '600px';
     }
     return;
   }
@@ -170,6 +207,7 @@ async function renderPdfWithPdfJs(url) {
     if (iframe) {
       iframe.src = `${url}#toolbar=0&navpanes=0&scrollbar=0`;
       iframe.style.display = 'block';
+      iframe.style.height = '600px';
     }
   }
 }
