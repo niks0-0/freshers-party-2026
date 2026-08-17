@@ -28,12 +28,13 @@
 
   <main class="container" style="padding: 2.5rem 1.5rem 5rem;">
 
+    <!-- Header -->
     <div class="admin-header-bar">
       <div>
         <h1 style="font-size: 2rem;">Admin <span class="gradient-text">Control Center</span></h1>
-        <p>Real-time analytics and direct master controls for CRUD 2026</p>
+        <p>Real-time system telemetry and instant master switch controls for CRUD 2026</p>
       </div>
-      <a href="settings.html" class="btn btn-primary btn-sm">⚙️ Event Public Settings</a>
+      <a href="settings.html" class="btn btn-secondary btn-sm">⚙️ Public Event Guidelines</a>
     </div>
 
     <!-- Analytics Stats Grid -->
@@ -59,78 +60,89 @@
       </div>
     </div>
 
-    <!-- DIRECT MASTER CONTROLS BAR (REAL-TIME TOGGLE SWITCHES) -->
-    <div class="glass-card" style="margin-top: 1.5rem; border: 1px solid var(--border-accent); background: rgba(13, 17, 28, 0.85);">
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem;">
-        <div>
-          <h3 style="font-size: 1.2rem; margin: 0;">⚡ Quick Master Switch Controls</h3>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0.2rem 0 0;">Toggle release & security rules directly from dashboard</p>
+    <!-- UNIFIED MASTER COMMAND BAR (OPTION 1) -->
+    <section class="command-bar">
+      <div class="command-bar-header">
+        <div style="display: flex; align-items: center; gap: 0.65rem;">
+          <span style="font-size: 1.35rem;">⚡</span>
+          <div>
+            <h3 style="font-size: 1.15rem; margin: 0; font-weight: 800; letter-spacing: 0.02em;">MASTER SYSTEM SWITCHES</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0.15rem 0 0;">Unified access control & instant real-time toggle rules</p>
+          </div>
         </div>
-        <span class="badge badge-live" style="font-size: 0.75rem;"><span class="badge-dot"></span> LIVE SYNCED</span>
+        <span class="badge badge-live" style="font-size: 0.78rem; font-weight: 700; padding: 0.35rem 0.85rem;">
+          <span class="badge-dot"></span> REALTIME LIVE SYNC
+        </span>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
+      <div class="command-grid">
         
-        <!-- Ticket Live Master Toggle Card -->
-        <div style="padding: 1.25rem; background: rgba(255, 255, 255, 0.03); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-            <strong style="font-size: 1rem; color: var(--text-main);">🎟️ Ticket Release Switch</strong>
+        <!-- Left Panel: Ticket Pass Release Switch -->
+        <div class="command-panel">
+          <div class="command-panel-top">
+            <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">🎟️ Global Ticket Release</span>
             <div id="dash-ticket-badge">
               <span class="badge badge-off"><span class="badge-dot"></span> OFF</span>
             </div>
           </div>
-          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5;">
-            Controls whether students can unlock and view their event ticket pass.
-          </p>
-          <div class="switch-container">
+          
+          <div class="command-panel-body">
             <label class="switch">
               <input type="checkbox" id="dashboard-ticket-live-toggle">
               <span class="slider"></span>
             </label>
-            <span style="font-size: 0.85rem; font-weight: 600;" id="dash-ticket-toggle-label">Toggle Status</span>
+            <div style="flex: 1;">
+              <div id="dash-ticket-toggle-label" style="font-weight: 700; font-size: 0.925rem; color: var(--text-main); margin-bottom: 0.2rem;">
+                Tickets are OFF 🔴
+              </div>
+              <p class="command-desc">Controls whether students can view & unlock digital tickets</p>
+            </div>
           </div>
         </div>
 
-        <!-- Email OTP Master Toggle Card -->
-        <div style="padding: 1.25rem; background: rgba(255, 255, 255, 0.03); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-            <strong style="font-size: 1rem; color: var(--text-main);">📧 Email OTP Dispatch Switch</strong>
+        <!-- Right Panel: Email OTP Dispatch Switch -->
+        <div class="command-panel">
+          <div class="command-panel-top">
+            <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">📧 Email OTP Verification</span>
             <div id="dash-otp-badge">
               <span class="badge badge-live"><span class="badge-dot"></span> ALLOWED</span>
             </div>
           </div>
-          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5;">
-            Allow or strictly block automatic 6-digit OTP verification emails.
-          </p>
-          <div class="switch-container">
+
+          <div class="command-panel-body">
             <label class="switch">
               <input type="checkbox" id="dashboard-email-otp-toggle">
               <span class="slider"></span>
             </label>
-            <span style="font-size: 0.85rem; font-weight: 600;" id="dash-otp-toggle-label">Toggle Status</span>
+            <div style="flex: 1;">
+              <div id="dash-otp-toggle-label" style="font-weight: 700; font-size: 0.925rem; color: var(--text-main); margin-bottom: 0.2rem;">
+                OTP Emails ALLOWED 🟢
+              </div>
+              <p class="command-desc">Dispatches 6-digit security codes via Gmail serverless engine</p>
+            </div>
           </div>
         </div>
 
       </div>
-    </div>
+    </section>
 
-    <!-- Quick Navigation Cards -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+    <!-- Quick Navigation Directory Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
       <div class="glass-card">
         <h3 style="margin-bottom: 0.5rem;">👨‍🎓 Manage Registered Students</h3>
-        <p style="margin-bottom: 1.25rem;">View, search, enable/disable student login accounts or bulk import Excel/CSV files.</p>
+        <p style="margin-bottom: 1.25rem;">View, search, enable/disable student accounts, or bulk import Excel/CSV records.</p>
         <a href="students.html" class="btn btn-secondary btn-full">Open Student Manager →</a>
       </div>
 
       <div class="glass-card">
         <h3 style="margin-bottom: 0.5rem;">📁 Ticket Storage Repository</h3>
-        <p style="margin-bottom: 1.25rem;">View all uploaded student PDF tickets stored in Supabase private bucket.</p>
-        <a href="tickets.html" class="btn btn-secondary btn-full">View Tickets Repository →</a>
+        <p style="margin-bottom: 1.25rem;">View all uploaded student PDF tickets stored in Supabase private bucket repository.</p>
+        <a href="tickets.html" class="btn btn-secondary btn-full">View Tickets Storage →</a>
       </div>
 
       <div class="glass-card">
         <h3 style="margin-bottom: 0.5rem;">⚙️ Public Event Guidelines</h3>
-        <p style="margin-bottom: 1.25rem;">Update event date, timing, venue location, college name, and important guidelines.</p>
+        <p style="margin-bottom: 1.25rem;">Update public party schedules, date, timing, venue location, and college name.</p>
         <a href="settings.html" class="btn btn-primary btn-full">Manage Event Info →</a>
       </div>
     </div>
