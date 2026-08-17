@@ -229,7 +229,7 @@ function setupExcelImportModal() {
 
         parsedExcelStudents = [];
 
-        rawJson.forEach(row => {
+        rawJson.forEach((row, idx) => {
           let name = '';
           let email = '';
           let mobile = 'N/A';
@@ -237,25 +237,36 @@ function setupExcelImportModal() {
           let ticketUrl = '';
           let ticketId = '';
 
-          // STRICT FILTER: Extract ONLY Name, Email, Mobile, Course & Ticket URL
+          // FLEXIBLE FILTER: Extract Name, Email, Mobile, Course & Ticket URL
           Object.keys(row).forEach(key => {
             const lowerKey = key.toLowerCase().trim();
             const val = String(row[key] || '').trim();
 
-            if (lowerKey === 'name' || lowerKey.includes('full name') || lowerKey.includes('fullname') || lowerKey.includes('student name')) {
+            if (!name && (lowerKey === 'name' || lowerKey.includes('name'))) {
               name = val;
-            } else if (lowerKey === 'email' || lowerKey.includes('email address')) {
+            }
+            if (!email && (lowerKey.includes('email') || lowerKey.includes('mail'))) {
               email = val.toLowerCase();
-            } else if (lowerKey.includes('mobile') || lowerKey.includes('phone') || lowerKey.includes('contact')) {
-              mobile = val;
-            } else if (lowerKey.includes('course') || lowerKey.includes('stream') || lowerKey.includes('branch')) {
-              course = val;
-            } else if (lowerKey.includes('merged doc url') || lowerKey.includes('ticket url') || lowerKey.includes('link to merged doc') || lowerKey.includes('doc url')) {
-              ticketUrl = val;
-            } else if (lowerKey.includes('ticket id')) {
-              ticketId = val;
+            }
+            if (lowerKey.includes('mobile') || lowerKey.includes('phone') || lowerKey.includes('contact') || lowerKey.includes('no')) {
+              if (val && val !== 'N/A') mobile = val;
+            }
+            if (lowerKey.includes('course') || lowerKey.includes('stream') || lowerKey.includes('branch')) {
+              if (val) course = val;
+            }
+            if (lowerKey.includes('merged doc url') || lowerKey.includes('ticket url') || lowerKey.includes('link') || lowerKey.includes('url')) {
+              if (val && val.startsWith('http')) ticketUrl = val;
+            }
+            if (lowerKey.includes('ticket id') || lowerKey.includes('ticketid')) {
+              if (val) ticketId = val;
             }
           });
+
+          // Fallback email if name exists
+          if (name && !email) {
+            const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+            email = `${cleanName || 'student'}${idx + 1}@freshers2026.com`;
+          }
 
           if (name && email) {
             parsedExcelStudents.push({
