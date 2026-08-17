@@ -1,9 +1,4 @@
 {
-  "version": 2,
-  "cleanUrls": true,
-  "routes": [
-    { "src": "/admin", "dest": "/admin/dashboard.html" },
-    { "src": "/admin/(.*)", "dest": "/admin/$1" },
-    { "src": "/(.*)", "dest": "/$1" }
-  ]
+  "cleanUrls": false,
+  "trailingSlash": false
 }
