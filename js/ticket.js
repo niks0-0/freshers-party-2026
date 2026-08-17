@@ -60,28 +60,27 @@ async function loadAndUnlockTicket() {
       return;
     }
 
+    // Failsafe Ticket Lookup by Auth ID or Details ID or Email
     let { data: ticket } = await sb
       .from('tickets')
       .select('*')
       .eq('student_profile_id', userId)
       .maybeSingle();
 
-    if (!ticket || (!ticket.storage_path && !ticket.ticket_url)) {
-      const { data: detail } = await sb
-        .from('student_details')
-        .select('id')
-        .eq('email', userEmail)
+    const { data: detail } = await sb
+      .from('student_details')
+      .select('id, profile_id')
+      .eq('email', userEmail)
+      .maybeSingle();
+
+    if (!ticket && detail) {
+      const { data: tFallback } = await sb
+        .from('tickets')
+        .select('*')
+        .or(`student_profile_id.eq.${detail.id},student_profile_id.eq.${detail.profile_id || userId}`)
         .maybeSingle();
 
-      if (detail) {
-        const { data: tFallback } = await sb
-          .from('tickets')
-          .select('*')
-          .eq('student_profile_id', detail.id)
-          .maybeSingle();
-
-        if (tFallback) ticket = tFallback;
-      }
+      if (tFallback) ticket = tFallback;
     }
 
     if (!ticket || (!ticket.storage_path && !ticket.ticket_url)) {
