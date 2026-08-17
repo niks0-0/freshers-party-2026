@@ -60,7 +60,7 @@
       </div>
     </div>
 
-    <!-- UNIFIED MASTER COMMAND BAR (OPTION 1) -->
+    <!-- UNIFIED MASTER COMMAND BAR (3-SWITCH TRI-CONTROL) -->
     <section class="command-bar">
       <div class="command-bar-header">
         <div style="display: flex; align-items: center; gap: 0.65rem;">
@@ -77,10 +77,10 @@
 
       <div class="command-grid">
         
-        <!-- Left Panel: Ticket Pass Release Switch -->
+        <!-- Panel 1: Ticket Pass Release Switch -->
         <div class="command-panel">
           <div class="command-panel-top">
-            <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">🎟️ Global Ticket Release</span>
+            <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">🎟️ Ticket Release Pass</span>
             <div id="dash-ticket-badge">
               <span class="badge badge-off"><span class="badge-dot"></span> OFF</span>
             </div>
@@ -100,7 +100,7 @@
           </div>
         </div>
 
-        <!-- Right Panel: Email OTP Dispatch Switch -->
+        <!-- Panel 2: Email OTP Dispatch Switch -->
         <div class="command-panel">
           <div class="command-panel-top">
             <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">📧 Email OTP Verification</span>
@@ -119,6 +119,29 @@
                 OTP Emails ALLOWED 🟢
               </div>
               <p class="command-desc">Dispatches 6-digit security codes via Gmail serverless engine</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel 3: Student Registration Switch (NEW) -->
+        <div class="command-panel">
+          <div class="command-panel-top">
+            <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">📝 Student Registration</span>
+            <div id="dash-reg-badge">
+              <span class="badge badge-live"><span class="badge-dot"></span> OPEN</span>
+            </div>
+          </div>
+
+          <div class="command-panel-body">
+            <label class="switch">
+              <input type="checkbox" id="dashboard-registration-toggle">
+              <span class="slider"></span>
+            </label>
+            <div style="flex: 1;">
+              <div id="dash-reg-toggle-label" style="font-weight: 700; font-size: 0.925rem; color: var(--text-main); margin-bottom: 0.2rem;">
+                Registration OPEN 🟢
+              </div>
+              <p class="command-desc">Control public student form access on landing page</p>
             </div>
           </div>
         </div>

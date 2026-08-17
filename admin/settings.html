@@ -31,7 +31,7 @@
     <div class="admin-header-bar">
       <div>
         <h1 style="font-size: 2rem;">Event Settings & <span class="gradient-text">Master Controls</span></h1>
-        <p>Control global ticket release status, email OTP dispatch workflow, and public event details</p>
+        <p>Control global ticket release status, email OTP dispatch workflow, student registrations, and public event details</p>
       </div>
     </div>
 
@@ -56,8 +56,8 @@
       </div>
     </div>
 
-    <!-- Master Email OTP Dispatch Switch Card (NEW) -->
-    <div class="glass-card" style="margin-bottom: 2rem; border-left: 4px solid var(--accent);">
+    <!-- Master Email OTP Dispatch Switch Card -->
+    <div class="glass-card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--accent);">
       <h3 style="margin-bottom: 0.5rem;">📧 2. MASTER EMAIL OTP DISPATCH SWITCH</h3>
       <p style="margin-bottom: 1.25rem; font-size: 0.9rem;">
         When set to <strong>ENABLED (ON)</strong>, students can request and receive 6-digit verification codes on Gmail. When set to <strong>DISABLED (OFF)</strong>, OTP email sending is strictly prevented and locked.
@@ -73,6 +73,27 @@
             <span class="badge badge-live"><span class="badge-dot"></span> OTP EMAILS ALLOWED</span>
           </div>
           <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem;">Control whether the system dispatches OTP verification emails.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Master Student Registration Switch Card (NEW) -->
+    <div class="glass-card" style="margin-bottom: 2rem; border-left: 4px solid var(--success);">
+      <h3 style="margin-bottom: 0.5rem;">📝 3. MASTER STUDENT REGISTRATION SWITCH</h3>
+      <p style="margin-bottom: 1.25rem; font-size: 0.9rem;">
+        When set to <strong>OPEN (ON)</strong>, new students can register via the public landing page form. When set to <strong>CLOSED (OFF)</strong>, the form is replaced by a "Registrations Closed" notice.
+      </p>
+
+      <div class="switch-container">
+        <label class="switch">
+          <input type="checkbox" id="global-registration-toggle">
+          <span class="slider"></span>
+        </label>
+        <div>
+          <div style="font-weight: 700; font-size: 1.1rem;" id="reg-switch-status-label">
+            <span class="badge badge-live"><span class="badge-dot"></span> REGISTRATION OPEN</span>
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem;">Control public registration form visibility on the landing page.</div>
         </div>
       </div>
     </div>

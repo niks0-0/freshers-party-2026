@@ -52,15 +52,16 @@ async function initAdminDashboard() {
       .select('*', { count: 'exact', head: true })
       .eq('is_uploaded', true);
 
-    // Event Settings (Global Ticket LIVE & Email OTP)
+    // Event Settings (Global Ticket LIVE, Email OTP & Registration)
     const { data: settings } = await sb
       .from('event_settings')
-      .select('id, ticket_live, email_otp_enabled')
+      .select('id, ticket_live, email_otp_enabled, registration_open')
       .limit(1)
       .maybeSingle();
 
     const isLive = settings ? settings.ticket_live : false;
     const isOtpEnabled = settings ? (settings.email_otp_enabled !== false) : true;
+    const isRegOpen = settings ? (settings.registration_open !== false) : true;
     const actualTotal = totalCount || 0;
     const actualUploaded = ticketsUploadedCount || 0;
     const missingCount = Math.max(0, actualTotal - actualUploaded);
@@ -78,7 +79,7 @@ async function initAdminDashboard() {
     const missingEl = document.getElementById('stat-tickets-missing');
     if (missingEl) missingEl.textContent = missingCount;
 
-    // Render Dashboard Ticket Switch State & Badges
+    // 1. Render Dashboard Ticket Switch State & Badges
     const dashTicketToggle = document.getElementById('dashboard-ticket-live-toggle');
     const dashTicketBadge = document.getElementById('dash-ticket-badge');
     const dashTicketLabel = document.getElementById('dash-ticket-toggle-label');
@@ -122,7 +123,7 @@ async function initAdminDashboard() {
       dashTicketToggle.checked = isLive;
     }
 
-    // Render Dashboard Email OTP Switch State & Badges
+    // 2. Render Dashboard Email OTP Switch State & Badges
     const dashOtpToggle = document.getElementById('dashboard-email-otp-toggle');
     const dashOtpBadge = document.getElementById('dash-otp-badge');
     const dashOtpLabel = document.getElementById('dash-otp-toggle-label');
@@ -164,6 +165,50 @@ async function initAdminDashboard() {
       });
     } else if (dashOtpToggle) {
       dashOtpToggle.checked = isOtpEnabled;
+    }
+
+    // 3. Render Dashboard Student Registration Switch State & Badges
+    const dashRegToggle = document.getElementById('dashboard-registration-toggle');
+    const dashRegBadge = document.getElementById('dash-reg-badge');
+    const dashRegLabel = document.getElementById('dash-reg-toggle-label');
+
+    if (dashRegBadge) {
+      dashRegBadge.innerHTML = isRegOpen 
+        ? `<span class="badge badge-live"><span class="badge-dot"></span> OPEN</span>` 
+        : `<span class="badge badge-off"><span class="badge-dot"></span> CLOSED</span>`;
+    }
+    if (dashRegLabel) {
+      dashRegLabel.textContent = isRegOpen ? 'Registration OPEN 🟢' : 'Registration CLOSED 🔴';
+    }
+    if (dashRegToggle && !dashRegToggle.dataset.bound) {
+      dashRegToggle.checked = isRegOpen;
+      dashRegToggle.dataset.bound = 'true';
+
+      dashRegToggle.addEventListener('change', async (e) => {
+        const isChecked = e.target.checked;
+        if (dashRegBadge) {
+          dashRegBadge.innerHTML = isChecked 
+            ? `<span class="badge badge-live"><span class="badge-dot"></span> OPEN</span>` 
+            : `<span class="badge badge-off"><span class="badge-dot"></span> CLOSED</span>`;
+        }
+        if (dashRegLabel) {
+          dashRegLabel.textContent = isChecked ? 'Registration OPEN 🟢' : 'Registration CLOSED 🔴';
+        }
+
+        const { error: updateErr } = await sb
+          .from('event_settings')
+          .update({ registration_open: isChecked, updated_at: new Date().toISOString() })
+          .eq('id', settings?.id || 'd50387d3-f794-4778-9e88-d7afcee561ee');
+
+        if (updateErr) {
+          showToast('Failed to update registration status.', 'error');
+          e.target.checked = !isChecked;
+        } else {
+          showToast(`Student Registration is now ${isChecked ? 'OPEN 🟢' : 'CLOSED 🔴'}`, isChecked ? 'success' : 'warning');
+        }
+      });
+    } else if (dashRegToggle) {
+      dashRegToggle.checked = isRegOpen;
     }
 
   } catch (err) {
@@ -966,6 +1011,31 @@ async function initAdminSettingsPage() {
       });
     }
 
+    const regSwitch = document.getElementById('global-registration-toggle');
+    if (regSwitch) {
+      const isRegOpen = settings.registration_open !== false; // default true
+      regSwitch.checked = isRegOpen;
+      updateRegSwitchLabel(isRegOpen);
+
+      regSwitch.addEventListener('change', async (e) => {
+        const isChecked = e.target.checked;
+        updateRegSwitchLabel(isChecked);
+
+        const { error: updateErr } = await sb
+          .from('event_settings')
+          .update({ registration_open: isChecked, updated_at: new Date().toISOString() })
+          .eq('id', settings.id);
+
+        if (updateErr) {
+          showToast('Failed to update registration status.', 'error');
+          e.target.checked = !isChecked;
+          updateRegSwitchLabel(!isChecked);
+        } else {
+          showToast(`Student Registration is now ${isChecked ? 'OPEN 🟢' : 'CLOSED 🔴'}`, isChecked ? 'success' : 'warning');
+        }
+      });
+    }
+
     const form = document.getElementById('event-settings-form');
     if (form) {
       form.addEventListener('submit', async (e) => {
@@ -1026,6 +1096,18 @@ function updateOtpSwitchLabel(isEnabled) {
   } else {
     label.className = 'badge badge-off';
     label.innerHTML = `<span class="badge-dot"></span> OTP EMAILS BLOCKED (PAUSED)`;
+  }
+}
+
+function updateRegSwitchLabel(isOpen) {
+  const label = document.getElementById('reg-switch-status-label');
+  if (!label) return;
+  if (isOpen) {
+    label.className = 'badge badge-live';
+    label.innerHTML = `<span class="badge-dot"></span> REGISTRATION OPEN`;
+  } else {
+    label.className = 'badge badge-off';
+    label.innerHTML = `<span class="badge-dot"></span> REGISTRATION CLOSED`;
   }
 }
 

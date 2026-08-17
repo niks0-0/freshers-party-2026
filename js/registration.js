@@ -3,6 +3,7 @@
    ======================================================== */
 
 const FIXED_STUDENT_PASSWORD = "Freshers@2026";
+let isRegistrationOpen = true;
 
 document.addEventListener('DOMContentLoaded', () => {
   loadEventSettings();
@@ -26,7 +27,33 @@ async function loadEventSettings() {
       return;
     }
 
-    // Update Hero & Event Details UI
+    // 1. Check Registration Status (OPEN / CLOSED)
+    isRegistrationOpen = settings.registration_open !== false;
+
+    const heroRegBadge = document.getElementById('hero-reg-badge');
+    const formWrapper = document.getElementById('registration-form-wrapper');
+    const closedBox = document.getElementById('registration-closed-box');
+    const navRegItem = document.getElementById('nav-reg-item');
+
+    if (isRegistrationOpen) {
+      if (heroRegBadge) {
+        heroRegBadge.className = 'badge badge-live';
+        heroRegBadge.innerHTML = `<span class="badge-dot"></span> 🎉 REGISTRATION OPEN FOR BATCH 2026`;
+      }
+      if (formWrapper) formWrapper.style.display = 'block';
+      if (closedBox) closedBox.style.display = 'none';
+      if (navRegItem) navRegItem.style.display = 'inline-block';
+    } else {
+      if (heroRegBadge) {
+        heroRegBadge.className = 'badge badge-off';
+        heroRegBadge.innerHTML = `<span class="badge-dot"></span> 🔒 REGISTRATIONS CLOSED`;
+      }
+      if (formWrapper) formWrapper.style.display = 'none';
+      if (closedBox) closedBox.style.display = 'block';
+      if (navRegItem) navRegItem.style.display = 'none';
+    }
+
+    // 2. Update Hero & Event Details UI
     const eventNameEls = document.querySelectorAll('.event-name-display');
     eventNameEls.forEach(el => el.textContent = settings.event_name);
 
@@ -72,6 +99,11 @@ function setupRegistrationForm() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const submitBtn = document.getElementById('register-submit-btn');
+
+    if (!isRegistrationOpen) {
+      showToast('Registrations for CRUD 2026 are currently closed by administrators.', 'error', 6000);
+      return;
+    }
 
     // Collect inputs
     const fullName = document.getElementById('reg-name').value.trim();

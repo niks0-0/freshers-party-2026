@@ -3,10 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CRUD 2026 — Official Digital Portal</title>
-  <meta name="description" content="Official registration and secure digital ticket portal for CRUD 2026.">
+  <title>CRUD 2026 — Welcome Freshers Official Portal</title>
   <link rel="stylesheet" href="css/style.css?v=3.0">
-  <link rel="stylesheet" href="css/auth.css?v=3.0">
 </head>
 <body>
 
@@ -15,14 +13,19 @@
     <div class="container nav-container">
       <a href="index.html" class="nav-logo">
         <span>CRUD 2026</span>
-        <span class="logo-badge">PORTAL</span>
+        <span class="logo-badge">FRESHERS</span>
       </a>
-      <ul class="nav-links">
-        <li><a href="#event-info" class="nav-link">Event Details</a></li>
+
+      <!-- Mobile Hamburger Toggle Button (☰) -->
+      <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Toggle navigation menu">
+        <span id="menu-icon">☰</span>
+      </button>
+
+      <ul class="nav-links" id="nav-menu">
         <li><a href="#poster" class="nav-link">Official Poster</a></li>
-        <li><a href="#register" class="nav-link">Registration</a></li>
-        <li><a href="login.html" class="btn btn-sm btn-primary">Student Login</a></li>
-        <li><a href="admin/login.html" class="nav-link" style="font-size: 0.8rem; opacity: 0.7;">Admin</a></li>
+        <li><a href="#event-info" class="nav-link">Event Guidelines</a></li>
+        <li id="nav-reg-item"><a href="#register" class="nav-link">Registration</a></li>
+        <li><a href="login.html" class="btn btn-sm btn-primary">Student Login 🔑</a></li>
       </ul>
     </div>
   </nav>
@@ -30,7 +33,7 @@
   <!-- Hero Section -->
   <header class="hero-section" style="padding: 4rem 0 2rem; text-align: center;">
     <div class="container container-narrow">
-      <span class="badge badge-live" style="margin-bottom: 1.25rem;">🎉 REGISTRATION OPEN FOR BATCH 2026</span>
+      <span id="hero-reg-badge" class="badge badge-live" style="margin-bottom: 1.25rem;">🎉 REGISTRATION OPEN FOR BATCH 2026</span>
       <h1 style="margin-bottom: 0.75rem;">
         WELCOME TO <br>
         <span class="gradient-text event-name-display">CRUD 2026</span>
@@ -113,83 +116,99 @@
   <section id="register" style="padding: 2rem 0 5rem;">
     <div class="container container-narrow">
       <div class="glass-card">
-        <div style="text-align: center; margin-bottom: 1.75rem;">
-          <h2>Student <span class="gradient-text">Registration</span></h2>
-          <p>Fill out the form below to register your entry for CRUD 2026.</p>
-        </div>
-
-        <!-- Registration Success Notification Box -->
-        <div id="registration-success-box" style="display: none; padding: 1.5rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: var(--radius-md); text-align: center; margin-bottom: 1.5rem;">
-          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎉</div>
-          <h3 style="color: var(--success);">Registration Submitted!</h3>
-          <p style="margin-top: 0.5rem; color: var(--text-main);">
-            Your account is ready. Default Login Password: <strong style="color: var(--primary);">Freshers@2026</strong>
+        
+        <!-- Registration Closed Notice Box (Shown when Admin sets Registration = CLOSED) -->
+        <div id="registration-closed-box" style="display: none; padding: 2.5rem 1.5rem; background: rgba(18, 24, 40, 0.95); border: 1px dashed var(--border-accent); border-radius: var(--radius-lg); text-align: center; margin: 0.5rem 0 1rem;">
+          <div style="font-size: 3rem; margin-bottom: 0.75rem;">🔒</div>
+          <h3 style="color: var(--text-main); font-size: 1.4rem; margin-bottom: 0.5rem;">Registrations are Currently Closed</h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 440px; margin: 0 auto 1.5rem; line-height: 1.6;">
+            Online registration for CRUD 2026 has ended or been paused by event organizers. If you have already registered, please log in to access your digital ticket.
           </p>
-          <a href="login.html" class="btn btn-primary btn-sm" style="margin-top: 1rem;">Go to Student Login</a>
+          <a href="login.html" class="btn btn-primary" style="padding: 0.85rem 2rem;">Go to Student Login 🔑</a>
         </div>
 
-        <form id="registration-form">
-          <div class="form-group">
-            <label for="reg-name">Full Name *</label>
-            <input type="text" id="reg-name" placeholder="e.g. Rahul Patel" required>
+        <!-- Registration Form Wrapper (Shown when Admin sets Registration = OPEN) -->
+        <div id="registration-form-wrapper">
+          <div style="text-align: center; margin-bottom: 1.75rem;">
+            <h2>Student <span class="gradient-text">Registration</span></h2>
+            <p>Fill out the form below to register your entry for CRUD 2026.</p>
           </div>
 
-          <div class="form-row">
+          <!-- Registration Success Notification Box -->
+          <div id="registration-success-box" style="display: none; padding: 1.5rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: var(--radius-md); text-align: center; margin-bottom: 1.5rem;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎉</div>
+            <h3 style="color: var(--success);">Registration Submitted!</h3>
+            <p style="margin-top: 0.5rem; color: var(--text-main);">
+              Your account is ready. Default Login Password: <strong style="color: var(--primary);">Freshers@2026</strong>
+            </p>
+            <a href="login.html" class="btn btn-primary btn-sm" style="margin-top: 1rem;">Go to Student Login</a>
+          </div>
+
+          <form id="registration-form">
             <div class="form-group">
-              <label for="reg-email">Email Address *</label>
-              <input type="email" id="reg-email" placeholder="rahul@example.com" required>
+              <label for="reg-name">Full Name *</label>
+              <input type="text" id="reg-name" placeholder="e.g. Rahul Patel" required>
             </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="reg-email">Email Address *</label>
+                <input type="email" id="reg-email" placeholder="rahul@example.com" required>
+              </div>
+              <div class="form-group">
+                <label for="reg-mobile">Mobile Number *</label>
+                <input type="tel" id="reg-mobile" placeholder="10-digit mobile number" required>
+              </div>
+            </div>
+
             <div class="form-group">
-              <label for="reg-mobile">Mobile Number *</label>
-              <input type="tel" id="reg-mobile" placeholder="10-digit mobile number" required>
+              <label for="reg-course">Select Course / Stream *</label>
+              <select id="reg-course" required>
+                <option value="">Choose Course...</option>
+                <option value="BCA">BCA</option>
+                <option value="MCA GIA (Sem-1)">MCA GIA (Sem-1)</option>
+                <option value="MCA SFI (Sem-1)">MCA SFI (Sem-1)</option>
+                <option value="MCA GIA (Sem-3)">MCA GIA (Sem-3)</option>
+                <option value="MCA SFI (Sem-3)">MCA SFI (Sem-3)</option>
+                <option value="MSc IT">MSc IT</option>
+                <option value="PGDCA">PGDCA</option>
+              </select>
             </div>
-          </div>
 
-          <div class="form-group">
-            <label for="reg-course">Select Course / Stream *</label>
-            <select id="reg-course" required>
-              <option value="">Choose Course...</option>
-              <option value="BCA">BCA</option>
-              <option value="MCA GIA (Sem-1)">MCA GIA (Sem-1)</option>
-              <option value="MCA SFI (Sem-1)">MCA SFI (Sem-1)</option>
-              <option value="MCA GIA (Sem-3)">MCA GIA (Sem-3)</option>
-              <option value="MCA SFI (Sem-3)">MCA SFI (Sem-3)</option>
-              <option value="MSc IT">MSc IT</option>
-              <option value="PGDCA">PGDCA</option>
-            </select>
-          </div>
+            <div style="padding: 0.75rem 0.85rem; background: rgba(99, 102, 241, 0.1); border-radius: var(--radius-md); font-size: 0.8rem; color: #a5b4fc; margin-bottom: 1.25rem;">
+              💡 <strong>Default First Login Password:</strong> Your account password will be set to <code>Freshers@2026</code>.
+            </div>
 
-          <div style="padding: 0.85rem 1rem; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: var(--radius-md); font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1rem;">
-            🔑 Default Login Password for all students: <strong style="color: var(--text-main);">Freshers@2026</strong>
-          </div>
+            <button type="submit" id="register-submit-btn" class="btn btn-primary btn-full">
+              COMPLETE REGISTRATION 🚀
+            </button>
+          </form>
+        </div>
 
-          <button type="submit" id="register-submit-btn" class="btn btn-primary btn-full" style="margin-top: 0.5rem;">
-            SUBMIT REGISTRATION
-          </button>
-        </form>
       </div>
     </div>
   </section>
 
-  <!-- Poster Modal -->
+  <!-- Poster Modal (Lightbox) -->
   <div id="poster-modal" class="modal-overlay" onclick="closeModal('poster-modal')">
-    <div class="modal-container" style="max-width: 600px; padding: 1rem;" onclick="event.stopPropagation()">
-      <div class="modal-header" style="margin-bottom: 0.5rem; border: none;">
-        <h3 style="font-size: 1.1rem;">CRUD 2026 — Official Poster</h3>
-        <button onclick="closeModal('poster-modal')" class="close-btn">×</button>
+    <div class="modal-container" style="max-width: 800px; padding: 1rem; background: transparent; border: none; box-shadow: none;" onclick="event.stopPropagation()">
+      <div style="text-align: right; margin-bottom: 0.5rem;">
+        <button class="btn btn-sm btn-secondary" onclick="closeModal('poster-modal')">✕ Close</button>
       </div>
-      <img src="assets/images/poster.jpg" alt="CRUD 2026 Official Poster Full" style="width: 100%; height: auto; border-radius: var(--radius-md); display: block;">
+      <img src="assets/images/poster.jpg" alt="CRUD 2026 Full Poster" style="width: 100%; height: auto; border-radius: var(--radius-md); box-shadow: var(--shadow-glow);">
     </div>
   </div>
 
   <!-- Footer -->
   <footer class="footer">
     <div class="container">
-      <p>© 2026 CRUD 2026 Digital Portal • Crafted by <span class="credit-tag">NIKSLAB</span></p>
+      <p>© 2026 CRUD 2026 — Welcome Freshers. All rights reserved.</p>
+      <p style="margin-top: 0.35rem;">
+        <a href="admin/login.html" class="credit-tag" style="font-size: 0.75rem;">Admin Access</a>
+      </p>
     </div>
   </footer>
 
-  <!-- Supabase CDN & JS Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js?v=3.0"></script>
   <script src="js/supabase.js?v=3.0"></script>
