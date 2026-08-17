@@ -5,7 +5,7 @@
 let currentUserAuth = null;
 let ticketData = null;
 let isTicketLive = false;
-let isEmailVerified = false;
+let isEmailOtpEnabled = true;
 
 document.addEventListener('DOMContentLoaded', async () => {
   currentUserAuth = await requireStudentAuth();
@@ -58,14 +58,15 @@ async function loadStudentDashboardData() {
       }
     }
 
-    // 2. Fetch Global Event Settings (Is Ticket LIVE?)
+    // 2. Fetch Global Event Settings (Is Ticket LIVE? & Is Email OTP Allowed?)
     const { data: settings } = await sb
       .from('event_settings')
-      .select('ticket_live, event_name, event_date, venue')
+      .select('ticket_live, email_otp_enabled, event_name, event_date, venue')
       .limit(1)
       .maybeSingle();
 
     isTicketLive = settings ? settings.ticket_live : false;
+    isEmailOtpEnabled = settings ? (settings.email_otp_enabled !== false) : true;
 
     // Update LIVE/OFF badge on Dashboard UI
     const ticketLiveBadge = document.getElementById('ticket-live-badge');
@@ -110,6 +111,9 @@ async function loadStudentDashboardData() {
       } else if (!ticketData) {
         statusBanner.className = 'info-banner danger-banner';
         statusBanner.innerHTML = `⚠️ <strong>Ticket pending upload.</strong> Your individual PDF ticket has not been uploaded by organizers yet.`;
+      } else if (!isEmailOtpEnabled) {
+        statusBanner.className = 'info-banner warning-banner';
+        statusBanner.innerHTML = `🔒 <strong>Email OTP verification is currently paused by Admin.</strong> Please wait for organizers to enable OTP dispatch.`;
       } else {
         statusBanner.className = 'info-banner success-banner';
         statusBanner.innerHTML = `📧 <strong>Security OTP Verification Required.</strong> Click 'Generate Ticket' below to send a 6-digit OTP code to your Gmail inbox.`;
@@ -133,6 +137,11 @@ function setupGenerateTicketButton() {
 
     if (!ticketData) {
       showToast('Your ticket has not been uploaded yet. Please contact administrators.', 'error');
+      return;
+    }
+
+    if (!isEmailOtpEnabled) {
+      showToast('Email OTP dispatch is currently paused by event administrators.', 'error', 6000);
       return;
     }
 

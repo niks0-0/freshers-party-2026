@@ -30,15 +30,15 @@
 
     <div class="admin-header-bar">
       <div>
-        <h1 style="font-size: 2rem;">Event Settings & <span class="gradient-text">Ticket Release</span></h1>
-        <p>Control global ticket release status and event details displayed on the landing page</p>
+        <h1 style="font-size: 2rem;">Event Settings & <span class="gradient-text">Master Controls</span></h1>
+        <p>Control global ticket release status, email OTP dispatch workflow, and public event details</p>
       </div>
     </div>
 
     <!-- Master Ticket Release Switch Card -->
-    <div class="glass-card" style="margin-bottom: 2rem; border-left: 4px solid var(--primary);">
-      <h3 style="margin-bottom: 0.5rem;">🟢 MASTER TICKET RELEASE SWITCH</h3>
-      <p style="margin-bottom: 1.5rem; font-size: 0.9rem;">
+    <div class="glass-card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+      <h3 style="margin-bottom: 0.5rem;">🟢 1. MASTER TICKET RELEASE SWITCH</h3>
+      <p style="margin-bottom: 1.25rem; font-size: 0.9rem;">
         When set to <strong>LIVE</strong>, verified students can generate and download their PDF tickets. When set to <strong>OFF</strong>, tickets remain locked.
       </p>
 
@@ -52,6 +52,27 @@
             <span class="badge badge-off"><span class="badge-dot"></span> TICKETS OFF</span>
           </div>
           <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem;">Click toggle switch to change release mode in real-time.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Master Email OTP Dispatch Switch Card (NEW) -->
+    <div class="glass-card" style="margin-bottom: 2rem; border-left: 4px solid var(--accent);">
+      <h3 style="margin-bottom: 0.5rem;">📧 2. MASTER EMAIL OTP DISPATCH SWITCH</h3>
+      <p style="margin-bottom: 1.25rem; font-size: 0.9rem;">
+        When set to <strong>ENABLED (ON)</strong>, students can request and receive 6-digit verification codes on Gmail. When set to <strong>DISABLED (OFF)</strong>, OTP email sending is strictly prevented and locked.
+      </p>
+
+      <div class="switch-container">
+        <label class="switch">
+          <input type="checkbox" id="global-email-otp-toggle">
+          <span class="slider"></span>
+        </label>
+        <div>
+          <div style="font-weight: 700; font-size: 1.1rem;" id="otp-switch-status-label">
+            <span class="badge badge-live"><span class="badge-dot"></span> OTP EMAILS ALLOWED</span>
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem;">Control whether the system dispatches OTP verification emails.</div>
         </div>
       </div>
     </div>

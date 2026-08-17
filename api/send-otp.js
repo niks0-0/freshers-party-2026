@@ -31,13 +31,27 @@ export default async function handler(req, res) {
     const cleanEmail = email.trim().toLowerCase();
     const studentName = fullName || 'Student';
 
-    // 1. Generate 6-Digit Random OTP
+    // 1. Initialize Supabase Client
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // 2. CHECK ADMIN MASTER TOGGLE: Is Email OTP Allowed?
+    const { data: settings, error: settingsErr } = await supabase
+      .from('event_settings')
+      .select('email_otp_enabled, ticket_live')
+      .limit(1)
+      .maybeSingle();
+
+    if (settings && settings.email_otp_enabled === false) {
+      return res.status(403).json({
+        success: false,
+        message: 'Email OTP dispatch is currently paused/disabled by the event administrator.'
+      });
+    }
+
+    // 3. Generate 6-Digit Random OTP
     const otpCode = String(Math.floor(100000 + Math.random() * 900000));
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes validity
-
-    // 2. Initialize Supabase Client & Save OTP to Database
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Remove older pending verification records for this user
     await supabase.from('verification_codes').delete().eq('user_id', userId);
@@ -59,7 +73,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ success: false, message: 'Failed to generate security code in database: ' + dbError.message });
     }
 
-    // 3. Setup Nodemailer Transporter with Gmail SMTP
+    // 4. Setup Nodemailer Transporter with Gmail SMTP
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -68,7 +82,7 @@ export default async function handler(req, res) {
       }
     });
 
-    // 4. Clean HTML Email Design
+    // 5. Clean HTML Email Design
     const mailOptions = {
       from: `"CRUD 2026 Official" <${GMAIL_USER}>`,
       to: cleanEmail,
@@ -104,7 +118,7 @@ export default async function handler(req, res) {
       `
     };
 
-    // 5. Send the email
+    // 6. Send the email
     await transporter.sendMail(mailOptions);
 
     return res.status(200).json({

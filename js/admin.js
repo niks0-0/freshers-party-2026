@@ -863,6 +863,31 @@ async function initAdminSettingsPage() {
       });
     }
 
+    const otpSwitch = document.getElementById('global-email-otp-toggle');
+    if (otpSwitch) {
+      const isOtpEnabled = settings.email_otp_enabled !== false; // default true
+      otpSwitch.checked = isOtpEnabled;
+      updateOtpSwitchLabel(isOtpEnabled);
+
+      otpSwitch.addEventListener('change', async (e) => {
+        const isChecked = e.target.checked;
+        updateOtpSwitchLabel(isChecked);
+
+        const { error: updateErr } = await sb
+          .from('event_settings')
+          .update({ email_otp_enabled: isChecked, updated_at: new Date().toISOString() })
+          .eq('id', settings.id);
+
+        if (updateErr) {
+          showToast('Failed to update Email OTP status.', 'error');
+          e.target.checked = !isChecked;
+          updateOtpSwitchLabel(!isChecked);
+        } else {
+          showToast(`Email OTP Dispatch is now ${isChecked ? 'ALLOWED 🟢' : 'BLOCKED / PAUSED 🔴'}`, isChecked ? 'success' : 'warning');
+        }
+      });
+    }
+
     const form = document.getElementById('event-settings-form');
     if (form) {
       form.addEventListener('submit', async (e) => {
@@ -911,6 +936,18 @@ function updateSwitchLabel(isLive) {
   } else {
     label.className = 'badge badge-off';
     label.innerHTML = `<span class="badge-dot"></span> TICKETS OFF`;
+  }
+}
+
+function updateOtpSwitchLabel(isEnabled) {
+  const label = document.getElementById('otp-switch-status-label');
+  if (!label) return;
+  if (isEnabled) {
+    label.className = 'badge badge-live';
+    label.innerHTML = `<span class="badge-dot"></span> OTP EMAILS ALLOWED`;
+  } else {
+    label.className = 'badge badge-off';
+    label.innerHTML = `<span class="badge-dot"></span> OTP EMAILS BLOCKED (PAUSED)`;
   }
 }
 
