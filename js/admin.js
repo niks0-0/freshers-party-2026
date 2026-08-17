@@ -110,13 +110,22 @@ async function fetchAndRenderStudents() {
   try {
     const { data: students, error } = await sb
       .from('student_details')
-      .select(`
-        *,
-        profile:profiles(id, is_active, role)
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (error) throw error;
+
+    const { data: profiles } = await sb
+      .from('profiles')
+      .select('id, email, is_active, role');
+
+    const profileMap = new Map();
+    if (profiles) {
+      profiles.forEach(p => {
+        profileMap.set(p.id, p);
+        if (p.email) profileMap.set(p.email.toLowerCase(), p);
+      });
+    }
 
     const { data: tickets } = await sb
       .from('tickets')
@@ -130,8 +139,9 @@ async function fetchAndRenderStudents() {
     }
 
     allStudentsList = (students || []).map(s => {
-      const profileId = s.profile ? s.profile.id : (s.profile_id || s.id);
-      const isActive = s.profile ? s.profile.is_active : true;
+      const matchedProfile = (s.profile_id ? profileMap.get(s.profile_id) : null) || (s.email ? profileMap.get(s.email.toLowerCase()) : null);
+      const profileId = matchedProfile ? matchedProfile.id : (s.profile_id || s.id);
+      const isActive = matchedProfile ? matchedProfile.is_active : true;
       const ticketRecord = ticketMap.get(profileId) || ticketMap.get(s.id) || ticketMap.get(s.profile_id);
       const hasTicket = ticketRecord ? (ticketRecord.is_uploaded || !!ticketRecord.ticket_url) : false;
       return { ...s, profileId, isActive, hasTicket, ticketRecord };
@@ -529,10 +539,7 @@ async function initAdminSingleStudentPage() {
   try {
     const { data: student, error } = await sb
       .from('student_details')
-      .select(`
-        *,
-        profile:profiles(id, email, is_active, role)
-      `)
+      .select('*')
       .eq('id', detailId)
       .single();
 
@@ -540,19 +547,7 @@ async function initAdminSingleStudentPage() {
     currentStudentDetail = student;
 
     // Resolve profileId dynamically
-    let profileId = student.profile ? student.profile.id : student.profile_id;
-    if (!profileId) {
-      const { data: pData } = await sb
-        .from('profiles')
-        .select('id')
-        .eq('email', student.email)
-        .maybeSingle();
-
-      if (pData) {
-        profileId = pData.id;
-        await sb.from('student_details').update({ profile_id: profileId }).eq('id', student.id);
-      }
-    }
+    let profileId = student.profile_id || student.id;
 
     // Render Student Details
     const nameEl = document.getElementById('detail-name');
@@ -572,7 +567,7 @@ async function initAdminSingleStudentPage() {
       const { data: ticket } = await sb
         .from('tickets')
         .select('*')
-        .or(`student_profile_id.eq.${profileId || student.id},student_profile_id.eq.${student.id}`)
+        .or(`student_profile_id.eq.${profileId},student_profile_id.eq.${student.id}`)
         .maybeSingle();
 
       if (ticket) existingTicket = ticket;
@@ -677,20 +672,7 @@ function setupTicketUploadForm(student, profileId) {
     const sb = window.getSupabase();
 
     try {
-      let effectiveProfileId = profileId;
-      if (!effectiveProfileId) {
-        const { data: pData } = await sb
-          .from('profiles')
-          .select('id')
-          .eq('email', student.email)
-          .maybeSingle();
-
-        if (pData) {
-          effectiveProfileId = pData.id;
-        } else {
-          effectiveProfileId = student.id;
-        }
-      }
+      let effectiveProfileId = profileId || student.id;
 
       const ticketId = `FP26-${Math.floor(1000 + Math.random() * 9000)}`;
       const storagePath = `student_${effectiveProfileId}/${ticketId}_ticket.pdf`;
@@ -744,10 +726,7 @@ async function initAdminTicketsPage() {
   try {
     const { data: tickets, error } = await sb
       .from('tickets')
-      .select(`
-        *,
-        profile:profiles(id, email, full_name)
-      `)
+      .select('*')
       .order('uploaded_at', { ascending: false });
 
     if (error) throw error;
@@ -767,8 +746,7 @@ async function initAdminTicketsPage() {
             <span style="font-size: 0.78rem; color: #34d399; font-family: monospace;">📄 ${escapeHtml(fileNameOnly)}</span>
           </td>
           <td>
-            <div style="font-weight: 600;">${escapeHtml(t.profile ? t.profile.full_name : 'N/A')}</div>
-            <div style="font-size: 0.8rem; color: var(--text-muted);">${escapeHtml(t.profile ? t.profile.email : '')}</div>
+            <div style="font-weight: 600;">Student Ticket Pass</div>
           </td>
           <td>${formatDate(t.uploaded_at)}</td>
           <td><span class="badge badge-live">UPLOADED</span></td>
