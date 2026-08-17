@@ -52,14 +52,15 @@ async function initAdminDashboard() {
       .select('*', { count: 'exact', head: true })
       .eq('is_uploaded', true);
 
-    // Event Settings (Global Ticket LIVE)
+    // Event Settings (Global Ticket LIVE & Email OTP)
     const { data: settings } = await sb
       .from('event_settings')
-      .select('ticket_live')
+      .select('id, ticket_live, email_otp_enabled')
       .limit(1)
       .maybeSingle();
 
     const isLive = settings ? settings.ticket_live : false;
+    const isOtpEnabled = settings ? (settings.email_otp_enabled !== false) : true;
     const actualTotal = totalCount || 0;
     const actualUploaded = ticketsUploadedCount || 0;
     const missingCount = Math.max(0, actualTotal - actualUploaded);
@@ -77,15 +78,92 @@ async function initAdminDashboard() {
     const missingEl = document.getElementById('stat-tickets-missing');
     if (missingEl) missingEl.textContent = missingCount;
 
-    const statusBadgeEl = document.getElementById('stat-ticket-live-status');
-    if (statusBadgeEl) {
-      if (isLive) {
-        statusBadgeEl.className = 'badge badge-live';
-        statusBadgeEl.innerHTML = `<span class="badge-dot"></span> LIVE`;
-      } else {
-        statusBadgeEl.className = 'badge badge-off';
-        statusBadgeEl.innerHTML = `<span class="badge-dot"></span> OFF`;
-      }
+    // Render Dashboard Ticket Switch State & Badges
+    const dashTicketToggle = document.getElementById('dashboard-ticket-live-toggle');
+    const dashTicketBadge = document.getElementById('dash-ticket-badge');
+    const dashTicketLabel = document.getElementById('dash-ticket-toggle-label');
+
+    if (dashTicketBadge) {
+      dashTicketBadge.innerHTML = isLive 
+        ? `<span class="badge badge-live"><span class="badge-dot"></span> LIVE</span>` 
+        : `<span class="badge badge-off"><span class="badge-dot"></span> OFF</span>`;
+    }
+    if (dashTicketLabel) {
+      dashTicketLabel.textContent = isLive ? 'Tickets are LIVE 🟢' : 'Tickets are OFF 🔴';
+    }
+    if (dashTicketToggle && !dashTicketToggle.dataset.bound) {
+      dashTicketToggle.checked = isLive;
+      dashTicketToggle.dataset.bound = 'true';
+
+      dashTicketToggle.addEventListener('change', async (e) => {
+        const isChecked = e.target.checked;
+        if (dashTicketBadge) {
+          dashTicketBadge.innerHTML = isChecked 
+            ? `<span class="badge badge-live"><span class="badge-dot"></span> LIVE</span>` 
+            : `<span class="badge badge-off"><span class="badge-dot"></span> OFF</span>`;
+        }
+        if (dashTicketLabel) {
+          dashTicketLabel.textContent = isChecked ? 'Tickets are LIVE 🟢' : 'Tickets are OFF 🔴';
+        }
+
+        const { error: updateErr } = await sb
+          .from('event_settings')
+          .update({ ticket_live: isChecked, updated_at: new Date().toISOString() })
+          .eq('id', settings?.id || 'd50387d3-f794-4778-9e88-d7afcee561ee');
+
+        if (updateErr) {
+          showToast('Failed to update ticket status.', 'error');
+          e.target.checked = !isChecked;
+        } else {
+          showToast(`Global Tickets are now ${isChecked ? 'LIVE 🟢' : 'OFF 🔴'}`, isChecked ? 'success' : 'info');
+        }
+      });
+    } else if (dashTicketToggle) {
+      dashTicketToggle.checked = isLive;
+    }
+
+    // Render Dashboard Email OTP Switch State & Badges
+    const dashOtpToggle = document.getElementById('dashboard-email-otp-toggle');
+    const dashOtpBadge = document.getElementById('dash-otp-badge');
+    const dashOtpLabel = document.getElementById('dash-otp-toggle-label');
+
+    if (dashOtpBadge) {
+      dashOtpBadge.innerHTML = isOtpEnabled 
+        ? `<span class="badge badge-live"><span class="badge-dot"></span> ALLOWED</span>` 
+        : `<span class="badge badge-off"><span class="badge-dot"></span> BLOCKED</span>`;
+    }
+    if (dashOtpLabel) {
+      dashOtpLabel.textContent = isOtpEnabled ? 'OTP Emails ALLOWED 🟢' : 'OTP Emails BLOCKED 🔴';
+    }
+    if (dashOtpToggle && !dashOtpToggle.dataset.bound) {
+      dashOtpToggle.checked = isOtpEnabled;
+      dashOtpToggle.dataset.bound = 'true';
+
+      dashOtpToggle.addEventListener('change', async (e) => {
+        const isChecked = e.target.checked;
+        if (dashOtpBadge) {
+          dashOtpBadge.innerHTML = isChecked 
+            ? `<span class="badge badge-live"><span class="badge-dot"></span> ALLOWED</span>` 
+            : `<span class="badge badge-off"><span class="badge-dot"></span> BLOCKED</span>`;
+        }
+        if (dashOtpLabel) {
+          dashOtpLabel.textContent = isChecked ? 'OTP Emails ALLOWED 🟢' : 'OTP Emails BLOCKED 🔴';
+        }
+
+        const { error: updateErr } = await sb
+          .from('event_settings')
+          .update({ email_otp_enabled: isChecked, updated_at: new Date().toISOString() })
+          .eq('id', settings?.id || 'd50387d3-f794-4778-9e88-d7afcee561ee');
+
+        if (updateErr) {
+          showToast('Failed to update OTP status.', 'error');
+          e.target.checked = !isChecked;
+        } else {
+          showToast(`Email OTP Dispatch is now ${isChecked ? 'ALLOWED 🟢' : 'BLOCKED 🔴'}`, isChecked ? 'success' : 'warning');
+        }
+      });
+    } else if (dashOtpToggle) {
+      dashOtpToggle.checked = isOtpEnabled;
     }
 
   } catch (err) {
