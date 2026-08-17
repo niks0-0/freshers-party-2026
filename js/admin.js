@@ -213,7 +213,7 @@ function setupSearchAndFilters() {
 }
 
 // --------------------------------------------------------
-// EXCEL BULK IMPORT MODAL ENGINE (BULK TICKET URL IMPORTER)
+// EXCEL BULK IMPORT MODAL ENGINE (FAILSAFE BULK IMPORTER)
 // --------------------------------------------------------
 function setupExcelImportModal() {
   const fileInput = document.getElementById('excel-file-input');
@@ -357,40 +357,50 @@ function setupExcelImportModal() {
             }], { onConflict: 'email' })
             .select();
 
-          if (detailErr) {
-            console.error("student_details upsert error:", detailErr);
-          } else {
-            successCount++;
-            const targetId = detailData && detailData[0] ? detailData[0].id : null;
-            const targetProfileId = authUserId || (detailData && detailData[0] ? (detailData[0].profile_id || detailData[0].id) : null);
+          let targetId = detailData && detailData[0] ? detailData[0].id : null;
+          let targetProfileId = authUserId || (detailData && detailData[0] ? (detailData[0].profile_id || detailData[0].id) : null);
 
-            // 3. Upsert Ticket URL directly linked to Student Detail ID & Profile ID
-            if (student.ticketUrl) {
-              if (targetProfileId) {
-                await sb
-                  .from('tickets')
-                  .upsert({
-                    student_profile_id: targetProfileId,
-                    ticket_id: student.ticketId || `FP26-${Math.floor(1000 + Math.random() * 9000)}`,
-                    ticket_url: student.ticketUrl,
-                    storage_path: null,
-                    is_uploaded: true,
-                    uploaded_at: new Date().toISOString()
-                  }, { onConflict: 'student_profile_id' });
-              }
+          if (!targetId) {
+            const { data: existingSd } = await sb
+              .from('student_details')
+              .select('id, profile_id')
+              .eq('email', student.email)
+              .maybeSingle();
 
-              if (targetId && targetId !== targetProfileId) {
-                await sb
-                  .from('tickets')
-                  .upsert({
-                    student_profile_id: targetId,
-                    ticket_id: student.ticketId || `FP26-${Math.floor(1000 + Math.random() * 9000)}`,
-                    ticket_url: student.ticketUrl,
-                    storage_path: null,
-                    is_uploaded: true,
-                    uploaded_at: new Date().toISOString()
-                  }, { onConflict: 'student_profile_id' });
-              }
+            if (existingSd) {
+              targetId = existingSd.id;
+              targetProfileId = authUserId || existingSd.profile_id || existingSd.id;
+            }
+          }
+
+          successCount++;
+
+          // 3. Upsert Ticket URL directly linked to Student Detail ID & Profile ID
+          if (student.ticketUrl) {
+            if (targetProfileId) {
+              await sb
+                .from('tickets')
+                .upsert({
+                  student_profile_id: targetProfileId,
+                  ticket_id: student.ticketId || `FP26-${Math.floor(1000 + Math.random() * 9000)}`,
+                  ticket_url: student.ticketUrl,
+                  storage_path: null,
+                  is_uploaded: true,
+                  uploaded_at: new Date().toISOString()
+                }, { onConflict: 'student_profile_id' });
+            }
+
+            if (targetId && targetId !== targetProfileId) {
+              await sb
+                .from('tickets')
+                .upsert({
+                  student_profile_id: targetId,
+                  ticket_id: student.ticketId || `FP26-${Math.floor(1000 + Math.random() * 9000)}`,
+                  ticket_url: student.ticketUrl,
+                  storage_path: null,
+                  is_uploaded: true,
+                  uploaded_at: new Date().toISOString()
+                }, { onConflict: 'student_profile_id' });
             }
           }
 
@@ -400,7 +410,7 @@ function setupExcelImportModal() {
       }
 
       setButtonLoading(importBtn, false);
-      showToast(`Successfully processed ${successCount} student tickets from Excel sheet!`, 'success');
+      showToast(`Successfully processed ${successCount} student records from Excel sheet!`, 'success');
       closeModal('excel-import-modal');
 
       // Re-fetch and re-render directory table immediately
