@@ -33,6 +33,8 @@ export default async function handler(req, res) {
 
     // 1. Generate 6-Digit Random OTP
     const otpCode = String(Math.floor(100000 + Math.random() * 900000));
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes validity
 
     // 2. Initialize Supabase Client & Save OTP to Database
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -40,18 +42,21 @@ export default async function handler(req, res) {
     // Remove older pending verification records for this user
     await supabase.from('verification_codes').delete().eq('user_id', userId);
 
-    // Insert new pending OTP
+    // Insert new pending OTP with all required columns
     const { error: dbError } = await supabase.from('verification_codes').insert([{
       user_id: userId,
       email: cleanEmail,
       otp_code: otpCode,
       is_verified: false,
-      created_at: new Date().toISOString()
+      attempts: 0,
+      expires_at: expiresAt.toISOString(),
+      created_at: now.toISOString(),
+      updated_at: now.toISOString()
     }]);
 
     if (dbError) {
       console.error('Supabase DB error:', dbError);
-      return res.status(500).json({ success: false, message: 'Failed to generate security code in database.' });
+      return res.status(500).json({ success: false, message: 'Failed to generate security code in database: ' + dbError.message });
     }
 
     // 3. Setup Nodemailer Transporter with Gmail SMTP
@@ -87,7 +92,7 @@ export default async function handler(req, res) {
           </div>
 
           <p style="font-size: 0.85rem; color: #8b949e; text-align: center;">
-            ⏳ This code is valid for 10 minutes. If you did not request this, you can safely ignore this email.
+            ⏳ This code is valid for 15 minutes. If you did not request this, you can safely ignore this email.
           </p>
 
           <hr style="border: 0; border-top: 1px solid #30363d; margin: 2rem 0 1rem;" />
