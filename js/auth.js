@@ -19,6 +19,9 @@ function getAdminPrefix() {
   return 'admin/';
 }
 
+// Primary Admin Email
+const PRIMARY_ADMIN_EMAIL = 'nikmahant5@gmail.com';
+
 // Get current session and profile
 async function getCurrentUser() {
   const sb = window.getSupabase();
@@ -34,7 +37,7 @@ async function getCurrentUser() {
     .eq('id', session.user.id)
     .maybeSingle();
 
-  const isAdminEmail = (session.user.email === 'nikmahant5@gmail.com' || session.user.email === 'admin@freshers2026.com');
+  const isAdminEmail = (session.user.email.toLowerCase() === PRIMARY_ADMIN_EMAIL);
 
   if (!profile) {
     // Fail-safe fallback profile
@@ -50,7 +53,7 @@ async function getCurrentUser() {
     return { session, user: session.user, profile: fallbackProfile };
   }
 
-  // Override admin role for primary admin emails
+  // Override admin role for primary admin email
   if (isAdminEmail) {
     profile.role = 'admin';
   }
@@ -84,7 +87,7 @@ async function requireAdminAuth() {
     window.location.href = adminPath;
     return null;
   }
-  const isAdminEmail = (authData.user?.email === 'nikmahant5@gmail.com' || authData.user?.email === 'admin@freshers2026.com');
+  const isAdminEmail = (authData.user?.email.toLowerCase() === PRIMARY_ADMIN_EMAIL);
   if (!authData.profile || (authData.profile.role !== 'admin' && !isAdminEmail) || !authData.profile.is_active) {
     showToast('Access denied. Administrator privileges required.', 'error');
     window.location.href = adminPath;
@@ -104,7 +107,7 @@ async function loginUser(email, password, isAdminLogin = false) {
     return { success: false, message: error.message || 'Invalid email or password.' };
   }
 
-  const isAdminEmail = (cleanEmail === 'nikmahant5@gmail.com' || cleanEmail === 'admin@freshers2026.com');
+  const isAdminEmail = (cleanEmail === PRIMARY_ADMIN_EMAIL);
 
   // Verify Role and Active status
   let { data: profile } = await sb
