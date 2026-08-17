@@ -122,7 +122,7 @@ async function fetchAndRenderStudents() {
 
     const { data: tickets } = await sb
       .from('tickets')
-      .select('student_profile_id, is_uploaded, storage_path');
+      .select('student_profile_id, is_uploaded, storage_path, ticket_url');
 
     const ticketMap = new Map();
     if (tickets) {
@@ -133,7 +133,7 @@ async function fetchAndRenderStudents() {
       const profileId = s.profile ? s.profile.id : s.profile_id;
       const isActive = s.profile ? s.profile.is_active : true;
       const ticketRecord = profileId ? ticketMap.get(profileId) : null;
-      const hasTicket = ticketRecord ? ticketRecord.is_uploaded : false;
+      const hasTicket = ticketRecord ? (ticketRecord.is_uploaded || !!ticketRecord.ticket_url) : false;
       return { ...s, profileId, isActive, hasTicket, ticketRecord };
     });
 
@@ -203,7 +203,7 @@ function setupSearchAndFilters() {
 }
 
 // --------------------------------------------------------
-// EXCEL BULK IMPORT MODAL ENGINE
+// EXCEL BULK IMPORT MODAL ENGINE (STRICT 5 COLUMN FILTER)
 // --------------------------------------------------------
 function setupExcelImportModal() {
   const fileInput = document.getElementById('excel-file-input');
@@ -230,33 +230,51 @@ function setupExcelImportModal() {
         parsedExcelStudents = [];
 
         rawJson.forEach(row => {
-          // Normalize Column Names
           let name = '';
           let email = '';
           let mobile = 'N/A';
           let course = 'BCA';
+          let ticketUrl = '';
+          let ticketId = '';
 
+          // STRICT FILTER: Extract ONLY Name, Email, Mobile, Course & Ticket URL
           Object.keys(row).forEach(key => {
             const lowerKey = key.toLowerCase().trim();
             const val = String(row[key] || '').trim();
 
-            if (lowerKey.includes('name')) name = val;
-            else if (lowerKey.includes('email')) email = val.toLowerCase();
-            else if (lowerKey.includes('mobile') || lowerKey.includes('phone') || lowerKey.includes('contact')) mobile = val;
-            else if (lowerKey.includes('course') || lowerKey.includes('stream') || lowerKey.includes('branch')) course = val;
+            if (lowerKey === 'name' || lowerKey.includes('full name') || lowerKey.includes('fullname') || lowerKey.includes('student name')) {
+              name = val;
+            } else if (lowerKey === 'email' || lowerKey.includes('email address')) {
+              email = val.toLowerCase();
+            } else if (lowerKey.includes('mobile') || lowerKey.includes('phone') || lowerKey.includes('contact')) {
+              mobile = val;
+            } else if (lowerKey.includes('course') || lowerKey.includes('stream') || lowerKey.includes('branch')) {
+              course = val;
+            } else if (lowerKey.includes('merged doc url') || lowerKey.includes('ticket url') || lowerKey.includes('link to merged doc') || lowerKey.includes('doc url')) {
+              ticketUrl = val;
+            } else if (lowerKey.includes('ticket id')) {
+              ticketId = val;
+            }
           });
 
           if (name && email) {
-            parsedExcelStudents.push({ fullName: name, email: email, mobile: mobile || 'N/A', course: course || 'BCA' });
+            parsedExcelStudents.push({
+              fullName: name,
+              email: email,
+              mobile: mobile || 'N/A',
+              course: course || 'BCA',
+              ticketUrl: ticketUrl || '',
+              ticketId: ticketId || `FP26-${Math.floor(1000 + Math.random() * 9000)}`
+            });
           }
         });
 
         if (parsedExcelStudents.length > 0) {
           if (previewArea) previewArea.style.display = 'block';
-          if (countEl) countEl.textContent = `✅ Ready to import ${parsedExcelStudents.length} student accounts`;
+          if (countEl) countEl.textContent = `✅ Ready to import ${parsedExcelStudents.length} student records`;
           if (sampleEl) {
             sampleEl.innerHTML = parsedExcelStudents.slice(0, 5).map(s => `
-              <div>• <strong>${escapeHtml(s.fullName)}</strong> (${escapeHtml(s.email)}) — ${escapeHtml(s.course)} — ${escapeHtml(s.mobile)}</div>
+              <div>• <strong>${escapeHtml(s.fullName)}</strong> (${escapeHtml(s.email)}) — ${escapeHtml(s.course)} — ${escapeHtml(s.mobile)} ${s.ticketUrl ? '📄 [Ticket Link Included]' : ''}</div>
             `).join('') + (parsedExcelStudents.length > 5 ? `<div style="margin-top:0.3rem;">...and ${parsedExcelStudents.length - 5} more records</div>` : '');
           }
           if (importBtn) importBtn.disabled = false;
@@ -292,20 +310,22 @@ function setupExcelImportModal() {
             }
           });
 
-          const autoStudentId = `FP26-${Math.floor(100000 + Math.random() * 900000)}`;
+          const autoStudentId = student.ticketId || `FP26-${Math.floor(100000 + Math.random() * 900000)}`;
 
           // 2. Check & Upsert student_details
           const { data: existingDetail } = await sb
             .from('student_details')
-            .select('id')
+            .select('id, profile_id')
             .eq('email', student.email)
             .maybeSingle();
+
+          let targetProfileId = authData?.user?.id || (existingDetail ? existingDetail.profile_id : null);
 
           if (existingDetail) {
             await sb
               .from('student_details')
               .update({
-                profile_id: authData?.user?.id || null,
+                profile_id: targetProfileId,
                 full_name: student.fullName,
                 mobile: student.mobile,
                 course: student.course,
@@ -316,7 +336,7 @@ function setupExcelImportModal() {
             await sb
               .from('student_details')
               .insert([{
-                profile_id: authData?.user?.id || null,
+                profile_id: targetProfileId,
                 student_id: autoStudentId,
                 full_name: student.fullName,
                 email: student.email,
@@ -326,6 +346,20 @@ function setupExcelImportModal() {
                 registration_status: 'excel_imported'
               }]);
           }
+
+          // 3. Save Ticket URL to tickets table if present in Excel
+          if (student.ticketUrl && targetProfileId) {
+            await sb
+              .from('tickets')
+              .upsert({
+                student_profile_id: targetProfileId,
+                ticket_id: student.ticketId || `FP26-${Math.floor(1000 + Math.random() * 9000)}`,
+                ticket_url: student.ticketUrl,
+                is_uploaded: true,
+                uploaded_at: new Date().toISOString()
+              }, { onConflict: 'student_profile_id' });
+          }
+
           successCount++;
         } catch (e) {
           console.warn("Excel single import note:", e);
@@ -540,8 +574,8 @@ async function initAdminSingleStudentPage() {
     const filenameEl = document.getElementById('uploaded-filename-text');
     const uploadLabel = document.getElementById('upload-file-label');
 
-    if (existingTicket && existingTicket.storage_path) {
-      const fileNameOnly = existingTicket.storage_path.split('/').pop() || 'ticket.pdf';
+    if (existingTicket && (existingTicket.storage_path || existingTicket.ticket_url)) {
+      const fileNameOnly = existingTicket.storage_path ? existingTicket.storage_path.split('/').pop() : (existingTicket.ticket_url ? 'Google Drive PDF Link' : 'ticket.pdf');
 
       if (ticketStatusEl) {
         ticketStatusEl.className = 'badge badge-live';
@@ -555,7 +589,7 @@ async function initAdminSingleStudentPage() {
       // Setup View PDF button
       const viewBtn = document.getElementById('view-current-ticket-btn');
       if (viewBtn) {
-        viewBtn.onclick = () => viewPrivateTicket(existingTicket.storage_path);
+        viewBtn.onclick = () => viewPrivateTicket(existingTicket.storage_path || existingTicket.ticket_url);
       }
 
       // Setup Delete Ticket button
@@ -589,12 +623,9 @@ async function deleteStudentTicket(profileId, storagePath) {
 
   const sb = window.getSupabase();
   try {
-    // 1. Delete from Storage Bucket
     if (storagePath) {
       await sb.storage.from('tickets').remove([storagePath]);
     }
-
-    // 2. Delete from PostgreSQL Database
     await sb.from('tickets').delete().eq('student_profile_id', profileId);
 
     showToast('Ticket PDF deleted successfully!', 'success');
@@ -717,7 +748,8 @@ async function initAdminTicketsPage() {
     }
 
     container.innerHTML = tickets.map(t => {
-      const fileNameOnly = t.storage_path ? t.storage_path.split('/').pop() : 'ticket.pdf';
+      const fileNameOnly = t.storage_path ? t.storage_path.split('/').pop() : (t.ticket_url ? 'Google Drive PDF Link' : 'ticket.pdf');
+      const targetPath = t.storage_path || t.ticket_url;
       return `
         <tr>
           <td>
@@ -732,7 +764,7 @@ async function initAdminTicketsPage() {
           <td><span class="badge badge-live">UPLOADED</span></td>
           <td>
             <div class="table-actions">
-              <button class="btn btn-sm btn-secondary" onclick="viewPrivateTicket('${t.storage_path}')">👁️ View PDF</button>
+              <button class="btn btn-sm btn-secondary" onclick="viewPrivateTicket('${targetPath}')">👁️ View PDF</button>
               <button class="btn btn-sm btn-danger" onclick="deleteStudentTicket('${t.student_profile_id}', '${t.storage_path}')">🗑️ Delete</button>
             </div>
           </td>
@@ -746,12 +778,16 @@ async function initAdminTicketsPage() {
   }
 }
 
-async function viewPrivateTicket(storagePath) {
+async function viewPrivateTicket(storagePathOrUrl) {
   const sb = window.getSupabase();
+  if (storagePathOrUrl.startsWith('http')) {
+    window.open(storagePathOrUrl, '_blank');
+    return;
+  }
   const { data, error } = await sb
     .storage
     .from('tickets')
-    .createSignedUrl(storagePath, 300);
+    .createSignedUrl(storagePathOrUrl, 300);
 
   if (error || !data) {
     showToast('Failed to open PDF ticket.', 'error');
