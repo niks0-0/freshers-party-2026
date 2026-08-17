@@ -1,5 +1,5 @@
 /* ========================================================
-   FRESHERS PARTY 2026 — HIGH-DEFINITION PDF.JS TICKET RENDERER
+   FRESHERS PARTY 2026 — PURE ORIGINAL PDF TICKET VIEWER
    ======================================================== */
 
 let currentUserAuth = null;
@@ -66,7 +66,7 @@ async function loadAndUnlockTicket() {
       .eq('student_profile_id', userId)
       .maybeSingle();
 
-    if (!ticket || !ticket.storage_path) {
+    if (!ticket || (!ticket.storage_path && !ticket.ticket_url)) {
       const { data: detail } = await sb
         .from('student_details')
         .select('id')
@@ -84,22 +84,31 @@ async function loadAndUnlockTicket() {
       }
     }
 
-    if (!ticket || !ticket.storage_path) {
+    if (!ticket || (!ticket.storage_path && !ticket.ticket_url)) {
       showErrorState("Your individual ticket PDF has not been uploaded yet by administrators.");
       return;
     }
 
-    const { data: signedData, error: storageErr } = await sb
-      .storage
-      .from('tickets')
-      .createSignedUrl(ticket.storage_path, 300, { download: false });
+    // Resolve PDF URL (from ticket_url or storage_path)
+    let pdfDisplayUrl = ticket.ticket_url || null;
 
-    if (storageErr || !signedData || !signedData.signedUrl) {
+    if (!pdfDisplayUrl && ticket.storage_path) {
+      const { data: signedData, error: storageErr } = await sb
+        .storage
+        .from('tickets')
+        .createSignedUrl(ticket.storage_path, 300, { download: false });
+
+      if (!storageErr && signedData && signedData.signedUrl) {
+        pdfDisplayUrl = signedData.signedUrl;
+      }
+    }
+
+    if (!pdfDisplayUrl) {
       showErrorState("Failed to authorize private ticket access.");
       return;
     }
 
-    signedPdfUrl = signedData.signedUrl;
+    signedPdfUrl = pdfDisplayUrl;
 
     const ticketIdEl = document.getElementById('display-ticket-id');
     if (ticketIdEl) {
@@ -112,7 +121,7 @@ async function loadAndUnlockTicket() {
       directOpenBtn.style.display = 'inline-flex';
     }
 
-    // Render exact PDF file using Mozilla PDF.js (Fixes Android Mobile Chrome white box bug)
+    // Render exact PDF file using PDF.js
     await renderPdfWithPdfJs(signedPdfUrl);
 
   } catch (err) {
@@ -141,7 +150,7 @@ async function renderPdfWithPdfJs(url) {
     const pdf = await loadingTask.promise;
     const page = await pdf.getPage(1);
 
-    const viewport = page.getViewport({ scale: 2.0 }); // HD Scale
+    const viewport = page.getViewport({ scale: 2.0 });
     const context = canvas.getContext('2d');
     canvas.height = viewport.height;
     canvas.width = viewport.width;
