@@ -348,7 +348,7 @@ function setupExcelImportModal() {
             console.warn("Auth signup note:", e);
           }
 
-          // 2. Insert or Update student_details directly
+          // 2. Insert or Update student_details directly with 'registered' status
           const { data: detailData, error: detailErr } = await sb
             .from('student_details')
             .upsert([{
@@ -359,7 +359,7 @@ function setupExcelImportModal() {
               mobile: student.mobile,
               course: student.course,
               semester: student.course.includes('Sem-3') ? 'Sem 3' : 'Sem 1',
-              registration_status: 'excel_imported'
+              registration_status: 'registered'
             }], { onConflict: 'email' })
             .select();
 
