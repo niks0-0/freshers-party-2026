@@ -1,5 +1,5 @@
 /* ========================================================
-   CRUD 2026 — SUPABASE AUTH REAL OTP VERIFICATION LOGIC
+   CRUD 2026 — DIRECT GMAIL OTP VERIFICATION LOGIC
    ======================================================== */
 
 let currentUserAuth = null;
@@ -60,31 +60,55 @@ function getEnteredOtpCode() {
   return code;
 }
 
-// Trigger Supabase Auth Email OTP Dispatch
+// Trigger Direct Serverless Gmail OTP Dispatch
 async function sendOtpCode() {
   const sb = window.getSupabase();
   const userId = currentUserAuth.user.id;
   const userEmail = currentUserAuth.user.email;
+  const fullName = currentUserAuth.profile?.full_name || currentUserAuth.user?.user_metadata?.full_name || 'Student';
 
   // Clear previous verification flags on fresh code request
   localStorage.removeItem(`crud2026_verified_${userId}`);
   sessionStorage.removeItem(`crud2026_verified_${userId}`);
 
   try {
-    // 1. Delete previous verification status in DB
-    await sb.from('verification_codes').delete().eq('user_id', userId);
-
-    // 2. Trigger Supabase Auth Email OTP Dispatch
-    await sb.auth.signInWithOtp({
-      email: userEmail,
-      options: { shouldCreateUser: false }
+    const response = await fetch('/api/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: userEmail,
+        userId: userId,
+        fullName: fullName
+      })
     });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      // Fallback: if serverless function not ready or failed, try Supabase native fallback
+      console.warn("Direct API note, trying fallback:", result.message);
+      await sb.auth.signInWithOtp({
+        email: userEmail,
+        options: { shouldCreateUser: false }
+      });
+    }
 
     showToast(`Verification code sent to your Gmail (${maskEmail(userEmail)})! Check Inbox & Spam.`, 'info', 7000);
     startResendCountdown();
 
   } catch (err) {
     console.error("Error generating OTP:", err);
+    // Supabase fallback
+    try {
+      await sb.auth.signInWithOtp({
+        email: userEmail,
+        options: { shouldCreateUser: false }
+      });
+      showToast(`Verification code sent to your Gmail!`, 'info', 6000);
+    } catch (e) {
+      console.error("Fallback error:", e);
+    }
+    startResendCountdown();
   }
 }
 
@@ -143,31 +167,44 @@ function setupVerificationForm() {
     const userEmail = currentUserAuth.user.email;
 
     try {
-      // 1. Verify exact token against Supabase Auth Native Engine
-      const { data: authVerify, error: authVerifyErr } = await sb.auth.verifyOtp({
-        email: userEmail,
-        token: otpCode,
-        type: 'email'
-      });
+      // 1. Check against verification_codes table in Supabase
+      const { data: records, error: dbErr } = await sb
+        .from('verification_codes')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('otp_code', otpCode)
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-      if (authVerifyErr || !authVerify || !authVerify.session) {
+      let isMatch = false;
+
+      if (records && records.length > 0) {
+        isMatch = true;
+        // Mark as verified in database
+        await sb
+          .from('verification_codes')
+          .update({ is_verified: true })
+          .eq('id', records[0].id);
+      } else {
+        // Fallback check: Supabase verifyOtp
+        const { data: authVerify } = await sb.auth.verifyOtp({
+          email: userEmail,
+          token: otpCode,
+          type: 'email'
+        });
+        if (authVerify && authVerify.session) {
+          isMatch = true;
+        }
+      }
+
+      if (!isMatch) {
         showToast('Incorrect verification code! Please check your email inbox.', 'error');
         setButtonLoading(verifyBtn, false);
         clearOtpInputs();
         return;
       }
 
-      // 2. Exact Match Verified! Mark in Database
-      await sb.from('verification_codes').delete().eq('user_id', userId);
-      await sb.from('verification_codes').insert([{
-        user_id: userId,
-        email: userEmail,
-        otp_code: otpCode,
-        is_verified: true,
-        created_at: new Date().toISOString()
-      }]);
-
-      // 3. Set Verified Proof Flags
+      // 2. Set Verified Proof Flags
       localStorage.setItem(`crud2026_verified_${userId}`, 'true');
       sessionStorage.setItem(`crud2026_verified_${userId}`, 'true');
 
