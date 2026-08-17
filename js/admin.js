@@ -205,7 +205,7 @@ function setupSearchAndFilters() {
 }
 
 // --------------------------------------------------------
-// EXCEL BULK IMPORT MODAL ENGINE (GUARANTEED BULK INSERT)
+// EXCEL BULK IMPORT MODAL ENGINE (FAILSAFE DIRECT INSERT)
 // --------------------------------------------------------
 function setupExcelImportModal() {
   const fileInput = document.getElementById('excel-file-input');
@@ -303,7 +303,7 @@ function setupExcelImportModal() {
 
       for (const student of parsedExcelStudents) {
         try {
-          // 1. Create Auth User Account if possible
+          // 1. Create Auth User Account in background if possible
           let authUserId = null;
           try {
             const { data: authData } = await sb.auth.signUp({
@@ -318,18 +318,7 @@ function setupExcelImportModal() {
             console.warn("Auth signup note:", e);
           }
 
-          // 2. Ensure Profile Record in public.profiles
-          if (authUserId) {
-            await sb.from('profiles').upsert({
-              id: authUserId,
-              email: student.email,
-              full_name: student.fullName,
-              role: 'student',
-              is_active: true
-            });
-          }
-
-          // 3. Upsert Student Details Record
+          // 2. Insert or Update student_details directly
           const { data: detailData, error: detailErr } = await sb
             .from('student_details')
             .upsert([{
@@ -348,21 +337,22 @@ function setupExcelImportModal() {
             console.error("student_details upsert error:", detailErr);
           } else {
             successCount++;
-          }
-
-          // 4. Save Ticket URL to tickets table if present in Excel
-          if (student.ticketUrl) {
             const targetProfileId = authUserId || (detailData && detailData[0] ? detailData[0].id : null);
-            if (targetProfileId) {
-              await sb
+
+            // 3. Insert or Update Ticket URL record
+            if (student.ticketUrl && targetProfileId) {
+              const { error: ticketErr } = await sb
                 .from('tickets')
                 .upsert({
                   student_profile_id: targetProfileId,
                   ticket_id: student.ticketId || `FP26-${Math.floor(1000 + Math.random() * 9000)}`,
                   ticket_url: student.ticketUrl,
+                  storage_path: null,
                   is_uploaded: true,
                   uploaded_at: new Date().toISOString()
-                });
+                }, { onConflict: 'student_profile_id' });
+
+              if (ticketErr) console.error("Ticket upsert note:", ticketErr);
             }
           }
 
@@ -374,6 +364,8 @@ function setupExcelImportModal() {
       setButtonLoading(importBtn, false);
       showToast(`Successfully registered ${successCount} students from Excel sheet!`, 'success');
       closeModal('excel-import-modal');
+
+      // Re-fetch and re-render directory table immediately
       await fetchAndRenderStudents();
     });
   }
