@@ -3,6 +3,7 @@
    ======================================================== */
 
 let adminAuth = null;
+let dashboardRefreshInterval = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Guard check for admin subfolder or root
@@ -13,6 +14,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const path = window.location.pathname;
   if (path.includes('dashboard.html')) {
     initAdminDashboard();
+    // REALTIME AUTO-REFRESH EVERY 4 SECONDS
+    if (!dashboardRefreshInterval) {
+      dashboardRefreshInterval = setInterval(initAdminDashboard, 4000);
+    }
   } else if (path.includes('students.html')) {
     initAdminStudentsPage();
   } else if (path.includes('student.html')) {
@@ -25,13 +30,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // --------------------------------------------------------
-// 1. ADMIN DASHBOARD STATS
+// 1. ADMIN DASHBOARD STATS (REALTIME LIVE AUTO-REFRESH)
 // --------------------------------------------------------
 async function initAdminDashboard() {
   const sb = window.getSupabase();
 
   try {
-    // Total Registrations
+    // Total Registrations (From student_details)
     const { count: totalCount } = await sb
       .from('student_details')
       .select('*', { count: 'exact', head: true });
@@ -41,7 +46,7 @@ async function initAdminDashboard() {
       .from('student_details')
       .select('*', { count: 'exact', head: true });
 
-    // Tickets Uploaded
+    // Tickets Uploaded (From tickets where is_uploaded is true)
     const { count: ticketsUploadedCount } = await sb
       .from('tickets')
       .select('*', { count: 'exact', head: true })
@@ -55,17 +60,19 @@ async function initAdminDashboard() {
       .maybeSingle();
 
     const isLive = settings ? settings.ticket_live : false;
-    const missingCount = Math.max(0, (totalCount || 0) - (ticketsUploadedCount || 0));
+    const actualTotal = totalCount || 0;
+    const actualUploaded = ticketsUploadedCount || 0;
+    const missingCount = Math.max(0, actualTotal - actualUploaded);
 
     // Render Stats to UI
     const totalEl = document.getElementById('stat-total-students');
-    if (totalEl) totalEl.textContent = totalCount || 0;
+    if (totalEl) totalEl.textContent = actualTotal;
 
     const activeEl = document.getElementById('stat-active-accounts');
     if (activeEl) activeEl.textContent = activeCount || 0;
 
     const uploadedEl = document.getElementById('stat-tickets-uploaded');
-    if (uploadedEl) uploadedEl.textContent = ticketsUploadedCount || 0;
+    if (uploadedEl) uploadedEl.textContent = actualUploaded;
 
     const missingEl = document.getElementById('stat-tickets-missing');
     if (missingEl) missingEl.textContent = missingCount;
@@ -83,7 +90,6 @@ async function initAdminDashboard() {
 
   } catch (err) {
     console.error("Error loading admin stats:", err);
-    showToast('Failed to load live statistics.', 'error');
   }
 }
 
@@ -798,16 +804,16 @@ async function viewPrivateTicket(storagePathOrUrl) {
     window.open(storagePathOrUrl, '_blank');
     return;
   }
-  const { data, error } = await sb
+  const { data: signedData, error } = await sb
     .storage
     .from('tickets')
     .createSignedUrl(storagePathOrUrl, 300);
 
-  if (error || !data) {
+  if (error || !signedData) {
     showToast('Failed to open PDF ticket.', 'error');
     return;
   }
-  window.open(data.signedUrl, '_blank');
+  window.open(signedData.signedUrl, '_blank');
 }
 window.viewPrivateTicket = viewPrivateTicket;
 
