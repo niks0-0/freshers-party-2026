@@ -258,12 +258,13 @@ async function fetchAndRenderStudents() {
 
     const { data: tickets } = await sb
       .from('tickets')
-      .select('student_profile_id, is_uploaded, storage_path, ticket_url');
+      .select('student_profile_id, ticket_id, is_uploaded, storage_path, ticket_url');
 
     const ticketMap = new Map();
     if (tickets) {
       tickets.forEach(t => {
-        ticketMap.set(t.student_profile_id, t);
+        if (t.student_profile_id) ticketMap.set(t.student_profile_id, t);
+        if (t.ticket_id) ticketMap.set(t.ticket_id.toLowerCase().trim(), t);
       });
     }
 
@@ -271,7 +272,10 @@ async function fetchAndRenderStudents() {
       const matchedProfile = (s.profile_id ? profileMap.get(s.profile_id) : null) || (s.email ? profileMap.get(s.email.toLowerCase()) : null);
       const profileId = matchedProfile ? matchedProfile.id : (s.profile_id || s.id);
       const isActive = matchedProfile ? matchedProfile.is_active : true;
-      const ticketRecord = ticketMap.get(profileId) || ticketMap.get(s.id) || ticketMap.get(s.profile_id);
+      const ticketRecord = ticketMap.get(profileId) || 
+                           ticketMap.get(s.id) || 
+                           ticketMap.get(s.profile_id) || 
+                           (s.student_id ? ticketMap.get(s.student_id.toLowerCase().trim()) : null);
       const hasTicket = ticketRecord ? (ticketRecord.is_uploaded || !!ticketRecord.ticket_url) : false;
       return { ...s, profileId, isActive, hasTicket, ticketRecord };
     });
@@ -718,10 +722,14 @@ async function initAdminSingleStudentPage() {
 
     let existingTicket = null;
     if (profileId || student.id) {
+      let queryOr = `student_profile_id.eq.${profileId},student_profile_id.eq.${student.id}`;
+      if (student.student_id) {
+        queryOr += `,ticket_id.eq.${student.student_id}`;
+      }
       const { data: ticket } = await sb
         .from('tickets')
         .select('*')
-        .or(`student_profile_id.eq.${profileId},student_profile_id.eq.${student.id}`)
+        .or(queryOr)
         .maybeSingle();
 
       if (ticket) existingTicket = ticket;
