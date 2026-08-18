@@ -47,16 +47,36 @@ async function loadStudentDashboardData() {
       .maybeSingle();
 
     if (details) {
+      if (details.full_name) {
+        if (nameHeader) nameHeader.textContent = `Welcome, ${details.full_name} 👋`;
+        if (nameEl) nameEl.textContent = details.full_name;
+        if (avatarEl) avatarEl.textContent = details.full_name[0].toUpperCase();
+      }
+
+      if (details.email && emailEl) {
+        emailEl.textContent = details.email;
+      }
+
       const mobileEl = document.getElementById('student-mobile-display');
       if (mobileEl) mobileEl.textContent = details.mobile || 'N/A';
 
       const courseEl = document.getElementById('student-course-display');
       if (courseEl) courseEl.textContent = details.course || 'N/A';
 
-      if (details.full_name) {
-        if (nameEl) nameEl.textContent = details.full_name;
-        if (avatarEl) avatarEl.textContent = details.full_name[0].toUpperCase();
-      }
+      // Realtime Listener for Student Details Updates
+      sb.channel(`realtime_sd_${details.id}`)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'student_details', filter: `id=eq.${details.id}` }, (payload) => {
+          const updated = payload.new;
+          if (updated) {
+            if (nameHeader && updated.full_name) nameHeader.textContent = `Welcome, ${updated.full_name} 👋`;
+            if (nameEl && updated.full_name) nameEl.textContent = updated.full_name;
+            if (emailEl && updated.email) emailEl.textContent = updated.email;
+            if (mobileEl && updated.mobile) mobileEl.textContent = updated.mobile;
+            if (courseEl && updated.course) courseEl.textContent = updated.course;
+            if (avatarEl && updated.full_name) avatarEl.textContent = updated.full_name[0].toUpperCase();
+          }
+        })
+        .subscribe();
     }
 
     // 2. Fetch Global Event Settings (Is Ticket LIVE? & Is Email OTP Allowed?)
