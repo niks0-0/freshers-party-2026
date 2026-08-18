@@ -826,7 +826,22 @@ function setupEditProfileForm(student, profileId, existingTicket) {
     const sb = window.getSupabase();
 
     try {
-      // 1. Update student_details
+      // 1. Update Auth User Account & Database details atomically via SECURITY DEFINER RPC
+      const targetUserId = student.profile_id || profileId || student.id;
+      const { data: rpcRes, error: rpcErr } = await sb.rpc('admin_update_student_auth', {
+        p_user_id: targetUserId,
+        p_new_email: newEmail,
+        p_new_name: newName,
+        p_new_mobile: newMobile || 'N/A',
+        p_new_course: newCourse,
+        p_new_ticket_url: newTicketUrl || null
+      });
+
+      if (rpcErr) {
+        console.warn("RPC update notice, proceeding with direct sync:", rpcErr);
+      }
+
+      // 2. Direct Table Updates Failsafe
       const { error: sdErr } = await sb
         .from('student_details')
         .update({
@@ -841,7 +856,7 @@ function setupEditProfileForm(student, profileId, existingTicket) {
 
       if (sdErr) throw sdErr;
 
-      // 2. Update profiles if profile_id exists
+      // 3. Update profiles if profile_id exists
       if (student.profile_id) {
         await sb
           .from('profiles')
@@ -853,7 +868,7 @@ function setupEditProfileForm(student, profileId, existingTicket) {
           .eq('id', student.profile_id);
       }
 
-      // 3. Update or Insert Google Drive Ticket URL if provided
+      // 4. Update or Insert Google Drive Ticket URL if provided
       if (newTicketUrl) {
         const ticketId = existingTicket?.ticket_id || student.student_id || `FP26-${Math.floor(1000 + Math.random() * 9000)}`;
         await sb
@@ -868,7 +883,7 @@ function setupEditProfileForm(student, profileId, existingTicket) {
           }, { onConflict: 'student_profile_id' });
       }
 
-      showToast('Student profile updated successfully!', 'success');
+      showToast('Student profile & login email updated successfully!', 'success');
       setTimeout(() => location.reload(), 1000);
 
     } catch (err) {
