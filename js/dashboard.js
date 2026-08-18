@@ -81,7 +81,7 @@ async function loadStudentDashboardData() {
       }
     }
 
-    // 3. Fetch Ticket Record for this student (Failsafe for Auth ID, Details ID, or Email)
+    // 3. Fetch Ticket Record for this student (Bulletproof Failsafe for Auth ID, Details ID, Student ID)
     let { data: tData } = await sb
       .from('tickets')
       .select('*')
@@ -89,16 +89,17 @@ async function loadStudentDashboardData() {
       .maybeSingle();
 
     if (!tData && details) {
-      const targetIds = [details.id, details.profile_id].filter(Boolean).join(',');
-      if (targetIds) {
-        const { data: fallbackTicket } = await sb
-          .from('tickets')
-          .select('*')
-          .or(`student_profile_id.eq.${details.id},student_profile_id.eq.${details.profile_id || userId}`)
-          .maybeSingle();
+      let queryOr = `student_profile_id.eq.${details.id}`;
+      if (details.profile_id) queryOr += `,student_profile_id.eq.${details.profile_id}`;
+      if (details.student_id) queryOr += `,ticket_id.eq.${details.student_id}`;
 
-        if (fallbackTicket) tData = fallbackTicket;
-      }
+      const { data: fallbackTicket } = await sb
+        .from('tickets')
+        .select('*')
+        .or(queryOr)
+        .maybeSingle();
+
+      if (fallbackTicket) tData = fallbackTicket;
     }
 
     ticketData = tData;

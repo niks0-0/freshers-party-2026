@@ -64,7 +64,7 @@ async function loadAndUnlockTicket() {
       return;
     }
 
-    // Failsafe Ticket Lookup by Auth ID or Details ID or Email
+    // Bulletproof Failsafe Ticket Lookup by Auth ID, Details ID, or Ticket ID
     let { data: ticket } = await sb
       .from('tickets')
       .select('*')
@@ -73,15 +73,19 @@ async function loadAndUnlockTicket() {
 
     const { data: detail } = await sb
       .from('student_details')
-      .select('id, profile_id')
+      .select('id, profile_id, student_id')
       .eq('email', userEmail)
       .maybeSingle();
 
     if (!ticket && detail) {
+      let queryOr = `student_profile_id.eq.${detail.id}`;
+      if (detail.profile_id) queryOr += `,student_profile_id.eq.${detail.profile_id}`;
+      if (detail.student_id) queryOr += `,ticket_id.eq.${detail.student_id}`;
+
       const { data: tFallback } = await sb
         .from('tickets')
         .select('*')
-        .or(`student_profile_id.eq.${detail.id},student_profile_id.eq.${detail.profile_id || userId}`)
+        .or(queryOr)
         .maybeSingle();
 
       if (tFallback) ticket = tFallback;
