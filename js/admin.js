@@ -579,6 +579,7 @@ async function deleteStudent(detailId, profileId, studentName) {
 
   const sb = window.getSupabase();
   try {
+    // 1. Delete student details record
     const { error: detailErr } = await sb
       .from('student_details')
       .delete()
@@ -586,6 +587,10 @@ async function deleteStudent(detailId, profileId, studentName) {
 
     if (detailErr) throw detailErr;
 
+    // 2. Clean up associated tickets by profileId and detailId
+    if (detailId) {
+      await sb.from('tickets').delete().eq('student_profile_id', detailId);
+    }
     if (profileId) {
       await sb.from('tickets').delete().eq('student_profile_id', profileId);
       await sb.from('verification_codes').delete().eq('user_id', profileId);
