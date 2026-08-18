@@ -50,6 +50,8 @@ async function loadAndUnlockTicket() {
       .maybeSingle();
 
     if (!settings || !settings.ticket_live) {
+      localStorage.removeItem(`crud2026_verified_${userId}`);
+      sessionStorage.removeItem(`crud2026_verified_${userId}`);
       showErrorState("Tickets are currently locked by the administrator. Please wait for official release.", "dashboard.html", "Back to Dashboard");
       return;
     }
@@ -83,30 +85,12 @@ async function loadAndUnlockTicket() {
     }
 
     // CHECK 2: Authorization & Persistent Generation Status
-    const isLocalVerified = localStorage.getItem(`crud2026_verified_${userId}`) === 'true';
-    const isSessionVerified = sessionStorage.getItem(`crud2026_verified_${userId}`) === 'true';
     const isDatabaseGenerated = ticket.is_generated === true;
 
-    let isDbVerified = false;
-    try {
-      const { data: verifyRecord } = await sb
-        .from('verification_codes')
-        .select('is_verified')
-        .eq('user_id', userId)
-        .eq('is_verified', true)
-        .limit(1);
-
-      if (verifyRecord && verifyRecord.length > 0) {
-        isDbVerified = true;
-      }
-    } catch (e) {
-      console.warn("DB verification note:", e);
-    }
-
-    const isAuthorized = isDatabaseGenerated || isDbVerified || isLocalVerified || isSessionVerified;
-
-    if (!isAuthorized) {
-      showErrorState("Email security verification required before accessing ticket.", "verify.html", "Verify Email Now");
+    if (!isDatabaseGenerated) {
+      localStorage.removeItem(`crud2026_verified_${userId}`);
+      sessionStorage.removeItem(`crud2026_verified_${userId}`);
+      showErrorState("Email security OTP verification is required to generate and unlock your ticket.", "verify.html", "Generate & Verify Ticket Now");
       return;
     }
 

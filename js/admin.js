@@ -116,6 +116,11 @@ async function initAdminDashboard() {
           showToast('Failed to update ticket status.', 'error');
           e.target.checked = !isChecked;
         } else {
+          if (!isChecked) {
+            // When admin turns tickets OFF, reset generation cycle so next release requires 1-time OTP verification
+            await sb.from('tickets').update({ is_generated: false }).neq('id', '00000000-0000-0000-0000-000000000000');
+            await sb.from('verification_codes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+          }
           showToast(`Global Tickets are now ${isChecked ? 'LIVE 🟢' : 'OFF 🔴'}`, isChecked ? 'success' : 'info');
         }
       });
@@ -994,6 +999,10 @@ async function initAdminSettingsPage() {
           e.target.checked = !isChecked;
           updateSwitchLabel(!isChecked);
         } else {
+          if (!isChecked) {
+            await sb.from('tickets').update({ is_generated: false }).neq('id', '00000000-0000-0000-0000-000000000000');
+            await sb.from('verification_codes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+          }
           showToast(`Global Tickets are now ${isChecked ? 'LIVE 🟢' : 'OFF 🔴'}`, isChecked ? 'success' : 'info');
         }
       });
