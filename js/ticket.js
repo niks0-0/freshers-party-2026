@@ -10,6 +10,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!currentUserAuth) return;
 
   await loadAndUnlockTicket();
+
+  // Single-Use Security: Clear verification token when student leaves ticket page
+  window.addEventListener('beforeunload', () => {
+    if (currentUserAuth && currentUserAuth.user) {
+      sessionStorage.removeItem(`crud2026_verified_${currentUserAuth.user.id}`);
+      localStorage.removeItem(`crud2026_verified_${currentUserAuth.user.id}`);
+    }
+  });
 });
 
 // Helper to convert any Google Drive URL into a clean iframe preview URL
@@ -84,13 +92,11 @@ async function loadAndUnlockTicket() {
       return;
     }
 
-    // CHECK 2: Authorization & Persistent Generation Status
-    const isDatabaseGenerated = ticket.is_generated === true;
+    // CHECK 2: Authorization: Must have completed active OTP verification
+    const isSessionVerified = sessionStorage.getItem(`crud2026_verified_${userId}`) === 'true';
 
-    if (!isDatabaseGenerated) {
-      localStorage.removeItem(`crud2026_verified_${userId}`);
-      sessionStorage.removeItem(`crud2026_verified_${userId}`);
-      showErrorState("Email security OTP verification is required to generate and unlock your ticket.", "verify.html", "Generate & Verify Ticket Now");
+    if (!isSessionVerified) {
+      showErrorState("Security OTP verification required. Please verify via email OTP to view your ticket pass.", "dashboard.html", "Go to Verification 🔐");
       return;
     }
 
