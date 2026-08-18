@@ -126,6 +126,19 @@ async function loadAndUnlockTicket() {
       directOpenBtn.style.display = 'inline-flex';
     }
 
+    const downloadBtn = document.getElementById('direct-pdf-download-btn');
+    if (downloadBtn) {
+      if (signedPdfUrl.includes('drive.google.com')) {
+        let fileId = null;
+        const matchFileD = signedPdfUrl.match(/\/file\/d\/([^\/\?#]+)/);
+        if (matchFileD) fileId = matchFileD[1];
+        downloadBtn.href = fileId ? `https://drive.google.com/uc?export=download&id=${fileId}` : signedPdfUrl;
+      } else {
+        downloadBtn.href = signedPdfUrl;
+      }
+      downloadBtn.style.display = 'inline-flex';
+    }
+
     // Check if URL is a Google Drive link -> Render in direct embedded Iframe!
     if (pdfDisplayUrl.includes('drive.google.com')) {
       const embedUrl = getGoogleDriveEmbedUrl(pdfDisplayUrl);
