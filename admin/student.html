@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manage Student — Admin Portal</title>
-  <link rel="stylesheet" href="../css/style.css?v=7.0">
-  <link rel="stylesheet" href="../css/admin.css?v=7.0">
+  <title>Manage Student & Edit Profile — Admin Portal</title>
+  <link rel="stylesheet" href="../css/style.css?v=18.0">
+  <link rel="stylesheet" href="../css/admin.css?v=18.0">
   <style>
     .admin-detail-grid {
       display: grid;
@@ -50,40 +50,65 @@
 
     <div class="admin-header-bar">
       <div>
-        <h1 style="font-size: 1.8rem;">Manage <span class="gradient-text">Student Profile</span></h1>
-        <p>Upload individual PDF ticket and manage account status</p>
+        <h1 style="font-size: 1.8rem;">Manage & <span class="gradient-text">Edit Student Profile</span></h1>
+        <p>Edit personal credentials, update Google Drive ticket links, or upload PDF passes</p>
       </div>
+      <div id="detail-ticket-status" class="badge badge-pending">LOADING STATUS...</div>
     </div>
 
     <div class="admin-detail-grid">
-      <!-- Student Info Card -->
+      
+      <!-- EDIT STUDENT PROFILE FORM CARD -->
       <div class="glass-card">
-        <h3 style="margin-bottom: 1.25rem;">📄 Student Information</h3>
-        <div style="display: flex; flex-direction: column; gap: 1rem;">
-          <div>
-            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Full Name</div>
-            <div id="detail-name" style="font-size: 1.1rem; font-weight: 700; color: var(--text-main);">Loading...</div>
+        <h3 style="margin-bottom: 1.25rem;">✏️ Edit Student Information</h3>
+        
+        <form id="edit-student-profile-form">
+          <div class="form-group">
+            <label for="edit-name">Full Name *</label>
+            <input type="text" id="edit-name" placeholder="Student Full Name" required>
           </div>
-          <div>
-            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Email Address</div>
-            <div id="detail-email" style="font-size: 0.95rem; color: var(--text-muted);">Loading...</div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-email">Email Address *</label>
+              <input type="email" id="edit-email" placeholder="student@example.com" required>
+            </div>
+            <div class="form-group">
+              <label for="edit-mobile">Mobile Number *</label>
+              <input type="tel" id="edit-mobile" placeholder="Mobile Number" required>
+            </div>
           </div>
-          <div>
-            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Course & Stream</div>
-            <div id="detail-course" style="font-size: 0.95rem; color: var(--text-muted);">Loading...</div>
+
+          <div class="form-group">
+            <label for="edit-course">Course & Stream *</label>
+            <select id="edit-course" required>
+              <option value="BCA">BCA</option>
+              <option value="MCA GIA (Sem-1)">MCA GIA (Sem-1)</option>
+              <option value="MCA SFI (Sem-1)">MCA SFI (Sem-1)</option>
+              <option value="MCA GIA (Sem-3)">MCA GIA (Sem-3)</option>
+              <option value="MCA SFI (Sem-3)">MCA SFI (Sem-3)</option>
+              <option value="MCA 3 GIA">MCA 3 GIA</option>
+              <option value="MCA 3 SFI">MCA 3 SFI</option>
+              <option value="MSc IT">MSc IT</option>
+              <option value="PGDCA">PGDCA</option>
+            </select>
           </div>
-          <div>
-            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Mobile Number</div>
-            <div id="detail-mobile" style="font-size: 0.95rem; color: var(--text-muted);">Loading...</div>
+
+          <div class="form-group">
+            <label for="edit-ticket-url">Google Drive Ticket URL (Optional Link)</label>
+            <input type="url" id="edit-ticket-url" placeholder="https://drive.google.com/file/d/.../view">
+            <small style="color: var(--text-dim); font-size: 0.75rem; display: block; margin-top: 0.25rem;">
+              💡 Direct preview link for Google Drive PDF tickets.
+            </small>
           </div>
-          <div>
-            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 0.2rem;">Ticket Upload Status</div>
-            <div id="detail-ticket-status" class="badge badge-pending">NOT UPLOADED</div>
-          </div>
-        </div>
+
+          <button type="submit" id="save-profile-btn" class="btn btn-primary btn-full" style="margin-top: 1rem;">
+            SAVE PROFILE CHANGES 💾
+          </button>
+        </form>
       </div>
 
-      <!-- Ticket Upload & Management Card -->
+      <!-- TICKET UPLOAD & MANAGEMENT CARD -->
       <div class="glass-card">
         <h3 style="margin-bottom: 0.5rem;">🎟️ Individual Ticket PDF Manager</h3>
         <p style="font-size: 0.875rem; margin-bottom: 1.25rem;">View uploaded file details, replace PDF, or delete existing ticket.</p>
@@ -108,19 +133,20 @@
 
         <form id="ticket-upload-form">
           <div class="form-group">
-            <label for="ticket-pdf-file" id="upload-file-label">Select PDF File (.pdf, Max 10MB) *</label>
+            <label for="ticket-pdf-file" id="upload-file-label">Select Local PDF File (.pdf, Max 10MB) *</label>
             <input type="file" id="ticket-pdf-file" accept="application/pdf" required style="padding: 0.6rem;">
           </div>
 
           <div style="padding: 0.85rem 1rem; background: rgba(13, 18, 30, 0.6); border-radius: var(--radius-md); border: 1px solid var(--border-color); margin: 1rem 0; font-size: 0.825rem; color: var(--text-muted);">
-            🛡️ Uploading a new PDF file will automatically replace the existing ticket file for this student.
+            🛡️ Uploading a new PDF file will store it securely in Supabase storage and link it to this student.
           </div>
 
-          <button type="submit" id="upload-ticket-submit-btn" class="btn btn-primary btn-full">
-            UPLOAD / REPLACE TICKET PDF 📤
+          <button type="submit" id="upload-ticket-submit-btn" class="btn btn-secondary btn-full">
+            UPLOAD LOCAL TICKET PDF 📤
           </button>
         </form>
       </div>
+
     </div>
 
   </main>
@@ -132,11 +158,11 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../js/config.js?v=7.0"></script>
-  <script src="../js/supabase.js?v=7.0"></script>
-  <script src="../js/ui-helpers.js?v=7.0"></script>
-  <script src="../js/auth.js?v=7.0"></script>
-  <script src="../js/admin.js?v=7.0"></script>
+  <script src="../js/config.js?v=18.0"></script>
+  <script src="../js/supabase.js?v=18.0"></script>
+  <script src="../js/ui-helpers.js?v=18.0"></script>
+  <script src="../js/auth.js?v=18.0"></script>
+  <script src="../js/admin.js?v=18.0"></script>
 
 </body>
 </html>

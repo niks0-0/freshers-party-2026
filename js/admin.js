@@ -712,18 +712,29 @@ async function initAdminSingleStudentPage() {
     // Resolve profileId dynamically
     let profileId = student.profile_id || student.id;
 
-    // Render Student Details
-    const nameEl = document.getElementById('detail-name');
-    if (nameEl) nameEl.textContent = student.full_name;
+    // Populate Edit Form Inputs
+    const nameInput = document.getElementById('edit-name');
+    if (nameInput) nameInput.value = student.full_name || '';
 
-    const emailEl = document.getElementById('detail-email');
-    if (emailEl) emailEl.textContent = student.email;
+    const emailInput = document.getElementById('edit-email');
+    if (emailInput) emailInput.value = student.email || '';
 
-    const courseEl = document.getElementById('detail-course');
-    if (courseEl) courseEl.textContent = student.course;
+    const courseSelect = document.getElementById('edit-course');
+    if (courseSelect) {
+      courseSelect.value = student.course || 'BCA';
+      if (!Array.from(courseSelect.options).some(opt => opt.value === student.course)) {
+        const opt = document.createElement('option');
+        opt.value = student.course;
+        opt.textContent = student.course;
+        courseSelect.appendChild(opt);
+        courseSelect.value = student.course;
+      }
+    }
 
-    const mobileEl = document.getElementById('detail-mobile');
-    if (mobileEl) mobileEl.textContent = student.mobile;
+    const mobileInput = document.getElementById('edit-mobile');
+    if (mobileInput) mobileInput.value = (student.mobile && student.mobile !== 'N/A') ? student.mobile : '';
+
+    const ticketUrlInput = document.getElementById('edit-ticket-url');
 
     let existingTicket = null;
     if (profileId || student.id) {
@@ -738,6 +749,10 @@ async function initAdminSingleStudentPage() {
         .maybeSingle();
 
       if (ticket) existingTicket = ticket;
+    }
+
+    if (ticketUrlInput && existingTicket && existingTicket.ticket_url) {
+      ticketUrlInput.value = existingTicket.ticket_url;
     }
 
     // Update UI elements for Ticket Status & File Box
@@ -779,12 +794,90 @@ async function initAdminSingleStudentPage() {
       if (uploadLabel) uploadLabel.textContent = `Select PDF File (.pdf, Max 10MB) *`;
     }
 
+    setupEditProfileForm(student, profileId || student.id, existingTicket);
     setupTicketUploadForm(student, profileId || student.id);
 
   } catch (err) {
     console.error("Error fetching single student detail:", err);
     showToast('Failed to load student details.', 'error');
   }
+}
+
+function setupEditProfileForm(student, profileId, existingTicket) {
+  const form = document.getElementById('edit-student-profile-form');
+  if (!form || form.dataset.bound) return;
+  form.dataset.bound = 'true';
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const saveBtn = document.getElementById('save-profile-btn');
+    const newName = document.getElementById('edit-name').value.trim();
+    const newEmail = document.getElementById('edit-email').value.trim().toLowerCase();
+    const newMobile = document.getElementById('edit-mobile').value.trim();
+    const newCourse = document.getElementById('edit-course').value;
+    const newTicketUrl = document.getElementById('edit-ticket-url').value.trim();
+
+    if (!newName || !newEmail || !newCourse) {
+      showToast('Name, Email and Course are required.', 'error');
+      return;
+    }
+
+    setButtonLoading(saveBtn, true, 'Saving Changes...');
+    const sb = window.getSupabase();
+
+    try {
+      // 1. Update student_details
+      const { error: sdErr } = await sb
+        .from('student_details')
+        .update({
+          full_name: newName,
+          email: newEmail,
+          mobile: newMobile || 'N/A',
+          course: newCourse,
+          semester: newCourse.includes('Sem-3') ? 'Sem 3' : 'Sem 1',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', student.id);
+
+      if (sdErr) throw sdErr;
+
+      // 2. Update profiles if profile_id exists
+      if (student.profile_id) {
+        await sb
+          .from('profiles')
+          .update({
+            full_name: newName,
+            email: newEmail,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', student.profile_id);
+      }
+
+      // 3. Update or Insert Google Drive Ticket URL if provided
+      if (newTicketUrl) {
+        const ticketId = existingTicket?.ticket_id || student.student_id || `FP26-${Math.floor(1000 + Math.random() * 9000)}`;
+        await sb
+          .from('tickets')
+          .upsert({
+            student_profile_id: profileId,
+            ticket_id: ticketId,
+            ticket_url: newTicketUrl,
+            storage_path: existingTicket?.storage_path || null,
+            is_uploaded: true,
+            uploaded_at: new Date().toISOString()
+          }, { onConflict: 'student_profile_id' });
+      }
+
+      showToast('Student profile updated successfully!', 'success');
+      setTimeout(() => location.reload(), 1000);
+
+    } catch (err) {
+      console.error("Profile update error:", err);
+      showToast(err.message || 'Failed to update student profile.', 'error');
+    } finally {
+      setButtonLoading(saveBtn, false);
+    }
+  });
 }
 
 // DELETE STUDENT TICKET FUNCTION
