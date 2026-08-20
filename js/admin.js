@@ -346,6 +346,96 @@ function setupSearchAndFilters() {
 }
 
 // --------------------------------------------------------
+// SINGLE STUDENT ACCOUNT CREATION MODAL
+// --------------------------------------------------------
+function setupCreateStudentModal() {
+  const form = document.getElementById('create-student-account-form');
+  if (!form || form.dataset.bound) return;
+  form.dataset.bound = 'true';
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = document.getElementById('create-account-submit-btn');
+    const fullName = document.getElementById('create-fullname').value.trim();
+    const email = document.getElementById('create-email').value.trim().toLowerCase();
+    const password = document.getElementById('create-password').value || 'Freshers@2026';
+    const course = document.getElementById('create-course').value || 'BCA';
+
+    if (!fullName || !email) {
+      showToast('Name and email are required.', 'error');
+      return;
+    }
+
+    setButtonLoading(submitBtn, true, 'Creating Account...');
+    const sb = window.getSupabase();
+
+    try {
+      // 1. Create Supabase Auth User
+      let authUserId = null;
+      try {
+        const { data: authData, error: authErr } = await sb.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            data: { full_name: fullName, role: 'student' }
+          }
+        });
+        if (authData && authData.user) {
+          authUserId = authData.user.id;
+        }
+      } catch (authE) {
+        console.warn("Auth signup notice:", authE);
+      }
+
+      const studentId = `FP26-${Math.floor(100000 + Math.random() * 900000)}`;
+
+      // 2. Insert into student_details
+      const { data: sdData, error: sdErr } = await sb
+        .from('student_details')
+        .upsert([{
+          profile_id: authUserId || null,
+          student_id: studentId,
+          full_name: fullName,
+          email: email,
+          mobile: 'N/A',
+          course: course,
+          semester: course.includes('Sem-3') ? 'Sem 3' : 'Sem 1',
+          registration_status: 'registered'
+        }], { onConflict: 'email' })
+        .select();
+
+      if (sdErr) throw sdErr;
+
+      const targetProfileId = authUserId || (sdData && sdData[0] ? (sdData[0].profile_id || sdData[0].id) : null);
+
+      // 3. Create Ticket Record Placeholder
+      if (targetProfileId) {
+        await sb
+          .from('tickets')
+          .upsert({
+            student_profile_id: targetProfileId,
+            ticket_id: studentId,
+            is_uploaded: false,
+            is_generated: false
+          }, { onConflict: 'student_profile_id' });
+      }
+
+      showToast(`Student "${fullName}" created successfully!`, 'success');
+      form.reset();
+      document.getElementById('create-password').value = 'Freshers@2026';
+      closeModal('create-student-modal');
+      await fetchAndRenderStudents();
+
+    } catch (err) {
+      console.error("Create student account error:", err);
+      showToast(err.message || 'Failed to create student account.', 'error');
+    } finally {
+      setButtonLoading(submitBtn, false);
+    }
+  });
+}
+
+// --------------------------------------------------------
 // EXCEL BULK IMPORT MODAL ENGINE (FAILSAFE BULK IMPORTER)
 // --------------------------------------------------------
 function setupExcelImportModal() {

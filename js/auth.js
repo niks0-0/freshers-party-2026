@@ -102,7 +102,39 @@ async function loginUser(email, password, isAdminLogin = false) {
   if (!sb) return { success: false, message: 'Database initialization failed.' };
 
   const cleanEmail = email.trim().toLowerCase();
-  const { data, error } = await sb.auth.signInWithPassword({ email: cleanEmail, password });
+  let { data, error } = await sb.auth.signInWithPassword({ email: cleanEmail, password });
+
+  // JUST-IN-TIME (JIT) FAILSAFE: If student is in student_details and logs in with Freshers@2026, auto-provision if needed
+  if (error && password === 'Freshers@2026' && !isAdminLogin) {
+    try {
+      const { data: sdStudent } = await sb
+        .from('student_details')
+        .select('*')
+        .eq('email', cleanEmail)
+        .maybeSingle();
+
+      if (sdStudent) {
+        const { data: signupData, error: signupErr } = await sb.auth.signUp({
+          email: cleanEmail,
+          password: 'Freshers@2026',
+          options: {
+            data: { full_name: sdStudent.full_name, role: 'student' }
+          }
+        });
+
+        if (signupData && signupData.user) {
+          // Sync profile_id
+          await sb.from('student_details').update({ profile_id: signupData.user.id }).eq('id', sdStudent.id);
+          await sb.from('tickets').update({ student_profile_id: signupData.user.id }).eq('student_profile_id', sdStudent.id);
+          data = signupData;
+          error = null;
+        }
+      }
+    } catch (jitErr) {
+      console.warn("JIT Auto-Provision note:", jitErr);
+    }
+  }
+
   if (error) {
     return { success: false, message: error.message || 'Invalid email or password.' };
   }
