@@ -82,38 +82,41 @@ export default async function handler(req, res) {
       }
     });
 
-    // 5. Clean HTML Email Design
+    // 5. Clean Multi-Part Email Design (HTML + Plaintext for Anti-Spam Deliverability)
     const mailOptions = {
-      from: `"CRUD 2026 Official" <${GMAIL_USER}>`,
+      from: `CRUD 2026 Verification <${GMAIL_USER}>`,
       to: cleanEmail,
-      subject: `Your CRUD 2026 Ticket Verification Code: ${otpCode}`,
+      replyTo: GMAIL_USER,
+      priority: 'high',
+      subject: `CRUD 2026 Verification Code: ${otpCode}`,
+      text: `Hello ${studentName},\n\nYour security verification code for the CRUD 2026 Freshers Party ticket pass is: ${otpCode}\n\nThis code is valid for 15 minutes.\n\nCRUD 2026 Digital Ticket System - Crafted by NIKSLAB`,
       html: `
-        <div style="font-family: Arial, sans-serif; background-color: #0d1117; color: #ffffff; padding: 2.5rem 1.5rem; max-width: 550px; margin: auto; border-radius: 12px; border: 1px solid #30363d;">
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0f172a; color: #ffffff; padding: 2rem 1.5rem; max-width: 520px; margin: 0 auto; border-radius: 12px; border: 1px solid #1e293b;">
           <div style="text-align: center; margin-bottom: 1.5rem;">
-            <h1 style="color: #6366f1; margin: 0; font-size: 1.8rem; letter-spacing: 1px;">CRUD 2026</h1>
-            <p style="color: #8b949e; font-size: 0.9rem; margin-top: 0.3rem;">Official Digital Ticket Security Verification</p>
+            <h2 style="color: #6366f1; margin: 0; font-size: 1.6rem; letter-spacing: 0.5px;">CRUD 2026</h2>
+            <p style="color: #94a3b8; font-size: 0.85rem; margin-top: 0.3rem;">Official Event Pass Verification</p>
           </div>
 
-          <p style="font-size: 1rem; color: #e6edf3;">Hello <strong>${studentName}</strong>,</p>
-          <p style="font-size: 0.95rem; color: #8b949e; line-height: 1.6;">
-            You requested to unlock your digital ticket pass for the <strong>CRUD 2026 Freshers Party</strong>. Use the 6-digit security code below to complete your verification:
+          <p style="font-size: 0.95rem; color: #f1f5f9; margin-bottom: 0.5rem;">Hello <strong>${studentName}</strong>,</p>
+          <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.5;">
+            Use the 6-digit verification code below to access and download your personalized digital ticket pass for the <strong>CRUD 2026 Freshers Party</strong>:
           </p>
 
-          <div style="text-align: center; margin: 2rem 0;">
-            <span style="display: inline-block; font-size: 2.2rem; font-weight: 800; letter-spacing: 8px; color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 1rem 2rem; border-radius: 8px; border: 1px dashed #38bdf8; font-family: monospace;">
+          <div style="text-align: center; margin: 1.75rem 0;">
+            <div style="display: inline-block; font-size: 2rem; font-weight: 800; letter-spacing: 6px; color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 0.85rem 1.75rem; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.3); font-family: monospace;">
               ${otpCode}
-            </span>
+            </div>
           </div>
 
-          <p style="font-size: 0.85rem; color: #8b949e; text-align: center;">
-            ⏳ This code is valid for 15 minutes. If you did not request this, you can safely ignore this email.
+          <p style="font-size: 0.8rem; color: #64748b; text-align: center; margin-top: 1rem;">
+            ⏳ This code is valid for 15 minutes.
           </p>
 
-          <hr style="border: 0; border-top: 1px solid #30363d; margin: 2rem 0 1rem;" />
-
-          <p style="font-size: 0.75rem; color: #6e7681; text-align: center; margin: 0;">
-            © 2026 CRUD 2026 Digital Ticket System • Crafted by NIKSLAB
-          </p>
+          <div style="border-top: 1px solid #1e293b; margin-top: 1.5rem; padding-top: 1rem; text-align: center;">
+            <p style="font-size: 0.75rem; color: #64748b; margin: 0;">
+              © 2026 Department of Computer Science • Crafted by NIKSLAB
+            </p>
+          </div>
         </div>
       `
     };
