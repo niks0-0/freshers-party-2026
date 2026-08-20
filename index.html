@@ -273,10 +273,8 @@
   <!-- Live Countdown Timer Engine -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Target: August 21, 2026 at 12:30 PM Afternoon
-      const targetDate = new Date();
-      targetDate.setDate(targetDate.getDate() + 1);
-      targetDate.setHours(12, 30, 0, 0);
+      // Exact Event Target: August 21, 2026 at 12:30 PM IST
+      const targetDate = new Date('2026-08-21T12:30:00+05:30');
 
       function updateHeroCountdown() {
         const now = new Date().getTime();
