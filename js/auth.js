@@ -101,11 +101,22 @@ async function loginUser(email, password, isAdminLogin = false) {
   const sb = window.getSupabase();
   if (!sb) return { success: false, message: 'Database initialization failed.' };
 
-  const cleanEmail = email.trim().toLowerCase();
-  let { data, error } = await sb.auth.signInWithPassword({ email: cleanEmail, password });
+  const cleanEmail = (email || '').trim().toLowerCase();
+  const cleanPassword = (password || '').trim();
+  
+  let { data, error } = await sb.auth.signInWithPassword({ email: cleanEmail, password: cleanPassword });
 
-  // JUST-IN-TIME (JIT) FAILSAFE: If student is in student_details and logs in with Freshers@2026, auto-provision if needed
-  if (error && password === 'Freshers@2026' && !isAdminLogin) {
+  // FALLBACK 1: Case-insensitive fallback for default password (handles freshers@2026 -> Freshers@2026)
+  if (error && cleanPassword.toLowerCase() === 'freshers@2026' && cleanPassword !== 'Freshers@2026') {
+    const retry = await sb.auth.signInWithPassword({ email: cleanEmail, password: 'Freshers@2026' });
+    if (!retry.error) {
+      data = retry.data;
+      error = null;
+    }
+  }
+
+  // FALLBACK 2: JUST-IN-TIME (JIT) FAILSAFE: If student is in student_details and logs in with default password
+  if (error && cleanPassword.toLowerCase() === 'freshers@2026' && !isAdminLogin) {
     try {
       const { data: sdStudent } = await sb
         .from('student_details')
@@ -114,7 +125,7 @@ async function loginUser(email, password, isAdminLogin = false) {
         .maybeSingle();
 
       if (sdStudent) {
-        const { data: signupData, error: signupErr } = await sb.auth.signUp({
+        const { data: signupData } = await sb.auth.signUp({
           email: cleanEmail,
           password: 'Freshers@2026',
           options: {
@@ -123,11 +134,16 @@ async function loginUser(email, password, isAdminLogin = false) {
         });
 
         if (signupData && signupData.user) {
-          // Sync profile_id
           await sb.from('student_details').update({ profile_id: signupData.user.id }).eq('id', sdStudent.id);
           await sb.from('tickets').update({ student_profile_id: signupData.user.id }).eq('student_profile_id', sdStudent.id);
           data = signupData;
           error = null;
+        } else {
+          const relogin = await sb.auth.signInWithPassword({ email: cleanEmail, password: 'Freshers@2026' });
+          if (!relogin.error) {
+            data = relogin.data;
+            error = null;
+          }
         }
       }
     } catch (jitErr) {
@@ -136,7 +152,7 @@ async function loginUser(email, password, isAdminLogin = false) {
   }
 
   if (error) {
-    return { success: false, message: error.message || 'Invalid email or password.' };
+    return { success: false, message: 'Invalid email or password. Please check your credentials (Default Password: Freshers@2026 with capital F).' };
   }
 
   const isAdminEmail = (cleanEmail === PRIMARY_ADMIN_EMAIL);
