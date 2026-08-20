@@ -31,8 +31,15 @@
     </div>
   </nav>
 
+  <!-- Concert Stage Laser Beams -->
+  <div class="laser-container">
+    <div class="laser laser-cyan"></div>
+    <div class="laser laser-violet"></div>
+    <div class="laser laser-magenta"></div>
+  </div>
+
   <!-- Hero Section -->
-  <header class="hero-section" style="padding: 4rem 0 2rem; text-align: center;">
+  <header class="hero-section" style="padding: 3.5rem 0 2rem; text-align: center; position: relative; z-index: 5;">
     <div class="container container-narrow">
       <span id="hero-reg-badge" class="badge badge-live" style="margin-bottom: 1.25rem;">🎉 REGISTRATION OPEN FOR BATCH 2026</span>
       <h1 style="margin-bottom: 0.75rem;">
@@ -42,10 +49,57 @@
       <p style="font-size: 1.15rem; font-weight: 600; color: #a5b4fc; margin-bottom: 0.5rem; letter-spacing: 0.05em;">
         COME ROCK UR DAY • WELCOME FRESHERS
       </p>
-      <p style="font-size: 0.95rem; margin-bottom: 2rem;">
-        A new chapter begins! Step into the spotlight for an unforgettable evening of music, celebration & memories.
-      </p>
-      <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+
+      <!-- Heartwarming Welcome Card -->
+      <div class="welcome-freshers-card">
+        <div style="font-size: 2rem; margin-bottom: 0.35rem;">✨ 🎓 🎉</div>
+        <h2 style="font-size: 1.35rem; font-weight: 800; color: #ffffff; margin: 0 0 0.5rem;">
+          Welcome Home, Freshers! 💫
+        </h2>
+        <p style="font-size: 0.92rem; color: #cbd5e1; line-height: 1.6; margin: 0 auto; max-width: 440px;">
+          To our incredible <strong>Batch of 2026</strong> — you are not just stepping into college, you are stepping into a family of innovators, dreamers, and lifelong friends.
+        </p>
+        <div style="margin-top: 0.85rem; font-size: 0.82rem; color: #a5b4fc; font-weight: 600;">
+          "Today we celebrate YOU. Let the lights shine, the music play, and the memories begin!" 🎈
+        </div>
+      </div>
+
+      <!-- Live Party Countdown Clock -->
+      <div class="hero-countdown-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <span class="badge badge-live" style="font-size: 0.72rem; padding: 0.3rem 0.75rem;">
+            🔴 OFFICIAL COUNTDOWN
+          </span>
+          <span style="font-size: 0.78rem; font-weight: 700; color: #38bdf8; letter-spacing: 1px;">
+            AUG 21 • 12:30 PM
+          </span>
+        </div>
+
+        <div style="font-size: 1.15rem; font-weight: 800; margin: 0.5rem 0 0.2rem; color: #ffffff;">
+          CRUD 2026 Starts In
+        </div>
+
+        <div class="countdown-grid">
+          <div class="time-box">
+            <span class="time-num" id="hero-hours">--</span>
+            <span class="time-label">HOURS</span>
+          </div>
+          <div class="time-box">
+            <span class="time-num" id="hero-minutes">--</span>
+            <span class="time-label">MINUTES</span>
+          </div>
+          <div class="time-box">
+            <span class="time-num" id="hero-seconds">--</span>
+            <span class="time-label">SECONDS</span>
+          </div>
+        </div>
+
+        <div id="hero-countdown-status" style="font-size: 0.9rem; color: #f1f5f9; font-weight: 600; margin-top: 0.75rem;">
+          Get your passes ready & bring the energy! 🔥🕺
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem;">
         <a href="login.html" class="btn btn-primary" style="padding: 0.9rem 2rem; font-size: 1rem;">Student Login 🔑</a>
         <a href="#poster" class="btn btn-secondary" style="padding: 0.9rem 1.8rem; font-size: 1rem;">VIEW POSTER 🖼️</a>
       </div>
@@ -215,6 +269,45 @@
   <script src="js/supabase.js?v=3.0"></script>
   <script src="js/ui-helpers.js?v=3.0"></script>
   <script src="js/registration.js?v=3.0"></script>
+
+  <!-- Live Countdown Timer Engine -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Target: August 21, 2026 at 12:30 PM Afternoon
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + 1);
+      targetDate.setHours(12, 30, 0, 0);
+
+      function updateHeroCountdown() {
+        const now = new Date().getTime();
+        const diff = targetDate.getTime() - now;
+
+        const hoursEl = document.getElementById('hero-hours');
+        const minutesEl = document.getElementById('hero-minutes');
+        const secondsEl = document.getElementById('hero-seconds');
+        const statusText = document.getElementById('hero-countdown-status');
+
+        if (diff <= 0) {
+          if (hoursEl) hoursEl.textContent = '00';
+          if (minutesEl) minutesEl.textContent = '00';
+          if (secondsEl) secondsEl.textContent = '00';
+          if (statusText) statusText.innerHTML = '🎉 <strong>THE FRESHERS PARTY HAS OFFICIALLY BEGUN! 🕺💃</strong>';
+          return;
+        }
+
+        const totalHours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        if (hoursEl) hoursEl.textContent = String(totalHours).padStart(2, '0');
+        if (minutesEl) minutesEl.textContent = String(minutes).padStart(2, '0');
+        if (secondsEl) secondsEl.textContent = String(seconds).padStart(2, '0');
+      }
+
+      setInterval(updateHeroCountdown, 1000);
+      updateHeroCountdown();
+    });
+  </script>
 
 </body>
 </html>
