@@ -170,11 +170,12 @@ function setupVerificationForm() {
     const userEmail = currentUserAuth.user.email;
 
     try {
-      // 1. Check against verification_codes table in Supabase
+      // 1. Check against verification_codes table in Supabase (by User ID or Email)
+      const cleanEmail = userEmail.trim().toLowerCase();
       const { data: records, error: dbErr } = await sb
         .from('verification_codes')
         .select('*')
-        .eq('user_id', userId)
+        .or(`user_id.eq.${userId},email.eq.${cleanEmail}`)
         .eq('otp_code', otpCode)
         .order('created_at', { ascending: false })
         .limit(1);

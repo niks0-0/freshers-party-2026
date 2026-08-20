@@ -53,8 +53,8 @@ export default async function handler(req, res) {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes validity
 
-    // Remove older pending verification records for this user
-    await supabase.from('verification_codes').delete().eq('user_id', userId);
+    // Remove older pending verification records for this user or email
+    await supabase.from('verification_codes').delete().or(`user_id.eq.${userId},email.eq.${cleanEmail}`);
 
     // Insert new pending OTP with all required columns
     const { error: dbError } = await supabase.from('verification_codes').insert([{
