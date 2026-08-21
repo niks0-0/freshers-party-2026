@@ -44,7 +44,8 @@ async function fetchAndRenderFeedback() {
 
     // 1. Calculate Average Rating
     const avgRating = (feedbacks.reduce((acc, f) => acc + (f.rating || 5), 0) / total).toFixed(1);
-    document.getElementById('stat-avg-rating').textContent = `⭐ ${avgRating} / 5.0`;
+    const avgEl = document.getElementById('stat-avg-rating');
+    if (avgEl) avgEl.textContent = `⭐ ${avgRating} / 5.0`;
 
     // 2. Calculate Breakdowns
     renderBreakdown('breakdown-vibe', feedbacks, 'q1_vibe', total);
@@ -57,19 +58,22 @@ async function fetchAndRenderFeedback() {
     feedbacks.forEach(f => {
       if (f.q5_highlight) highlights[f.q5_highlight] = (highlights[f.q5_highlight] || 0) + 1;
     });
-    const topHighlight = Object.keys(highlights).reduce((a, b) => (highlights[a] > highlights[b] ? a : b), 'DJ & Dance');
-    document.getElementById('stat-top-segment').textContent = topHighlight.replace(/^[^\s]+\s/, '').slice(0, 15);
+    const highlightKeys = Object.keys(highlights);
+    const topHighlight = highlightKeys.length > 0 ? highlightKeys.reduce((a, b) => (highlights[a] > highlights[b] ? a : b)) : 'DJ & Dance';
+    const topEl = document.getElementById('stat-top-segment');
+    if (topEl) topEl.textContent = topHighlight.replace(/^[^\s]+\s/, '').slice(0, 18);
 
     const positiveFood = feedbacks.filter(f => f.q2_food && (f.q2_food.includes('5/5') || f.q2_food.includes('Tasty'))).length;
     const foodScore = Math.round((positiveFood / total) * 100);
-    document.getElementById('stat-food-score').textContent = `${foodScore}%`;
+    const foodEl = document.getElementById('stat-food-score');
+    if (foodEl) foodEl.textContent = `${foodScore}%`;
 
     // 4. Render Reviews Wall
     renderReviewsWall(feedbacks);
 
   } catch (err) {
     console.error("Error fetching feedback:", err);
-    showToast('Failed to load feedback analytics.', 'error');
+    showToast('Failed to load feedback analytics: ' + (err.message || ''), 'error');
   }
 }
 

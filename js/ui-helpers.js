@@ -2,6 +2,18 @@
    CRUD 2026 — UI HELPERS & MOBILE MENU CONTROLLER
    ======================================================== */
 
+// Universal HTML Escape Sanitizer
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+window.escapeHtml = escapeHtml;
+
 document.addEventListener('DOMContentLoaded', () => {
   setupMobileMenuToggle();
 });
