@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRUD 2026 Admin — Event Feedback & Analytics</title>
+  <link rel="stylesheet" href="../css/style.css?v=25.0">
+  <style>
+    .admin-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .stat-bar-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.65rem;
+      font-size: 0.88rem;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 0.25rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #6366f1, #38bdf8);
+      transition: width 0.8s ease-in-out;
+    }
+
+    .reviews-wall-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .review-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 18px;
+      padding: 1.25rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Admin Navigation -->
+  <nav class="navbar">
+    <div class="container nav-container">
+      <a href="dashboard.html" class="logo">
+        <span class="logo-accent">CRUD</span> Admin
+      </a>
+      <ul class="nav-links">
+        <li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+        <li><a href="students.html" class="nav-link">Students</a></li>
+        <li><a href="feedback.html" class="nav-link active">⭐ Feedback Reviews</a></li>
+        <li><button onclick="logoutUser()" class="btn btn-sm btn-secondary">Logout 🚪</button></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container" style="padding-top: 2rem; padding-bottom: 4rem;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+      <div>
+        <h1 style="font-size: 2.2rem; margin-bottom: 0.25rem;">Event <span class="gradient-text">Feedback Analytics</span></h1>
+        <p style="color: var(--text-muted);">Real-time student ratings, reviews & shoutouts for CRUD 2026</p>
+      </div>
+      <div style="display: flex; gap: 0.75rem;">
+        <a href="../feedback.html" target="_blank" class="btn btn-secondary btn-sm">👁️ Open Feedback Form ↗</a>
+        <button onclick="fetchAndRenderFeedback()" class="btn btn-primary btn-sm">🔄 Refresh Data</button>
+      </div>
+    </div>
+
+    <!-- 1. Top Summary Counters -->
+    <div class="admin-stats-grid">
+      <div class="glass-card stat-card">
+        <div class="stat-icon" style="background: rgba(99, 102, 241, 0.2); color: #818cf8;">📊</div>
+        <div class="stat-info">
+          <span class="stat-label">Total Reviews</span>
+          <span class="stat-value" id="stat-total-reviews">0</span>
+        </div>
+      </div>
+
+      <div class="glass-card stat-card">
+        <div class="stat-icon" style="background: rgba(251, 191, 36, 0.2); color: #fbbf24;">⭐</div>
+        <div class="stat-info">
+          <span class="stat-label">Average Star Rating</span>
+          <span class="stat-value" id="stat-avg-rating">0.0 / 5.0</span>
+        </div>
+      </div>
+
+      <div class="glass-card stat-card">
+        <div class="stat-icon" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8;">🔥</div>
+        <div class="stat-info">
+          <span class="stat-label">Top Rated Segment</span>
+          <span class="stat-value" id="stat-top-segment" style="font-size: 1.25rem;">DJ & Dance</span>
+        </div>
+      </div>
+
+      <div class="glass-card stat-card">
+        <div class="stat-icon" style="background: rgba(52, 211, 153, 0.2); color: #34d399;">😋</div>
+        <div class="stat-info">
+          <span class="stat-label">Food Satisfaction</span>
+          <span class="stat-value" id="stat-food-score">100%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Question Breakdown Analytics -->
+    <div class="analytics-grid">
+      
+      <!-- Vibe & Experience Breakdown -->
+      <div class="glass-card">
+        <h3 style="font-size: 1.1rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>💥</span> Overall Event Vibe
+        </h3>
+        <div id="breakdown-vibe">
+          <p style="color: var(--text-muted); font-size: 0.85rem;">Loading responses...</p>
+        </div>
+      </div>
+
+      <!-- Food Quality Breakdown -->
+      <div class="glass-card">
+        <h3 style="font-size: 1.1rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>🍕</span> Food & Refreshments
+        </h3>
+        <div id="breakdown-food">
+          <p style="color: var(--text-muted); font-size: 0.85rem;">Loading responses...</p>
+        </div>
+      </div>
+
+      <!-- DJ & Music Breakdown -->
+      <div class="glass-card">
+        <h3 style="font-size: 1.1rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>🕺</span> DJ Beats & Dance Floor
+        </h3>
+        <div id="breakdown-dj">
+          <p style="color: var(--text-muted); font-size: 0.85rem;">Loading responses...</p>
+        </div>
+      </div>
+
+      <!-- Organizing Committee Breakdown -->
+      <div class="glass-card">
+        <h3 style="font-size: 1.1rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>🌟</span> Committee & Management
+        </h3>
+        <div id="breakdown-committee">
+          <p style="color: var(--text-muted); font-size: 0.85rem;">Loading responses...</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 3. Live Student Reviews & Shoutouts Wall -->
+    <div style="margin-bottom: 1.25rem;">
+      <h2 style="font-size: 1.6rem; margin-bottom: 0.25rem;">💬 Student Reviews & <span class="gradient-text">Shoutouts</span></h2>
+      <p style="color: var(--text-muted);">Real-time feed of all messages sent to the seniors and organizing team</p>
+    </div>
+
+    <div class="reviews-wall-grid" id="reviews-wall-container">
+      <div style="text-align: center; grid-column: 1 / -1; padding: 3rem; color: var(--text-muted);">
+        Loading student reviews...
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>© 2026 CRUD 2026 Admin Portal • Crafted by <span class="credit-tag">NIKSLAB</span></p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js?v=25.0"></script>
+  <script src="../js/supabase.js?v=25.0"></script>
+  <script src="../js/ui-helpers.js?v=25.0"></script>
+  <script src="../js/auth.js?v=25.0"></script>
+  <script src="../js/admin-feedback.js?v=25.0"></script>
+
+</body>
+</html>

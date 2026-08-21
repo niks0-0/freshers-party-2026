@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CRUD 2026 — Event Feedback & Reviews</title>
+  <link rel="stylesheet" href="css/style.css?v=25.0">
+  <style>
+    body {
+      background: #060911;
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .feedback-hero {
+      text-align: center;
+      padding: 3rem 1.25rem 1.5rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .feedback-container {
+      max-width: 620px;
+      margin: 0 auto 4rem;
+      padding: 0 1.25rem;
+      position: relative;
+      z-index: 10;
+      width: 100%;
+    }
+
+    .feedback-card {
+      background: rgba(13, 18, 30, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      padding: 2rem 1.5rem;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(99, 102, 241, 0.15);
+    }
+
+    .q-group {
+      margin-bottom: 2rem;
+      padding-bottom: 1.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .q-group:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .q-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .q-num {
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      color: #ffffff;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.65rem;
+    }
+
+    .option-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 0.85rem 1.15rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      user-select: none;
+    }
+
+    .option-card:hover {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: rgba(99, 102, 241, 0.4);
+      color: #ffffff;
+    }
+
+    .option-card.selected {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(168, 85, 247, 0.2) 100%);
+      border-color: #38bdf8;
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.3), inset 0 0 10px rgba(56, 189, 248, 0.1);
+    }
+
+    .option-radio {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    .option-card.selected .option-radio {
+      border-color: #38bdf8;
+      background: #38bdf8;
+      box-shadow: 0 0 8px #38bdf8;
+    }
+
+    .option-card.selected .option-radio::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #0f172a;
+    }
+
+    /* Star Rating Widget */
+    .star-rating-box {
+      display: flex;
+      justify-content: center;
+      gap: 0.65rem;
+      margin: 1rem 0;
+      font-size: 2.2rem;
+      cursor: pointer;
+    }
+
+    .star-item {
+      color: rgba(255, 255, 255, 0.2);
+      transition: all 0.2s transform, 0.2s color;
+      user-select: none;
+    }
+
+    .star-item:hover,
+    .star-item.active {
+      color: #fbbf24;
+      text-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+      transform: scale(1.15);
+    }
+
+    /* Success Submission View */
+    #feedback-success-card {
+      display: none;
+      text-align: center;
+      padding: 3rem 1.5rem;
+    }
+
+    .confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Laser Beams -->
+  <div class="laser-container">
+    <div class="laser laser-cyan"></div>
+    <div class="laser laser-violet"></div>
+    <div class="laser laser-magenta"></div>
+  </div>
+
+  <!-- Confetti Canvas for Celebration -->
+  <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
+
+  <!-- Top Navigation -->
+  <nav class="navbar" style="position: relative; z-index: 20;">
+    <div class="container nav-container">
+      <a href="index.html" class="logo">
+        <span class="logo-accent">CRUD</span> 2026
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+        <li><a href="login.html" class="btn btn-sm btn-primary">Student Login 🔑</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Header -->
+  <div class="feedback-hero">
+    <span class="badge badge-live" style="margin-bottom: 0.75rem;">⭐ OFFICIAL EVENT REVIEW</span>
+    <h1 style="font-size: 2.25rem; font-weight: 900; margin: 0.4rem 0 0.5rem;">
+      CRUD 2026 <span class="gradient-text">Feedback</span>
+    </h1>
+    <p style="color: #94a3b8; font-size: 0.95rem; max-width: 480px; margin: 0 auto;">
+      Tell us how your day went! Your honest feedback helps us make future events even bigger & better! 🔥🎉
+    </p>
+  </div>
+
+  <!-- Main Container -->
+  <div class="feedback-container">
+    
+    <!-- Submission Form Card -->
+    <div class="feedback-card" id="feedback-form-card">
+      <form id="event-feedback-form">
+
+        <!-- Student Info (Optional / Pre-filled) -->
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 1.25rem; margin-bottom: 2rem;">
+          <div style="font-size: 0.8rem; font-weight: 800; color: #38bdf8; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 0.85rem;">
+            👤 Student Details (Optional)
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div>
+              <label for="fb-name" style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 0.25rem; display: block;">Your Name</label>
+              <input type="text" id="fb-name" placeholder="e.g. Rahul Patel" style="padding: 0.65rem 0.85rem; font-size: 0.88rem; width: 100%;">
+            </div>
+            <div>
+              <label for="fb-email" style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 0.25rem; display: block;">Email Address</label>
+              <input type="email" id="fb-email" placeholder="rahul@example.com" style="padding: 0.65rem 0.85rem; font-size: 0.88rem; width: 100%;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 1: Overall Vibe -->
+        <div class="q-group">
+          <div class="q-title">
+            <span class="q-num">1</span>
+            <span>Overall Maza Aaya? (Event Vibe) *</span>
+          </div>
+          <div class="options-grid" data-q="q1_vibe">
+            <div class="option-card" data-val="💥 Unbelievable! Best party ever!">
+              <div class="option-radio"></div>
+              <span>💥 Unbelievable! Best party ever!</span>
+            </div>
+            <div class="option-card" data-val="🔥 Super energetic & bohot maza aaya!">
+              <div class="option-radio"></div>
+              <span>🔥 Super energetic & bohot maza aaya!</span>
+            </div>
+            <div class="option-card" data-val="👍 Good, enjoyed the event!">
+              <div class="option-radio"></div>
+              <span>👍 Good, enjoyed the event!</span>
+            </div>
+            <div class="option-card" data-val="😐 Average / Could be better">
+              <div class="option-radio"></div>
+              <span>😐 Average / Could be better</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 2: Food & Snacks -->
+        <div class="q-group">
+          <div class="q-title">
+            <span class="q-num">2</span>
+            <span>Food & Snacks (Hotel Darshan Inn) *</span>
+          </div>
+          <div class="options-grid" data-q="q2_food">
+            <div class="option-card" data-val="😋 Super delicious & fresh! (5/5)">
+              <div class="option-radio"></div>
+              <span>😋 Super delicious & fresh! (5/5)</span>
+            </div>
+            <div class="option-card" data-val="🍕 Tasty & full satisfaction!">
+              <div class="option-radio"></div>
+              <span>🍕 Tasty & full satisfaction!</span>
+            </div>
+            <div class="option-card" data-val="🥪 Decent / Normal">
+              <div class="option-radio"></div>
+              <span>🥪 Decent / Normal</span>
+            </div>
+            <div class="option-card" data-val="👎 Not up to the mark">
+              <div class="option-radio"></div>
+              <span>👎 Not up to the mark</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 3: DJ & Dance Floor -->
+        <div class="q-group">
+          <div class="q-title">
+            <span class="q-num">3</span>
+            <span>DJ Beats, Stage Lights & Dance Floor *</span>
+          </div>
+          <div class="options-grid" data-q="q3_dj_music">
+            <div class="option-card" data-val="🕺💃 Total FIRE! Non-stop dancing!">
+              <div class="option-radio"></div>
+              <span>🕺💃 Total FIRE! Non-stop dancing!</span>
+            </div>
+            <div class="option-card" data-val="🎵 Great playlist & rocking beats!">
+              <div class="option-radio"></div>
+              <span>🎵 Great playlist & rocking beats!</span>
+            </div>
+            <div class="option-card" data-val="🎧 Good music vibe!">
+              <div class="option-radio"></div>
+              <span>🎧 Good music vibe!</span>
+            </div>
+            <div class="option-card" data-val="🔇 Needed more trending / bollywood tracks">
+              <div class="option-radio"></div>
+              <span>🔇 Needed more trending tracks</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 4: Organizing Committee & Seniors -->
+        <div class="q-group">
+          <div class="q-title">
+            <span class="q-num">4</span>
+            <span>CRUD 2026 Organizing Team & Management *</span>
+          </div>
+          <div class="options-grid" data-q="q4_committee">
+            <div class="option-card" data-val="🌟 10/10 — Super friendly, smooth & helpful!">
+              <div class="option-radio"></div>
+              <span>🌟 10/10 — Super friendly, smooth & helpful!</span>
+            </div>
+            <div class="option-card" data-val="👍 Well-managed and disciplined!">
+              <div class="option-radio"></div>
+              <span>👍 Well-managed and disciplined!</span>
+            </div>
+            <div class="option-card" data-val="🙂 Good effort by the team!">
+              <div class="option-radio"></div>
+              <span>🙂 Good effort by the team!</span>
+            </div>
+            <div class="option-card" data-val="⚠️ A bit crowded / needed better management">
+              <div class="option-radio"></div>
+              <span>⚠️ A bit crowded / needed better management</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 5: Best Highlight -->
+        <div class="q-group">
+          <div class="q-title">
+            <span class="q-num">5</span>
+            <span>Your Favorite Highlight of the Day *</span>
+          </div>
+          <div class="options-grid" data-q="q5_highlight">
+            <div class="option-card" data-val="🎧 DJ Night & Dance Floor">
+              <div class="option-radio"></div>
+              <span>🎧 DJ Night & Dance Floor</span>
+            </div>
+            <div class="option-card" data-val="🎮 Stage Games & Activities">
+              <div class="option-radio"></div>
+              <span>🎮 Stage Games & Activities</span>
+            </div>
+            <div class="option-card" data-val="📸 Photos & Candid Moments">
+              <div class="option-radio"></div>
+              <span>📸 Photos & Candid Moments</span>
+            </div>
+            <div class="option-card" data-val="🍽️ Food & Snacks Time">
+              <div class="option-radio"></div>
+              <span>🍽️ Food & Snacks Time</span>
+            </div>
+            <div class="option-card" data-val="🤝 Meeting Seniors & Making Friends">
+              <div class="option-radio"></div>
+              <span>🤝 Meeting Seniors & Making Friends</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 6: Overall Star Rating -->
+        <div class="q-group">
+          <div class="q-title">
+            <span class="q-num">6</span>
+            <span>Overall Event Star Rating *</span>
+          </div>
+          <div class="star-rating-box" id="star-rating-container">
+            <span class="star-item" data-star="1">★</span>
+            <span class="star-item" data-star="2">★</span>
+            <span class="star-item" data-star="3">★</span>
+            <span class="star-item" data-star="4">★</span>
+            <span class="star-item active" data-star="5">★</span>
+          </div>
+          <div id="star-rating-label" style="text-align: center; font-size: 0.88rem; font-weight: 700; color: #fbbf24;">
+            ⭐⭐⭐⭐⭐ 5.0 - Absolute Masterpiece!
+          </div>
+        </div>
+
+        <!-- Optional Message Box -->
+        <div class="q-group">
+          <div class="q-title">
+            <span class="q-num">💬</span>
+            <span>Message for Seniors / Organizers (Optional)</span>
+          </div>
+          <textarea id="fb-message" rows="3" placeholder="Write any sweet shoutout, memory, or thank-you note for the CRUD 2026 team & NIKSLAB..." style="width: 100%; padding: 0.85rem; font-size: 0.9rem; border-radius: 12px;"></textarea>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="feedback-submit-btn" class="btn btn-primary btn-full" style="padding: 1.1rem; font-size: 1.05rem; font-weight: 800; letter-spacing: 0.5px;">
+          🚀 SUBMIT MY FEEDBACK
+        </button>
+
+      </form>
+    </div>
+
+    <!-- Success Confirmation View -->
+    <div class="feedback-card" id="feedback-success-card">
+      <div style="font-size: 3.5rem; margin-bottom: 0.5rem;">🎉 🥳 ✨</div>
+      <h2 style="font-size: 1.8rem; font-weight: 900; margin-bottom: 0.5rem;">
+        Thank You for Your Feedback!
+      </h2>
+      <p style="color: #cbd5e1; font-size: 1rem; line-height: 1.6; max-width: 450px; margin: 0 auto 1.5rem;">
+        Your review has been recorded. Thank you for making <strong>CRUD 2026</strong> an unforgettable celebration! 💖🎈
+      </p>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+        <a href="index.html" class="btn btn-secondary">← Back to Home</a>
+        <a href="dashboard.html" class="btn btn-primary">My Dashboard 🎟️</a>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <p>© 2026 CRUD 2026 • Crafted with ❤️ by <span class="credit-tag">NIKSLAB</span></p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js?v=25.0"></script>
+  <script src="js/supabase.js?v=25.0"></script>
+  <script src="js/ui-helpers.js?v=25.0"></script>
+  <script src="js/feedback.js?v=25.0"></script>
+
+</body>
+</html>
